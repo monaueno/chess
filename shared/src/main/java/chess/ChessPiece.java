@@ -102,7 +102,7 @@ public class ChessPiece {
             int col = myPosition.getColumn();
                 row += dir[0];
                 col += dir[1];
-                if (row < 1 || row > 8 || col < 1 || col > 8) break;
+                if (row < 1 || row > 8 || col < 1 || col > 8) continue;
                 ChessPosition newPos = new ChessPosition(row, col);
                 ChessPiece target = board.getPiece(newPos);
                 if (target == null) {
@@ -111,7 +111,7 @@ public class ChessPiece {
                     if (target.getTeamColor() != this.getTeamColor()) {
                         moves.add(new ChessMove(myPosition, newPos, null));
                     }
-                    break;
+
             }
         }
     }
