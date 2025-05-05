@@ -68,9 +68,13 @@ public class ChessPiece {
             int[][] directions = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}, {1, 1}, {-1, -1}, {-1, 1}, {1, -1}};
             addMoves(directions, board, myPosition, moves);
         }
-        else if(this.pieceType == PieceType.BISHOP){
+        else if (this.pieceType == PieceType.BISHOP){
             int[][] directions = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
             addSlidingMoves(directions, board, myPosition, moves);
+        }
+        else if (this.pieceType == PieceType.KNIGHT) {
+            int[][] knightMoves = {{2,1},{1,2},{2,-1},{1,-2},{-2,1},{-1,2},{-2,-1},{-1,-2}};
+            addJumpMoves(knightMoves, board, myPosition, moves);
         }
         return moves;
     }
@@ -115,6 +119,18 @@ public class ChessPiece {
             }
         }
     }
+    private void addJumpMoves(int[][] knightMoves, ChessBoard board, ChessPosition myPosition, Collection<ChessMove> moves) {
+        for (int[] move : knightMoves) {
+            int row = myPosition.getRow() + move[0];
+            int col = myPosition.getColumn() + move[1];
 
+            if (row < 1 || row > 8 || col < 1 || col > 8) continue;
+                ChessPosition newPos = new ChessPosition(row,col);
+                ChessPiece target = board.getPiece(newPos);
+                if (target == null || target.getTeamColor() != this.getTeamColor()) {
+                    moves.add(new ChessMove(myPosition, newPos, null));
+                }
+        }
+    }
 }
 
