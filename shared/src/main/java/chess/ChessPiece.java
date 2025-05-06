@@ -76,6 +76,36 @@ public class ChessPiece {
             int[][] knightMoves = {{2,1},{1,2},{2,-1},{1,-2},{-2,1},{-1,2},{-2,-1},{-1,-2}};
             addJumpMoves(knightMoves, board, myPosition, moves);
         }
+        else if(this.pieceType == PieceType.PAWN){
+            int direction = (this.pieceColor == ChessGame.TeamColor.WHITE) ? 1: -1;
+            int row = myPosition.getRow();
+            int col = myPosition.getColumn();
+
+            ChessPosition oneAhead = new ChessPosition(row + direction, col);
+            if (row + direction >= 1 && row + direction <= 8 && board.getPiece(oneAhead) == null){
+                moves.add(new ChessMove(myPosition, oneAhead, null));
+            }
+
+            if (((this.pieceColor == ChessGame.TeamColor.WHITE && row == 2) || (this.pieceColor == ChessGame.TeamColor.BLACK && row == 7)) && board.getPiece(oneAhead) == null){
+                ChessPosition twoAhead = new ChessPosition(row + 2 * direction, col);
+                if(board.getPiece(twoAhead) == null){
+                    moves.add(new ChessMove(myPosition, twoAhead, null));
+                }
+            }
+
+            for (int dc = -1; dc <= 1; dc+=2){
+                int newCol = col + dc;
+                int newRow = row+direction;
+                if (newCol >= 1 && newCol <= 8 && newRow >= 1 && newCol <= 8) {
+                    ChessPosition diag = new ChessPosition(newRow, newCol);
+                    ChessPiece target = board.getPiece(diag);
+                    if (target != null && target.getTeamColor() != this.getTeamColor()){
+                        moves.add(new ChessMove(myPosition, diag, null));
+                    }
+                }
+            }
+
+        }
         return moves;
     }
 
