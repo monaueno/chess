@@ -21,8 +21,8 @@ public class ChessPiece {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
+        if (this == obj){return true;};
+        if (obj == null || getClass() != obj.getClass()) {return false;}
         ChessPiece other = (ChessPiece) obj;
         return this.pieceColor == other.pieceColor && this.pieceType == other.pieceType;
     }
@@ -100,7 +100,7 @@ public class ChessPiece {
             while (true) {
                 row += dir[0];
                 col += dir[1];
-                if (row < 1 || row > 8 || col < 1 || col > 8) break;
+                if (row < 1 || row > 8 || col < 1 || col > 8) {break;}
                 ChessPosition newPos = new ChessPosition(row, col);
                 ChessPiece target = board.getPiece(newPos);
                 if (target == null) {
@@ -120,7 +120,7 @@ public class ChessPiece {
             int col = myPosition.getColumn();
                 row += dir[0];
                 col += dir[1];
-                if (row < 1 || row > 8 || col < 1 || col > 8) continue;
+                if (row < 1 || row > 8 || col < 1 || col > 8) {continue;}
                 ChessPosition newPos = new ChessPosition(row, col);
                 ChessPiece target = board.getPiece(newPos);
                 if (target == null) {
@@ -138,7 +138,7 @@ public class ChessPiece {
             int row = myPosition.getRow() + move[0];
             int col = myPosition.getColumn() + move[1];
 
-            if (row < 1 || row > 8 || col < 1 || col > 8) continue;
+            if (row < 1 || row > 8 || col < 1 || col > 8) {continue;}
                 ChessPosition newPos = new ChessPosition(row,col);
                 ChessPiece target = board.getPiece(newPos);
                 if (target == null || target.getTeamColor() != this.getTeamColor()) {
