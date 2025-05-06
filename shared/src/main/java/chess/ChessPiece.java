@@ -1,5 +1,4 @@
 package chess;
-/*phase 0 passed!*/
 
 import java.util.Collection;
 import java.util.ArrayList;
