@@ -142,8 +142,15 @@ public class ChessPiece {
         int col = myPosition.getColumn();
 
         ChessPosition oneAhead = new ChessPosition(row + direction, col);
-        if (row + direction >= 1 && row + direction <= 8 && board.getPiece(oneAhead) == null) {
-            moves.add(new ChessMove(myPosition, oneAhead, null));
+        if (board.getPiece(oneAhead) == null) {
+            if ((this.pieceColor == ChessGame.TeamColor.WHITE && oneAhead.getRow() == 8) || (this.pieceColor == ChessGame.TeamColor.BLACK && oneAhead.getRow() == 1)) {
+                moves.add(new ChessMove(myPosition, oneAhead, PieceType.QUEEN));
+                moves.add(new ChessMove(myPosition, oneAhead, PieceType.ROOK));
+                moves.add(new ChessMove(myPosition, oneAhead, PieceType.KNIGHT));
+                moves.add(new ChessMove(myPosition, oneAhead, PieceType.BISHOP));
+            } else {
+                moves.add(new ChessMove(myPosition, oneAhead, null));
+            }
         }
 
         if (((this.pieceColor == ChessGame.TeamColor.WHITE && row == 2) || (this.pieceColor == ChessGame.TeamColor.BLACK && row == 7)) && board.getPiece(oneAhead) == null) {
@@ -156,11 +163,18 @@ public class ChessPiece {
         for (int dc = -1; dc <= 1; dc += 2) {
             int newCol = col + dc;
             int newRow = row + direction;
-            if (newCol >= 1 && newCol <= 8 && newRow >= 1 && newCol <= 8) {
+            if (newCol >= 1 && newCol <= 8 && newRow >= 1 && newRow <= 8) {
                 ChessPosition diag = new ChessPosition(newRow, newCol);
                 ChessPiece target = board.getPiece(diag);
                 if (target != null && target.getTeamColor() != this.getTeamColor()) {
-                    moves.add(new ChessMove(myPosition, diag, null));
+                    if ((this.pieceColor == ChessGame.TeamColor.WHITE && diag.getRow() == 8) || (this.pieceColor == ChessGame.TeamColor.BLACK && diag.getRow() == 1)) {
+                        moves.add(new ChessMove(myPosition, diag, PieceType.QUEEN));
+                        moves.add(new ChessMove(myPosition, diag, PieceType.ROOK));
+                        moves.add(new ChessMove(myPosition, diag, PieceType.KNIGHT));
+                        moves.add(new ChessMove(myPosition, diag, PieceType.BISHOP));
+                    } else {
+                        moves.add(new ChessMove(myPosition, diag, null));
+                    }
                 }
             }
         }
