@@ -83,6 +83,10 @@ public class ChessPiece {
             int[][] directions = {{1,0}, {1,1}, {0,1}, {-1,1}, {-1,0}, {-1,-1}, {0,-1}, {1,-1}};
             addSlidingMoves(directions, board, myPosition, moves);
         }
+        else if (this.pieceType == PieceType.ROOK){
+            int[][] directions = {{1,0}, {-1,0}, {0,1}, {0,-1}};
+            addSlidingMoves(directions, board, myPosition, moves);
+        }
         return moves;
     }
 
