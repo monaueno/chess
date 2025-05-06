@@ -79,6 +79,10 @@ public class ChessPiece {
         else if (this.pieceType == PieceType.PAWN) {
             addPawnMoves(board, myPosition, moves);
         }
+        else if (this.pieceType == PieceType.QUEEN){
+            int[][] directions = {{1,0}, {1,1}, {0,1}, {-1,1}, {-1,0}, {-1,-1}, {0,-1}, {1,-1}};
+            addSlidingMoves(directions, board, myPosition, moves);
+        }
         return moves;
     }
 
