@@ -21,13 +21,16 @@ public class ChessPiece {
     }
 
     @Override
-    public int hashCode() {
-        return super.hashCode();
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        ChessPiece other = (ChessPiece) obj;
+        return this.pieceColor == other.pieceColor && this.pieceType == other.pieceType;
     }
 
     @Override
-    public boolean equals(Object obj) {
-        return super.equals(obj);
+    public int hashCode() {
+        return java.util.Objects.hash(pieceColor, pieceType);
     }
 
     /**
