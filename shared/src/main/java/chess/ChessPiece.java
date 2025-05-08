@@ -155,10 +155,7 @@ public class ChessPiece {
         ChessPosition oneAhead = new ChessPosition(row + direction, col);
         if (board.getPiece(oneAhead) == null) {
             if ((this.pieceColor == ChessGame.TeamColor.WHITE && oneAhead.getRow() == 8) || (this.pieceColor == ChessGame.TeamColor.BLACK && oneAhead.getRow() == 1)) {
-                moves.add(new ChessMove(myPosition, oneAhead, PieceType.QUEEN));
-                moves.add(new ChessMove(myPosition, oneAhead, PieceType.ROOK));
-                moves.add(new ChessMove(myPosition, oneAhead, PieceType.KNIGHT));
-                moves.add(new ChessMove(myPosition, oneAhead, PieceType.BISHOP));
+                addPromotions(myPosition, oneAhead, moves);
             } else {
                 moves.add(new ChessMove(myPosition, oneAhead, null));
             }
@@ -179,15 +176,19 @@ public class ChessPiece {
                 ChessPiece target = board.getPiece(diag);
                 if (target != null && target.getTeamColor() != this.getTeamColor()) {
                     if ((this.pieceColor == ChessGame.TeamColor.WHITE && diag.getRow() == 8) || (this.pieceColor == ChessGame.TeamColor.BLACK && diag.getRow() == 1)) {
-                        moves.add(new ChessMove(myPosition, diag, PieceType.QUEEN));
-                        moves.add(new ChessMove(myPosition, diag, PieceType.ROOK));
-                        moves.add(new ChessMove(myPosition, diag, PieceType.KNIGHT));
-                        moves.add(new ChessMove(myPosition, diag, PieceType.BISHOP));
+                        addPromotions(myPosition, diag, moves);
                     } else {
                         moves.add(new ChessMove(myPosition, diag, null));
                     }
                 }
             }
+        }
+    }
+
+    private void addPromotions(ChessPosition start, ChessPosition end, Collection<ChessMove> moves) {
+        PieceType[] promotions = {PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT};
+        for (PieceType promotion : promotions) {
+            moves.add(new ChessMove(start, end, promotion));
         }
     }
 }
