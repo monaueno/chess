@@ -15,6 +15,7 @@ import java.util.ArrayList;
 public class ChessGame {
     private ChessBoard board;
     private TeamColor currentTurn;
+    private ChessMove lastMove;
 
     public ChessGame() {
         this.board = new ChessBoard();
@@ -56,24 +57,28 @@ public class ChessGame {
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
         ChessPiece piece = board.getPiece(startPosition);
-        if (piece == null) return null;
+        if (piece == null) {
+            return null;
+        }
 
         Collection<ChessMove> validMoves = new ArrayList<>();
         Collection<ChessMove> allMoves = piece.pieceMoves(board, startPosition);
 
         for (ChessMove move : allMoves) {
             ChessBoard copy = new ChessBoard(board);
-
             ChessPosition start = move.getStartPosition();
             ChessPosition end = move.getEndPosition();
             ChessPiece movingPiece = copy.getPiece(start);
+            if (movingPiece == null) {
+                continue;
+            }
             copy.addPiece(end, movingPiece);
             copy.removePiece(start);
 
             ChessGame simulatedGame = new ChessGame();
             simulatedGame.setBoard(copy);
 
-            if(!simulatedGame.isInCheck(piece.getTeamColor())){
+            if (!simulatedGame.isInCheck(piece.getTeamColor())) {
                 validMoves.add(move);
             }
         }
@@ -141,6 +146,37 @@ public class ChessGame {
                 }
             }
         }
+
+        // Add en passant if applicable
+        if (piece.getPieceType() == ChessPiece.PieceType.PAWN && lastMove != null) {
+            ChessPosition lastStart = lastMove.getStartPosition();
+            ChessPosition lastEnd = lastMove.getEndPosition();
+            ChessPiece lastPiece = board.getPiece(lastEnd);
+
+            if (lastPiece != null &&
+                lastPiece.getPieceType() == ChessPiece.PieceType.PAWN &&
+                Math.abs(lastStart.getRow() - lastEnd.getRow()) == 2 &&
+                lastEnd.getRow() == startPosition.getRow() &&
+                Math.abs(lastEnd.getColumn() - startPosition.getColumn()) == 1) {
+
+                int direction = (piece.getTeamColor() == TeamColor.WHITE) ? 1 : -1;
+                ChessPosition enPassantTarget = new ChessPosition(lastEnd.getRow() + direction, lastEnd.getColumn());
+                ChessMove enPassantMove = new ChessMove(startPosition, enPassantTarget, null);
+
+                ChessBoard copy = new ChessBoard(board);
+                copy.addPiece(enPassantTarget, piece);
+                copy.removePiece(startPosition);
+                copy.removePiece(lastEnd); // simulate capture
+
+                ChessGame tempGame = new ChessGame();
+                tempGame.setBoard(copy);
+
+                if (!tempGame.isInCheck(piece.getTeamColor())) {
+                    validMoves.add(enPassantMove);
+                }
+            }
+        }
+
         return validMoves;
     }
 
@@ -183,9 +219,16 @@ public class ChessGame {
             throw new InvalidMoveException("Invalid move.");
         }
 
+        // Handle en passant capture
+        if (movingPiece.getPieceType() == ChessPiece.PieceType.PAWN && board.getPiece(end) == null && start.getColumn() != end.getColumn()) {
+            int direction = (movingPiece.getTeamColor() == TeamColor.WHITE) ? -1 : 1;
+            ChessPosition capturedPawnPos = new ChessPosition(end.getRow() + direction, end.getColumn());
+            board.removePiece(capturedPawnPos);
+        }
+
         if (move.getPromotionPiece() != null) {
             board.addPiece(end, new ChessPiece(movingPiece.getTeamColor(), move.getPromotionPiece()));
-        }else{
+        } else {
             board.addPiece(end, movingPiece);
         }
 
@@ -211,6 +254,9 @@ public class ChessGame {
         }
 
         board.removePiece(start);
+
+        // Set lastMove before switching turn
+        this.lastMove = move;
 
         currentTurn = (currentTurn == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE;
     }
