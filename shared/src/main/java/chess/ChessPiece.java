@@ -13,6 +13,13 @@ public class ChessPiece {
 
     private final ChessGame.TeamColor pieceColor;
     private final ChessPiece.PieceType pieceType;
+    private boolean hasMoved = false;
+    public boolean hasMoved(){
+        return hasMoved;
+    }
+    public void setHasMoved(boolean moved) {
+        this.hasMoved = moved;
+    }
 
     public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
         this.pieceColor = pieceColor;

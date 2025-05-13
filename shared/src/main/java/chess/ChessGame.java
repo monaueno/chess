@@ -77,6 +77,70 @@ public class ChessGame {
                 validMoves.add(move);
             }
         }
+
+        // Add castling moves if king hasn't moved and not in check
+        if (piece.getPieceType() == ChessPiece.PieceType.KING && !piece.hasMoved() && !isInCheck(piece.getTeamColor())) {
+            int row = startPosition.getRow();
+
+            // King-side castling
+            ChessPiece kingSideRook = board.getPiece(new ChessPosition(row, 8));
+            if (kingSideRook != null && kingSideRook.getPieceType() == ChessPiece.PieceType.ROOK &&
+                    kingSideRook.getTeamColor() == piece.getTeamColor() && !kingSideRook.hasMoved()) {
+
+                if (board.getPiece(new ChessPosition(row, 6)) == null &&
+                        board.getPiece(new ChessPosition(row, 7)) == null) {
+
+                    // Simulate castling through F and G
+                    ChessBoard copy = new ChessBoard(board);
+                    copy.addPiece(new ChessPosition(row, 6), piece);
+                    copy.removePiece(startPosition);
+                    ChessGame tempGame = new ChessGame();
+                    tempGame.setBoard(copy);
+
+                    if (!tempGame.isInCheck(piece.getTeamColor())) {
+                        copy = new ChessBoard(board);
+                        copy.addPiece(new ChessPosition(row, 7), piece);
+                        copy.removePiece(startPosition);
+                        tempGame = new ChessGame();
+                        tempGame.setBoard(copy);
+
+                        if (!tempGame.isInCheck(piece.getTeamColor())) {
+                            validMoves.add(new ChessMove(startPosition, new ChessPosition(row, 7), null));
+                        }
+                    }
+                }
+            }
+
+            // Queen-side castling
+            ChessPiece queenSideRook = board.getPiece(new ChessPosition(row, 1));
+            if (queenSideRook != null && queenSideRook.getPieceType() == ChessPiece.PieceType.ROOK &&
+                    queenSideRook.getTeamColor() == piece.getTeamColor() && !queenSideRook.hasMoved()) {
+
+                if (board.getPiece(new ChessPosition(row, 2)) == null &&
+                        board.getPiece(new ChessPosition(row, 3)) == null &&
+                        board.getPiece(new ChessPosition(row, 4)) == null) {
+
+                    // Simulate castling through D and C
+                    ChessBoard copy = new ChessBoard(board);
+                    copy.addPiece(new ChessPosition(row, 4), piece);
+                    copy.removePiece(startPosition);
+                    ChessGame tempGame = new ChessGame();
+                    tempGame.setBoard(copy);
+
+                    if (!tempGame.isInCheck(piece.getTeamColor())) {
+                        copy = new ChessBoard(board);
+                        copy.addPiece(new ChessPosition(row, 3), piece);
+                        copy.removePiece(startPosition);
+                        tempGame = new ChessGame();
+                        tempGame.setBoard(copy);
+
+                        if (!tempGame.isInCheck(piece.getTeamColor())) {
+                            validMoves.add(new ChessMove(startPosition, new ChessPosition(row, 3), null));
+                        }
+                    }
+                }
+            }
+        }
         return validMoves;
     }
 
@@ -123,6 +187,27 @@ public class ChessGame {
             board.addPiece(end, new ChessPiece(movingPiece.getTeamColor(), move.getPromotionPiece()));
         }else{
             board.addPiece(end, movingPiece);
+        }
+
+        movingPiece.setHasMoved(true);
+
+        if(movingPiece.getPieceType() == ChessPiece.PieceType.KING){
+            int startCol = start.getColumn();
+            int endCol = end.getColumn();
+            int row = start.getRow();
+
+            if(startCol == 5 && endCol == 7){
+                ChessPiece rook = board.getPiece(new ChessPosition(row, 8));
+                board.removePiece(new ChessPosition(row, 8));
+                board.addPiece(new ChessPosition(row, 6), rook);
+                if(rook != null) rook.setHasMoved(true);
+            }
+            if(startCol == 5 && endCol == 3){
+                ChessPiece rook = board.getPiece(new ChessPosition(row, 1));
+                board.removePiece(new ChessPosition(row, 1));
+                board.addPiece(new ChessPosition(row, 4), rook);
+                if(rook != null) rook.setHasMoved(true);
+            }
         }
 
         board.removePiece(start);
