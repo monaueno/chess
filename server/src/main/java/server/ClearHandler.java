@@ -7,17 +7,24 @@ import spark.Route;
 import service.ClearService;
 import dataaccess.MemoryDataAccess;
 
-public class ClearHandler implements Route{
+public class ClearHandler implements Route {
+    private final MemoryDataAccess db;
+
+    public ClearHandler(MemoryDataAccess db) {
+        this.db = db;
+    }
+
     @Override
-    public Object handle(Request req, Response res){
-        try{
-            new ClearService(new MemoryDataAccess()).clear();
+    public Object handle(Request req, Response res) {
+        try {
+            new ClearService(db).clear();
             res.status(200);
-            return"{}";
+            return "{}";
         } catch (Exception e) {
             res.status(500);
             return new Gson().toJson(new ErrorMessage("Error: " + e.getMessage()));
         }
     }
-    record ErrorMessage(String message) {}
+
+    private record ErrorMessage(String message) {}
 }
