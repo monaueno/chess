@@ -8,24 +8,24 @@ import model.GameData;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ListGameService {
+public class ListGamesService {
     private final DataAccess db;
 
-    public ListGameService(DataAccess db) {
+    public ListGamesService(DataAccess db) {
         this.db = db;
     }
 
-    public ListGameResult listGames(String authToken) throws DataAccessException {
+    public ListGamesResult listGames(String authToken) throws DataAccessException {
         AuthData auth = db.getAuth(authToken);
         if (auth == null) {
             throw new DataAccessException("unauthorized");
         }
 
         List<GameData> allGames = db.listGames();  // ← you'll need to implement this
-        List<ListGameResult.GameSummary> summaries = new ArrayList<>();
+        List<ListGamesResult.GameSummary> summaries = new ArrayList<>();
 
         for (GameData game : allGames) {
-            summaries.add(new ListGameResult.GameSummary(
+            summaries.add(new ListGamesResult.GameSummary(
                     game.gameID(),
                     game.whiteUsername(),
                     game.blackUsername(),
@@ -33,6 +33,6 @@ public class ListGameService {
             ));
         }
 
-        return new ListGameResult(summaries);
+        return new ListGamesResult(summaries);
     }
 }

@@ -3,16 +3,16 @@ package server;
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
-import service.ListGamesResult;
-import service.ListGamesService;
+import service.JoinGameRequest;
+import service.JoinGameService;
 import spark.Request;
 import spark.Response;
 import spark.Route;
 
-public class ListGamesHandler implements Route {
+public class JoinGameHandler implements Route {
     private final MemoryDataAccess db;
 
-    public ListGamesHandler(MemoryDataAccess db) {
+    public JoinGameHandler(MemoryDataAccess db) {
         this.db = db;
     }
 
@@ -22,15 +22,21 @@ public class ListGamesHandler implements Route {
 
         try {
             String authToken = req.headers("authorization");
+            JoinGameRequest request = gson.fromJson(req.body(), JoinGameRequest.class);
 
-            ListGamesService service = new ListGamesService(db);
-            ListGamesResult result = service.listGames(authToken);
+            JoinGameService service = new JoinGameService(db);
+            service.joinGame(request, authToken);
 
             res.status(200);
-            return gson.toJson(result);
+            return "{}";
 
         } catch (DataAccessException e) {
-            res.status("unauthorized".equals(e.getMessage()) ? 401 : 500);
+            switch (e.getMessage()) {
+                case "bad request" -> res.status(400);
+                case "unauthorized" -> res.status(401);
+                case "already taken" -> res.status(403);
+                default -> res.status(500);
+            }
             return gson.toJson(new ErrorMessage("Error: " + e.getMessage()));
         } catch (Exception e) {
             res.status(500);
