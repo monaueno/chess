@@ -1,5 +1,6 @@
 package server;
 
+import dataaccess.MemoryDataAccess;
 import spark.*;
 
 public class Server {
@@ -8,7 +9,11 @@ public class Server {
         Spark.port(desiredPort);
 
         Spark.staticFiles.location("web");
-        Spark.post("/user", new RegisterHandler());
+
+        MemoryDataAccess db = new MemoryDataAccess();
+
+        Spark.post("/user", new RegisterHandler(db));
+        Spark.post("/session", new LoginHandler(db));
         Spark.delete("/db", new ClearHandler());
 
         // Register your endpoints and handle exceptions here.

@@ -3,37 +3,35 @@ package server;
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
-import service.RegisterRequest;
-import service.RegisterResult;
-import service.RegisterService;
+import service.LoginRequest;
+import service.LoginResult;
+import service.LoginService;
 import spark.Request;
 import spark.Response;
 import spark.Route;
 
-public class RegisterHandler implements Route {
+public class LoginHandler implements Route {
     private final MemoryDataAccess db;
-    public RegisterHandler(MemoryDataAccess db){
+    public LoginHandler(MemoryDataAccess db) {
         this.db = db;
     }
 
     @Override
     public Object handle(Request req, Response res) {
-        var gson = new Gson();
-        try {
-            // Parse JSON request body
-            RegisterRequest request = gson.fromJson(req.body(), RegisterRequest.class);
+        Gson gson = new Gson();
 
-            // Call the service
-            RegisterService service = new RegisterService(db);
-            RegisterResult result = service.register(request);
+        try {
+            LoginRequest request = gson.fromJson(req.body(), LoginRequest.class);
+            LoginService service = new LoginService(db);
+            LoginResult result = service.login(request);
 
             res.status(200);
             return gson.toJson(result);
+
         } catch (DataAccessException e) {
-            // Custom error codes based on message
             switch (e.getMessage()) {
                 case "bad request" -> res.status(400);
-                case "already taken" -> res.status(403);
+                case "unauthorized" -> res.status(401);
                 default -> res.status(500);
             }
             return gson.toJson(new ErrorMessage("Error: " + e.getMessage()));
