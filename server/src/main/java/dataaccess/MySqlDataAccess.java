@@ -227,8 +227,27 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public List<GameData> listGames() throws DataAccessException {
-        // Not implemented yet
-        throw new UnsupportedOperationException("Not implemented yet");
+        String sql = "SELECT gameID, whiteUsername, blackUsername, gameName, gameData FROM games";
+        List<GameData> games = newArrayList<>();
+
+        try (Connection conn = DatabaseManager.getConnection();
+        PreparedStatement stmt = conn.prepareStatement(sql);
+        ResultSet rs = stmt.executeQuery()){
+            while (rs.next()){
+                int gameID = rs.getInt("gameID");
+                String white = rs.getString("whiteUsername");
+                String black = rs.getString("blackUsername");
+                String name = rs.getString("gameName");
+                String gameJson = rs.getString("gameData");
+
+                ChessGame game = new Gson().fromJson(gameJson, ChessGame.class);
+                games.add(new GameData(gameID, white, black, name, game));
+            }
+            return games;
+        }catch(SQLException ex){
+            throw new DataAccessException("Error listing games", ex);
+        }
+
     }
 
     @Override
