@@ -5,7 +5,7 @@ import model.GameData;
 import java.util.List;
 
 public interface DataAccess {
-    void clear();
+    void clear() throws DataAccessException;
     UserData getUser(String username) throws DataAccessException;
 
     void createUser(UserData username) throws DataAccessException;
@@ -14,7 +14,7 @@ public interface DataAccess {
     AuthData getAuth(String authToken) throws DataAccessException;
 
     void deleteAuth(String authToken) throws DataAccessException;
-    void createGame(GameData game) throws DataAccessException;
+    int createGame(GameData game) throws DataAccessException;
     List<GameData> listGames() throws DataAccessException;
 
     GameData getGame(int gameID) throws DataAccessException;

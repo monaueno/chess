@@ -2,6 +2,10 @@ package server;
 
 import dataaccess.MemoryDataAccess;
 import spark.*;
+import dataaccess.MySqlDataAccess;
+import dataaccess.DataAccessException;
+import dataaccess.DatabaseManager;
+import dataaccess.DataAccess;
 
 public class Server {
 
@@ -10,7 +14,16 @@ public class Server {
 
         Spark.staticFiles.location("web");
 
-        MemoryDataAccess db = new MemoryDataAccess();
+        DataAccess db = null;
+        try {
+            DatabaseManager.createDatabase();
+            DatabaseManager.createTables();
+            db = new MySqlDataAccess();
+        } catch (DataAccessException ex) {
+            System.err.println("Failed to initialize database: " + ex.getMessage());
+            ex.printStackTrace();
+            System.exit(1); // fail fast if DB setup fails
+        }
 
         Spark.post("/user", new RegisterHandler(db));
         Spark.post("/session", new LoginHandler(db));

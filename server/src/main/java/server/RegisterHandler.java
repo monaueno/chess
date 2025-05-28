@@ -9,11 +9,12 @@ import service.RegisterService;
 import spark.Request;
 import spark.Response;
 import spark.Route;
+import dataaccess.DataAccess;
 
 public class RegisterHandler implements Route {
-    private final MemoryDataAccess db;
-    public RegisterHandler(MemoryDataAccess db){
-        this.db = db;
+    private final DataAccess dataAccess;
+    public RegisterHandler(DataAccess dataAccess){
+        this.dataAccess = dataAccess;
     }
 
     @Override
@@ -24,7 +25,7 @@ public class RegisterHandler implements Route {
             RegisterRequest request = gson.fromJson(req.body(), RegisterRequest.class);
 
             // Call the service
-            RegisterService service = new RegisterService(db);
+            RegisterService service = new RegisterService(dataAccess);
             RegisterResult result = service.register(request);
 
             res.status(200);
