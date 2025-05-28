@@ -134,8 +134,20 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public void deleteAuth(String authToken) throws DataAccessException {
-        // Not implemented yet
-        throw new UnsupportedOperationException("Not implemented yet");
+        String sql = "DELETE FROM auth WHERE authToken = ?";
+
+        try(Connection conn = DatabaseManager.getConnection();
+        PreparedStatement stmt = conn.prepareStatement(sql)){
+
+            stmt.setString(1, authToken);
+            int rowsAffected = stmt.executeUpdate();
+
+            if(rowsAffected == 0) {
+                throw new DataAccessException("Auth token not found: " + authToken);
+            }
+        } catch(SQLException ex) {
+            throw new DataAccessException("Error deleting auth token", ex);
+        }
     }
 
     @Override
