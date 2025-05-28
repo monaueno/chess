@@ -7,6 +7,7 @@ import model.AuthData;
 import model.GameData;
 import com.google.gson.Gson;
 import chess.ChessGame;
+import java.util.ArrayList;
 
 public class MySqlDataAccess implements DataAccess {
 
@@ -228,7 +229,7 @@ public class MySqlDataAccess implements DataAccess {
     @Override
     public List<GameData> listGames() throws DataAccessException {
         String sql = "SELECT gameID, whiteUsername, blackUsername, gameName, gameData FROM games";
-        List<GameData> games = newArrayList<>();
+        List<GameData> games = new ArrayList<>();
 
         try (Connection conn = DatabaseManager.getConnection();
         PreparedStatement stmt = conn.prepareStatement(sql);

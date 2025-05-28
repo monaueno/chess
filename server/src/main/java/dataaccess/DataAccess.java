@@ -3,6 +3,7 @@ import model.UserData;
 import model.AuthData;
 import model.GameData;
 import java.util.List;
+import chess.ChessGame;
 
 public interface DataAccess {
     void clear() throws DataAccessException;
@@ -18,5 +19,5 @@ public interface DataAccess {
     List<GameData> listGames() throws DataAccessException;
 
     GameData getGame(int gameID) throws DataAccessException;
-    void updateGame(GameData game) throws DataAccessException;
+    void updateGame(int gameID, ChessGame game) throws DataAccessException;
 }
