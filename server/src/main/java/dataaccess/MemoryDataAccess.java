@@ -5,6 +5,7 @@ import java.util.Map;
 import model.*;
 import java.util.ArrayList;
 import java.util.List;
+import chess.ChessGame;
 
 public class MemoryDataAccess implements DataAccess{
     private final Map<String, UserData> users = new HashMap<>();
@@ -54,8 +55,18 @@ public class MemoryDataAccess implements DataAccess{
     }
 
     @Override
-    public void updateGame(GameData game) {
-        games.put(game.gameID(), game);
+    public void updateGame(int gameID, ChessGame game) throws DataAccessException {
+        GameData old = games.get(gameID);
+        if(old == null){
+            throw new DataAccessException("Game ID not found: " + gameID);
+        }
+        games.put(gameID, new GameData(
+                gameID,
+                old.whiteUsername(),
+                old.blackUsername(),
+                old.gameName(),
+                game
+        ));
     }
 
 }
