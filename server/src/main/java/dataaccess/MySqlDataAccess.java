@@ -71,8 +71,26 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public UserData getUser(String username) throws DataAccessException {
-        // Not implemented yet
-        throw new UnsupportedOperationException("Not implemented yet");
+        String sql = "SELECT username, password, email FROM users WHERE username = ?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+        PreparedStatement stmt = conn.prepareStatement(sql)){
+            stmt.setString(1, username);
+
+            try (ResultSet rs = stmt.executeQuery()){
+                if (rs.next()){
+                    String user = rs.getString("username");
+                    String pass = rs.getString("password");
+                    String email = rs.getString("email");
+                    return new UserData(user, pass, email);
+                } else{
+                    return null;
+                }
+            }
+        }
+       catch (SQLException ex){
+            throw new DataAccessException("Error fetching user", ex);
+       }
     }
 
     @Override
