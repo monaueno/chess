@@ -55,8 +55,18 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public void createUser(UserData user) throws DataAccessException {
-        // Not implemented yet
-        throw new UnsupportedOperationException("Not implemented yet");
+        String sql = "INSERT INTO users (username, password, email) VALUES (?, ?, ?)";
+
+        try (Connection conn = DatabaseManager.getConnection();
+        PreparedStatement stmt = conn.prepareStatement(sql)){
+            stmt.setString(1, user.username());
+            stmt.setString(2, user.password());
+            stmt.setString(3, user.email());
+
+            stmt.executeUpdate();
+        }catch(SQLException ex) {
+            throw new DataAccessException("Error creating user", ex);
+        }
     }
 
     @Override
