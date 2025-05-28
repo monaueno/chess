@@ -95,8 +95,18 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public void createAuth(AuthData auth) throws DataAccessException {
-        // Not implemented yet
-        throw new UnsupportedOperationException("Not implemented yet");
+        String sql = "INSERT INTO auth (authToken, username) VALUES (?, ?)";
+
+        try (Connection conn = DatabaseManager.getConnection();
+        PreparedStatement stmt = conn.prepareStatement(sql)){
+
+            stmt.setString(1, auth.authToken());
+            stmt.setString(2, auth.username());
+
+            stmt.executeUpdate();
+        } catch (SQLException ex){
+            throw new DataAccessException("Error creating auth token", ex);
+        }
     }
 
     @Override
