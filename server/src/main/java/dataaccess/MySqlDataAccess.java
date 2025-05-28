@@ -252,7 +252,13 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public void clear() throws DataAccessException {
-        // Not implemented yet
-        throw new UnsupportedOperationException("Not implemented yet");
+        try (Connection conn = DatabaseManager.getConnection();
+        Statement stmt = conn.createStatement()){
+            stmt.executeUpdate("DELETE FROM auth");
+            stmt.executeUpdate("DELETE FROM games");
+            stmt.executeUpdate("DELETE FROM users");
+        }catch (SQLException ex){
+            throw new DataAccessException("Failed to clear database", ex);
+        }
     }
 }
