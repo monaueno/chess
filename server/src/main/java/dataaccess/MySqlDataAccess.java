@@ -206,9 +206,23 @@ public class MySqlDataAccess implements DataAccess {
     }
 
     @Override
-    public void updateGame(GameData game) throws DataAccessException {
-        // Not implemented yet
-        throw new UnsupportedOperationException("Not implemented yet");
+    public void updateGame(int gameID, ChessGame game) throws DataAccessException {
+        String sql = "UPDATE games SET gameData = ? WHERE gameID = ?";
+        String gameJson = new Gson().toJson(game);
+
+        try (Connection conn = DatabaseManager.getConnection();
+        PreparedStatement stmt = conn.prepareStatement(sql)){
+
+            stmt.setString(1, gameJson);
+            stmt.setInt(2, gameID);
+
+            int rowsAffected = stmt.executeUpdate();
+            if(rowsAffected == 0){
+                throw new DataAccessException("No game found with ID: " + gameID);
+            }
+        }catch (SQLException ex){
+            throw new DataAccessException("Error updating game in database", ex);
+        }
     }
 
     @Override
