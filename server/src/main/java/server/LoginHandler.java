@@ -9,11 +9,12 @@ import service.LoginService;
 import spark.Request;
 import spark.Response;
 import spark.Route;
+import dataaccess.DataAccess;
 
 public class LoginHandler implements Route {
-    private final MemoryDataAccess db;
-    public LoginHandler(MemoryDataAccess db) {
-        this.db = db;
+    private final DataAccess dataAccess;
+    public LoginHandler(DataAccess dataAccess) {
+        this.dataAccess = dataAccess;
     }
 
     @Override
@@ -22,7 +23,7 @@ public class LoginHandler implements Route {
 
         try {
             LoginRequest request = gson.fromJson(req.body(), LoginRequest.class);
-            LoginService service = new LoginService(db);
+            LoginService service = new LoginService(dataAccess);
             LoginResult result = service.login(request);
 
             res.status(200);

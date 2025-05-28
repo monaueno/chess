@@ -9,12 +9,13 @@ import service.CreateGameService;
 import spark.Request;
 import spark.Response;
 import spark.Route;
+import dataaccess.DataAccess;
 
 public class CreateGameHandler implements Route {
-    private final MemoryDataAccess db;
+    private final DataAccess dataAccess;
 
-    public CreateGameHandler(MemoryDataAccess db) {
-        this.db = db;
+    public CreateGameHandler(DataAccess dataAccess) {
+        this.dataAccess = dataAccess;
     }
 
     @Override
@@ -25,7 +26,7 @@ public class CreateGameHandler implements Route {
             String authToken = req.headers("authorization");
             CreateGameRequest request = gson.fromJson(req.body(), CreateGameRequest.class);
 
-            CreateGameService service = new CreateGameService(db);
+            CreateGameService service = new CreateGameService(dataAccess);
             CreateGameResult result = service.createGame(request, authToken);
 
             res.status(200);

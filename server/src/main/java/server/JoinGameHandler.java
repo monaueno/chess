@@ -8,12 +8,13 @@ import service.JoinGameService;
 import spark.Request;
 import spark.Response;
 import spark.Route;
+import dataaccess.DataAccess;
 
 public class JoinGameHandler implements Route {
-    private final MemoryDataAccess db;
+    private final DataAccess dataAccess;
 
-    public JoinGameHandler(MemoryDataAccess db) {
-        this.db = db;
+    public JoinGameHandler(DataAccess dataAccess) {
+        this.dataAccess = dataAccess;
     }
 
     @Override
@@ -24,7 +25,7 @@ public class JoinGameHandler implements Route {
             String authToken = req.headers("authorization");
             JoinGameRequest request = gson.fromJson(req.body(), JoinGameRequest.class);
 
-            JoinGameService service = new JoinGameService(db);
+            JoinGameService service = new JoinGameService(dataAccess);
             service.joinGame(request, authToken);
 
             res.status(200);

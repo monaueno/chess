@@ -8,12 +8,13 @@ import service.ListGamesService;
 import spark.Request;
 import spark.Response;
 import spark.Route;
+import dataaccess.DataAccess;
 
 public class ListGamesHandler implements Route {
-    private final MemoryDataAccess db;
+    private final DataAccess dataAccess;
 
-    public ListGamesHandler(MemoryDataAccess db) {
-        this.db = db;
+    public ListGamesHandler(DataAccess dataAccess) {
+        this.dataAccess = dataAccess;
     }
 
     @Override
@@ -23,7 +24,7 @@ public class ListGamesHandler implements Route {
         try {
             String authToken = req.headers("authorization");
 
-            ListGamesService service = new ListGamesService(db);
+            ListGamesService service = new ListGamesService(dataAccess);
             ListGamesResult result = service.listGames(authToken);
 
             res.status(200);

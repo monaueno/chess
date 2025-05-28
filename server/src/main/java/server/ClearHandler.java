@@ -6,18 +6,19 @@ import spark.Response;
 import spark.Route;
 import service.ClearService;
 import dataaccess.MemoryDataAccess;
+import dataaccess.DataAccess;
 
 public class ClearHandler implements Route {
-    private final MemoryDataAccess db;
+    private final DataAccess dataAccess;
 
-    public ClearHandler(MemoryDataAccess db) {
-        this.db = db;
+    public ClearHandler(DataAccess dataAccess) {
+        this.dataAccess = dataAccess;
     }
 
     @Override
     public Object handle(Request req, Response res) {
         try {
-            new ClearService(db).clear();
+            new ClearService(dataAccess).clear();
             res.status(200);
             return "{}";
         } catch (Exception e) {

@@ -8,12 +8,13 @@ import service.LogoutService;
 import spark.Request;
 import spark.Response;
 import spark.Route;
+import dataaccess.DataAccess;
 
 public class LogoutHandler implements Route {
-    private final MemoryDataAccess db;
+    private final DataAccess dataAccess;
 
-    public LogoutHandler(MemoryDataAccess db) {
-        this.db = db;
+    public LogoutHandler(DataAccess dataAccess) {
+        this.dataAccess = dataAccess;
     }
 
     @Override
@@ -25,7 +26,7 @@ public class LogoutHandler implements Route {
             String authToken = req.headers("authorization");
 
             LogoutRequest request = new LogoutRequest(authToken);
-            LogoutService service = new LogoutService(db);
+            LogoutService service = new LogoutService(dataAccess);
             service.logout(request);
 
             res.status(200);
