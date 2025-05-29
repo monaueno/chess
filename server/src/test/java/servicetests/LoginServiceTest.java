@@ -1,6 +1,6 @@
 
 
-package ServiceTests;
+package servicetests;
 
 import dataaccess.DataAccessException;
 import dataaccess.MySqlDataAccess;

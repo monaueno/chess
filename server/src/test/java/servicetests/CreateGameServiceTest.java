@@ -1,6 +1,5 @@
-package ServiceTests;
+package servicetests;
 
-import chess.ChessGame;
 import dataaccess.DataAccessException;
 import dataaccess.MySqlDataAccess;
 import model.AuthData;
