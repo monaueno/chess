@@ -1,6 +1,7 @@
 package dataaccess;
 
 import model.AuthData;
+import model.UserData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -17,6 +18,9 @@ public class AuthDAOTest{
 
     @Test
     void createAuth_Positive() throws Exception{
+        UserData user = new UserData("testuser", "password", "test@example.com");
+        db.createUser(user);
+
         AuthData auth = new AuthData("token123", "testuser");
         db.createAuth(auth);
 
@@ -27,6 +31,9 @@ public class AuthDAOTest{
     @Test
     void createAuth_Negative_Duplicate() throws Exception
     {
+        UserData user = new UserData("testuser", "password", "test@example.com");
+        db.createUser(user);
+
         AuthData auth = new AuthData("token123", "testuser");
         db.createAuth(auth);
                 assertThrows(DataAccessException.class, () -> db.createAuth(auth));
@@ -39,8 +46,12 @@ public class AuthDAOTest{
 
     @Test
     void deleteAuth_Positive() throws Exception {
+        UserData user = new UserData("testuser", "password", "test@example.com");
+        db.createUser(user);
+
         AuthData auth = new AuthData("token123", "testuser");
         db.createAuth(auth);
+
         db.deleteAuth("token123");
 
         assertNull(db.getAuth("token123"));
