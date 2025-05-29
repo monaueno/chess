@@ -74,30 +74,40 @@ public class ChessPiece {
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         Collection<ChessMove> moves = new ArrayList<>();
-        if (this.pieceType == PieceType.KING) {
-            int[][] directions = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}, {1, 1}, {-1, -1}, {-1, 1}, {1, -1}};
-            addMoves(directions, board, myPosition, moves);
-        }
-        else if (this.pieceType == PieceType.BISHOP){
-            int[][] directions = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
-            addSlidingMoves(directions, board, myPosition, moves);
-        }
-        else if (this.pieceType == PieceType.KNIGHT) {
-            int[][] knightMoves = {{2,1},{1,2},{2,-1},{1,-2},{-2,1},{-1,2},{-2,-1},{-1,-2}};
-            addJumpMoves(knightMoves, board, myPosition, moves);
-        }
-        else if (this.pieceType == PieceType.PAWN) {
-            addPawnMoves(board, myPosition, moves);
-        }
-        else if (this.pieceType == PieceType.QUEEN){
-            int[][] directions = {{1,0}, {1,1}, {0,1}, {-1,1}, {-1,0}, {-1,-1}, {0,-1}, {1,-1}};
-            addSlidingMoves(directions, board, myPosition, moves);
-        }
-        else if (this.pieceType == PieceType.ROOK){
-            int[][] directions = {{1,0}, {-1,0}, {0,1}, {0,-1}};
-            addSlidingMoves(directions, board, myPosition, moves);
+        switch (this.pieceType) {
+            case KING -> addKingMoves(board, myPosition, moves);
+            case QUEEN -> addQueenMoves(board, myPosition, moves);
+            case ROOK -> addRookMoves(board, myPosition, moves);
+            case BISHOP -> addBishopMoves(board, myPosition, moves);
+            case KNIGHT -> addKnightMoves(board, myPosition, moves);
+            case PAWN -> addPawnMoves(board, myPosition, moves);
         }
         return moves;
+    }
+
+    private void addKingMoves(ChessBoard board, ChessPosition pos, Collection<ChessMove> moves) {
+        int[][] directions = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}, {1, 1}, {-1, -1}, {-1, 1}, {1, -1}};
+        addMoves(directions, board, pos, moves);
+    }
+
+    private void addQueenMoves(ChessBoard board, ChessPosition pos, Collection<ChessMove> moves) {
+        int[][] directions = {{1,0}, {1,1}, {0,1}, {-1,1}, {-1,0}, {-1,-1}, {0,-1}, {1,-1}};
+        addSlidingMoves(directions, board, pos, moves);
+    }
+
+    private void addRookMoves(ChessBoard board, ChessPosition pos, Collection<ChessMove> moves) {
+        int[][] directions = {{1,0}, {-1,0}, {0,1}, {0,-1}};
+        addSlidingMoves(directions, board, pos, moves);
+    }
+
+    private void addBishopMoves(ChessBoard board, ChessPosition pos, Collection<ChessMove> moves) {
+        int[][] directions = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
+        addSlidingMoves(directions, board, pos, moves);
+    }
+
+    private void addKnightMoves(ChessBoard board, ChessPosition pos, Collection<ChessMove> moves) {
+        int[][] knightMoves = {{2,1},{1,2},{2,-1},{1,-2},{-2,1},{-1,2},{-2,-1},{-1,-2}};
+        addJumpMoves(knightMoves, board, pos, moves);
     }
 
     private void addSlidingMoves(int[][] directions, ChessBoard board, ChessPosition myPosition, Collection<ChessMove> moves) {
@@ -160,15 +170,21 @@ public class ChessPiece {
         int col = myPosition.getColumn();
 
         ChessPosition oneAhead = new ChessPosition(row + direction, col);
-        if (board.getPiece(oneAhead) == null) {
-            if ((this.pieceColor == ChessGame.TeamColor.WHITE && oneAhead.getRow() == 8) || (this.pieceColor == ChessGame.TeamColor.BLACK && oneAhead.getRow() == 1)) {
+        if ((this.pieceColor == ChessGame.TeamColor.WHITE && oneAhead.getRow() == 8) ||
+            (this.pieceColor == ChessGame.TeamColor.BLACK && oneAhead.getRow() == 1)) {
+            if (board.getPiece(oneAhead) == null) {
                 addPromotions(myPosition, oneAhead, moves);
             } else {
                 moves.add(new ChessMove(myPosition, oneAhead, null));
             }
         }
+        else if (board.getPiece(oneAhead) == null) {
+            moves.add(new ChessMove(myPosition, oneAhead, null));
+        }
 
-        if (((this.pieceColor == ChessGame.TeamColor.WHITE && row == 2) || (this.pieceColor == ChessGame.TeamColor.BLACK && row == 7)) && board.getPiece(oneAhead) == null) {
+        if (((this.pieceColor == ChessGame.TeamColor.WHITE && row == 2) ||
+             (this.pieceColor == ChessGame.TeamColor.BLACK && row == 7)) &&
+             board.getPiece(oneAhead) == null) {
             ChessPosition twoAhead = new ChessPosition(row + 2 * direction, col);
             if (board.getPiece(twoAhead) == null) {
                 moves.add(new ChessMove(myPosition, twoAhead, null));
@@ -182,7 +198,8 @@ public class ChessPiece {
                 ChessPosition diag = new ChessPosition(newRow, newCol);
                 ChessPiece target = board.getPiece(diag);
                 if (target != null && target.getTeamColor() != this.getTeamColor()) {
-                    if ((this.pieceColor == ChessGame.TeamColor.WHITE && diag.getRow() == 8) || (this.pieceColor == ChessGame.TeamColor.BLACK && diag.getRow() == 1)) {
+                    if ((this.pieceColor == ChessGame.TeamColor.WHITE && diag.getRow() == 8) ||
+                        (this.pieceColor == ChessGame.TeamColor.BLACK && diag.getRow() == 1)) {
                         addPromotions(myPosition, diag, moves);
                     } else {
                         moves.add(new ChessMove(myPosition, diag, null));

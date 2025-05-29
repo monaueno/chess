@@ -17,7 +17,7 @@ public class UserDAOTest {
     }
 
     @Test
-    void createUser_Positive() throws Exception {
+    void createUserPositive() throws Exception {
         UserData user = new UserData("testuser", "pass123", "test@example.com");
         db.createUser(user);
 
@@ -26,7 +26,7 @@ public class UserDAOTest {
     }
 
     @Test
-    void createUser_Negative_Duplicate() throws Exception {
+    void createUserNegativeDuplicate() throws Exception {
         UserData user = new UserData("testuser", "pass123", "test@example.com");
         db.createUser(user);
 
@@ -34,7 +34,7 @@ public class UserDAOTest {
     }
 
     @Test
-    void getUser_Negative_NotFound() throws DataAccessException {
+    void getUserNegativeNotFound() throws DataAccessException {
         assertNull(db.getUser("nonexistent"));
     }
 }

@@ -23,14 +23,14 @@ public class GameDAOTest{
     }
 
     @Test
-    void getGame_Positive() throws Exception{
+    void getGamePositive() throws Exception{
         GameData game = new GameData(0, "white", "black", "testGame", new ChessGame());
         int gameID = db.createGame(game);
         assertTrue(gameID > 0);
     }
 
     @Test
-    void createGame_Positive() throws Exception {
+    void createGamePositive() throws Exception {
         GameData game = new GameData(0, "white", "black", "testGame", new ChessGame());
         int gameID = db.createGame(game);
         GameData fetched = db.getGame(gameID);
@@ -39,18 +39,18 @@ public class GameDAOTest{
     }
 
     @Test
-    void createGame_Negative_InvalidGame(){
+    void createGameNegativeInvalidGame(){
         GameData invalidGame = new GameData(0, "", "", "", new ChessGame());
         assertThrows(DataAccessException.class, () -> db.createGame(invalidGame));
     }
 
     @Test
-    void getGame_Negative_NotFound() throws Exception {
+    void getGameNegativeNotFound() throws Exception {
         assertNull(db.getGame(99999));
     }
 
     @Test
-    void updateGame_Positive() throws Exception {
+    void updateGamePositive() throws Exception {
         GameData game = new GameData(0, "white", "black", "testGame", new ChessGame());
         int gameID = db.createGame(game);
         ChessGame newGame = new ChessGame();
@@ -62,20 +62,20 @@ public class GameDAOTest{
     }
 
     @Test
-    void updateGame_Negative_NotFound() {
+    void updateGameNegativeNotFound() {
         ChessGame game = new ChessGame();
         assertThrows(DataAccessException.class, () -> db.updateGame(99999, game));
     }
 
     @Test
-    void listGames_Positive() throws Exception{
+    void listGamesPositive() throws Exception{
         db.createGame(new GameData(0, "white", "black", "game1", new ChessGame()));
         db.createGame(new GameData(0, "white", "black", "game2", new ChessGame()));
         assertEquals(2, db.listGames().size());
     }
 
     @Test
-    void clear_Positive() throws Exception {
+    void clearPositive() throws Exception {
         db.createGame(new GameData(0, "white", "black", "game1", new ChessGame()));
         db.clear();
         assertEquals(0, db.listGames().size());

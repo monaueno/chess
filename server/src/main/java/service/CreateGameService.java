@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class CreateGameService {
     private final DataAccess db;
-    private static final AtomicInteger nextGameID = new AtomicInteger(1);
+    private static final AtomicInteger NEXT_GAME_ID = new AtomicInteger(1);
 
     public CreateGameService(DataAccess db) {
         this.db = db;

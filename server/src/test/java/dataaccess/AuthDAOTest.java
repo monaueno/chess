@@ -17,7 +17,7 @@ public class AuthDAOTest{
     }
 
     @Test
-    void createAuth_Positive() throws Exception{
+    void createAuthPositive() throws Exception{
         UserData user = new UserData("testuser", "password", "test@example.com");
         db.createUser(user);
 
@@ -29,7 +29,7 @@ public class AuthDAOTest{
     }
 
     @Test
-    void createAuth_Negative_Duplicate() throws Exception
+    void createAuthNegativeDuplicate() throws Exception
     {
         UserData user = new UserData("testuser", "password", "test@example.com");
         db.createUser(user);
@@ -40,12 +40,12 @@ public class AuthDAOTest{
     }
 
     @Test
-    void getAuth_Negative_NotFound() throws Exception{
+    void getAuthNegativeNotFound() throws Exception{
         assertNull(db.getAuth("nonexistent-token"));
     }
 
     @Test
-    void deleteAuth_Positive() throws Exception {
+    void deleteAuthPositive() throws Exception {
         UserData user = new UserData("testuser", "password", "test@example.com");
         db.createUser(user);
 

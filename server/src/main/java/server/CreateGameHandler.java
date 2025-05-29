@@ -10,6 +10,7 @@ import spark.Request;
 import spark.Response;
 import spark.Route;
 import dataaccess.DataAccess;
+import com.google.gson.Gson;
 
 public class CreateGameHandler implements Route {
     private final DataAccess dataAccess;
@@ -20,28 +21,39 @@ public class CreateGameHandler implements Route {
 
     @Override
     public Object handle(Request req, Response res) {
-        Gson gson = new Gson();
-
         try {
             String authToken = req.headers("authorization");
-            CreateGameRequest request = gson.fromJson(req.body(), CreateGameRequest.class);
+            CreateGameRequest request = parseJson(req, CreateGameRequest.class);
 
             CreateGameService service = new CreateGameService(dataAccess);
             CreateGameResult result = service.createGame(request, authToken);
 
             res.status(200);
-            return gson.toJson(result);
+            return toJson(result);
+        } catch (Exception e) {
+            return handleException(res, e);
+        }
+    }
 
-        } catch (DataAccessException e) {
-            switch (e.getMessage()) {
+    private <T> T parseJson(Request req, Class<T> clazz) {
+        return new Gson().fromJson(req.body(), clazz);
+    }
+
+    private String toJson(Object obj) {
+        return new Gson().toJson(obj);
+    }
+
+    private String handleException(Response res, Exception e) {
+        if (e instanceof DataAccessException dae) {
+            switch (dae.getMessage()) {
                 case "bad request" -> res.status(400);
                 case "unauthorized" -> res.status(401);
                 default -> res.status(500);
             }
-            return gson.toJson(new ErrorMessage("Error: " + e.getMessage()));
-        } catch (Exception e) {
+            return toJson(new ErrorMessage("Error: " + dae.getMessage()));
+        } else {
             res.status(500);
-            return gson.toJson(new ErrorMessage("Error: " + e.getMessage()));
+            return toJson(new ErrorMessage("Error: " + e.getMessage()));
         }
     }
 
