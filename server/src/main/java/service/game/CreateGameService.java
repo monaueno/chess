@@ -1,4 +1,4 @@
-package service;
+package service.game;
 
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;

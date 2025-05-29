@@ -2,15 +2,13 @@ package server;
 
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
-import dataaccess.MemoryDataAccess;
-import service.CreateGameRequest;
-import service.CreateGameResult;
-import service.CreateGameService;
+import service.game.CreateGameRequest;
+import service.game.CreateGameResult;
+import service.game.CreateGameService;
 import spark.Request;
 import spark.Response;
 import spark.Route;
 import dataaccess.DataAccess;
-import com.google.gson.Gson;
 
 public class CreateGameHandler implements Route {
     private final DataAccess dataAccess;

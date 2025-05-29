@@ -4,8 +4,7 @@ import com.google.gson.Gson;
 import spark.Request;
 import spark.Response;
 import spark.Route;
-import service.ClearService;
-import dataaccess.MemoryDataAccess;
+import service.game.ClearService;
 import dataaccess.DataAccess;
 
 public class ClearHandler implements Route {

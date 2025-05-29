@@ -1,4 +1,4 @@
-package service;
+package service.game;
 
 import dataaccess.MemoryDataAccess;
 import org.junit.jupiter.api.Test;

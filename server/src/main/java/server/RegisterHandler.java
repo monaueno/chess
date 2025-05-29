@@ -2,10 +2,9 @@ package server;
 
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
-import dataaccess.MemoryDataAccess;
-import service.RegisterRequest;
-import service.RegisterResult;
-import service.RegisterService;
+import service.auth.RegisterRequest;
+import service.auth.RegisterResult;
+import service.auth.RegisterService;
 import spark.Request;
 import spark.Response;
 import spark.Route;

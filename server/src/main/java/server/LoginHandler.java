@@ -1,8 +1,8 @@
 package server;
 
-import service.LoginRequest;
-import service.LoginResult;
-import service.LoginService;
+import service.auth.LoginRequest;
+import service.auth.LoginResult;
+import service.auth.LoginService;
 import spark.Request;
 import spark.Response;
 import spark.Route;
