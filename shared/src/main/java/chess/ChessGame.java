@@ -228,13 +228,17 @@ public class ChessGame {
                 ChessPiece rook = board.getPiece(new ChessPosition(row, 8));
                 board.removePiece(new ChessPosition(row, 8));
                 board.addPiece(new ChessPosition(row, 6), rook);
-                if(rook != null) rook.setHasMoved(true);
+                if(rook != null) {
+                    rook.setHasMoved(true);
+                }
             }
             if(startCol == 5 && endCol == 3){
                 ChessPiece rook = board.getPiece(new ChessPosition(row, 1));
                 board.removePiece(new ChessPosition(row, 1));
                 board.addPiece(new ChessPosition(row, 4), rook);
-                if(rook != null) rook.setHasMoved(true);
+                if(rook != null) {
+                    rook.setHasMoved(true);
+                }
             }
         }
 
