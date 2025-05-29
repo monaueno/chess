@@ -268,7 +268,7 @@ public class ChessGame {
                 }
             }
         }
-        if(kingPos == null){
+        if(kingPos == null) {
             throw new IllegalStateException("No king found for team: " + teamColor);
         }
 
@@ -303,15 +303,20 @@ public class ChessGame {
                 ChessPosition pos = new ChessPosition(row, col);
                 ChessPiece piece = board.getPiece(pos);
 
-                if(piece != null && piece.getTeamColor() == teamColor){
-                    Collection<ChessMove> moves = validMoves(pos);
-                    if(moves != null && !moves.isEmpty()){
-                        return false;
-                    }
+                if (piece != null && piece.getTeamColor() == teamColor && hasValidMoves(piece, pos)) {
+                    return false;
                 }
             }
         }
         return true;
+    }
+
+    private boolean hasValidMoves(ChessPiece piece, ChessPosition pos) {
+        if (piece != null) {
+            Collection<ChessMove> moves = validMoves(pos);
+            return moves != null && !moves.isEmpty();
+        }
+        return false;
     }
 
     /**

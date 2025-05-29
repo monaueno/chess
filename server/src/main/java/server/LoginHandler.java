@@ -39,16 +39,21 @@ public class LoginHandler implements Route {
     }
 
     private String handleException(Response res, Exception e) {
+        return ErrorHandlingUtil.handleException(res, e);
+    }
+}
+class ErrorHandlingUtil {
+    static String handleException(Response res, Exception e) {
         if (e instanceof dataaccess.DataAccessException dae) {
             switch (dae.getMessage()) {
                 case "bad request" -> res.status(400);
                 case "unauthorized" -> res.status(401);
                 default -> res.status(500);
             }
-            return toJson(new ErrorMessage("Error: " + dae.getMessage()));
+            return new com.google.gson.Gson().toJson(new ErrorMessage("Error: " + dae.getMessage()));
         } else {
             res.status(500);
-            return toJson(new ErrorMessage("Error: " + e.getMessage()));
+            return new com.google.gson.Gson().toJson(new ErrorMessage("Error: " + e.getMessage()));
         }
     }
 
