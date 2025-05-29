@@ -1,3 +1,5 @@
+package dataaccess;
+
 import dataaccess.DataAccess;
 import dataaccess.MySqlDataAccess;
 import model.GameData;
