@@ -286,18 +286,15 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public void clear() throws DataAccessException {
-        try (Connection conn = DatabaseManager.getConnection();
-        Statement stmt = conn.createStatement()){
-            stmt.executeUpdate("DELETE FROM auth");
-            stmt.executeUpdate("DELETE FROM games");
-            stmt.executeUpdate("DELETE FROM users");
-        }catch (SQLException ex){
+        try (Connection conn = DatabaseManager.getConnection()) {
+            try (Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate("DELETE FROM auth");
+                stmt.executeUpdate("DELETE FROM games");
+                stmt.executeUpdate("DELETE FROM users");
+            }
+            DatabaseManager.createTables();
+        } catch (SQLException ex) {
             throw new DataAccessException("Failed to clear database", ex);
-        }
-        try{
-            createTables();
-        } catch(SQLException ex) {
-            throw new DataAccessException("Failed to recreate table after clear", ex);
         }
     }
     @Override
