@@ -292,6 +292,11 @@ public class MySqlDataAccess implements DataAccess {
         }catch (SQLException ex){
             throw new DataAccessException("Failed to clear database", ex);
         }
+        try{
+            createTables();
+        } catch(SQLException ex) {
+            throw new DataAccessException("Failed to recreate table after clear", ex);
+        }
     }
     @Override
     public void setWhitePlayer(int gameID, String username) throws DataAccessException {
