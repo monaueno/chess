@@ -135,7 +135,7 @@ public class ChessGame {
     }
 
     private void addEnPassantMoves(ChessPiece piece, ChessPosition startPosition, Collection<ChessMove> validMoves) {
-        if (piece.getPieceType() != ChessPiece.PieceType.PAWN || lastMove == null) return;
+        if (piece.getPieceType() != ChessPiece.PieceType.PAWN || lastMove == null) {return;}
 
         ChessPosition lastStart = lastMove.getStartPosition();
         ChessPosition lastEnd = lastMove.getEndPosition();
@@ -272,17 +272,27 @@ public class ChessGame {
             throw new IllegalStateException("No king found for team: " + teamColor);
         }
 
-        for(int row = 1; row <= 8; row++){
+        for (int row = 1; row <= 8; row++) {
             for (int col = 1; col <= 8; col++) {
-                ChessPiece piece = board.getPiece(new ChessPosition(row, col));
-                if (piece != null && piece.getTeamColor() != teamColor) {
-                    Collection<ChessMove> moves = piece.pieceMoves(board, new ChessPosition(row, col));
-                    for (ChessMove move : moves) {
-                        if (move.getEndPosition().equals(kingPos)) {
-                            return true;
-                        }
-                    }
+                ChessPosition pos = new ChessPosition(row, col);
+                ChessPiece piece = board.getPiece(pos);
+                if (isOpponentPiece(piece, teamColor) && threatensKing(piece, pos, kingPos)) {
+                    return true;
                 }
+            }
+        }
+        return false;
+    }
+
+    private boolean isOpponentPiece(ChessPiece piece, TeamColor teamColor) {
+        return piece != null && piece.getTeamColor() != teamColor;
+    }
+
+    private boolean threatensKing(ChessPiece piece, ChessPosition piecePos, ChessPosition kingPos) {
+        Collection<ChessMove> moves = piece.pieceMoves(board, piecePos);
+        for (ChessMove move : moves) {
+            if (move.getEndPosition().equals(kingPos)) {
+                return true;
             }
         }
         return false;
