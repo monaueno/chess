@@ -8,6 +8,7 @@ import model.GameData;
 import com.google.gson.Gson;
 import chess.ChessGame;
 import java.util.ArrayList;
+import org.mindrot.jbcrypt.BCrypt;
 
 public class MySqlDataAccess implements DataAccess {
 
@@ -57,15 +58,16 @@ public class MySqlDataAccess implements DataAccess {
     @Override
     public void createUser(UserData user) throws DataAccessException {
         String sql = "INSERT INTO users (username, password, email) VALUES (?, ?, ?)";
+        String hashedPassword = BCrypt.hashpw(user.password(), BCrypt.gensalt());
 
         try (Connection conn = DatabaseManager.getConnection();
-        PreparedStatement stmt = conn.prepareStatement(sql)){
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, user.username());
-            stmt.setString(2, user.password());
+            stmt.setString(2, hashedPassword);
             stmt.setString(3, user.email());
 
             stmt.executeUpdate();
-        }catch(SQLException ex) {
+        } catch (SQLException ex) {
             throw new DataAccessException("Error creating user", ex);
         }
     }
