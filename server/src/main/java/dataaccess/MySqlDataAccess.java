@@ -1,5 +1,6 @@
 package dataaccess;
 
+import java.io.IOException;
 import java.sql.*;
 import java.util.List;
 import model.UserData;
@@ -9,14 +10,37 @@ import com.google.gson.Gson;
 import chess.ChessGame;
 import java.util.ArrayList;
 import org.mindrot.jbcrypt.BCrypt;
+import java.util.Properties;
+import java.io.InputStream;
 
 public class MySqlDataAccess implements DataAccess {
 
     public MySqlDataAccess() throws DataAccessException {
         try {
+            Properties props = new Properties();
+            try (InputStream input = getClass().getClassLoader().getResourceAsStream("db.properties")) {
+                if (input == null) {
+                    throw new RuntimeException("Unable to find db.properties");
+                }
+                props.load(input);
+            }
+
+            String dbHost = props.getProperty("db.host");
+            String dbPort = props.getProperty("db.port");
+            String dbName = props.getProperty("db.name");
+            String dbUser = props.getProperty("db.user");
+            String dbPassword = props.getProperty("db.password");
+
+            // Create database if it doesn't exist
+            try (Connection conn = DriverManager.getConnection(
+                    "jdbc:mysql://" + dbHost + ":" + dbPort + "/?user=" + dbUser + "&password=" + dbPassword);
+                 Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate("CREATE DATABASE IF NOT EXISTS " + dbName);
+            }
+
             createTables();
-        } catch (SQLException e) {
-            throw new DataAccessException("Failed to create database tables", e);
+        } catch (IOException | SQLException e) {
+            throw new DataAccessException("Failed to initialize MySQL DAO", e);
         }
     }
 
