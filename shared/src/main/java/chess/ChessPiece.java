@@ -184,7 +184,7 @@ public class ChessPiece {
 
         if (((this.pieceColor == ChessGame.TeamColor.WHITE && row == 2) ||
              (this.pieceColor == ChessGame.TeamColor.BLACK && row == 7)) &&
-             board.getPiece(oneAhead) == null) {
+            board.getPiece(oneAhead) == null) {
             ChessPosition twoAhead = new ChessPosition(row + 2 * direction, col);
             if (board.getPiece(twoAhead) == null) {
                 moves.add(new ChessMove(myPosition, twoAhead, null));
