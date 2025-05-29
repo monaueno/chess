@@ -75,6 +75,11 @@ public class GameDAOTest{
     }
 
     @Test
+    void listGamesNegativeEmpty() throws Exception {
+        assertEquals(0, db.listGames().size());
+    }
+
+    @Test
     void clearPositive() throws Exception {
         db.createGame(new GameData(0, "white", "black", "game1", new ChessGame()));
         db.clear();

@@ -34,6 +34,16 @@ public class UserDAOTest {
     }
 
     @Test
+    void getUserPositive() throws Exception {
+        UserData user = new UserData("positiveuser", "password", "email@example.com");
+        db.createUser(user);
+
+        UserData retrieved = db.getUser("positiveuser");
+        assertNotNull(retrieved);
+        assertEquals("positiveuser", retrieved.username());
+    }
+
+    @Test
     void getUserNegativeNotFound() throws DataAccessException {
         assertNull(db.getUser("nonexistent"));
     }

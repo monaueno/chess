@@ -56,4 +56,9 @@ public class AuthDAOTest{
 
         assertNull(db.getAuth("token123"));
     }
+
+    @Test
+    void deleteAuthNegativeNotFound() throws Exception {
+        assertThrows(DataAccessException.class, () -> db.deleteAuth("nonexistent-token"));
+    }
 }
