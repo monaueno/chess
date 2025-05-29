@@ -16,35 +16,13 @@ import java.io.InputStream;
 public class MySqlDataAccess implements DataAccess {
 
     public MySqlDataAccess() throws DataAccessException {
-        try {
-            Properties props = new Properties();
-            try (InputStream input = getClass().getClassLoader().getResourceAsStream("db.properties")) {
-                if (input == null) {
-                    throw new RuntimeException("Unable to find db.properties");
-                }
-                props.load(input);
-            }
-
-            String dbHost = props.getProperty("db.host");
-            String dbPort = props.getProperty("db.port");
-            String dbName = props.getProperty("db.name");
-            String dbUser = props.getProperty("db.user");
-            String dbPassword = props.getProperty("db.password");
-
-            // Create database if it doesn't exist
-            try (Connection conn = DriverManager.getConnection(
-                    "jdbc:mysql://" + dbHost + ":" + dbPort + "/?user=" + dbUser + "&password=" + dbPassword);
-                 Statement stmt = conn.createStatement()) {
-                stmt.executeUpdate("CREATE DATABASE IF NOT EXISTS " + dbName);
-            }
-
-            createTables();
-        } catch (IOException | SQLException e) {
-            throw new DataAccessException("Failed to initialize MySQL DAO", e);
-        }
+        DatabaseManager.createDatabase();
+        DatabaseManager.createTables();
     }
 
     private void createTables() throws SQLException {
+        System.out.println("Creating tables...");
+
         try (Connection conn = DatabaseManager.getConnection();
              Statement stmt = conn.createStatement()) {
 
@@ -65,7 +43,7 @@ public class MySqlDataAccess implements DataAccess {
             """);
 
             stmt.executeUpdate("""
-                CREATE TABLE IF NOT EXISTS games (
+                CREATE TABLE games (
                     gameID INT AUTO_INCREMENT PRIMARY KEY,
                     whiteUsername VARCHAR(255),
                     blackUsername VARCHAR(255),

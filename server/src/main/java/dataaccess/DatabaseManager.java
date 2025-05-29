@@ -94,6 +94,9 @@ public class DatabaseManager {
             stmt.executeUpdate("""
             CREATE TABLE IF NOT EXISTS games (
                 gameID INT AUTO_INCREMENT PRIMARY KEY,
+                whiteUsername VARCHAR(255),
+                blackUsername VARCHAR(255),
+                gameName VARCHAR(255),
                 gameData TEXT NOT NULL
             )
         """);
