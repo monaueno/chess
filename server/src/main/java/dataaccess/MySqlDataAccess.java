@@ -179,29 +179,53 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public int createGame(GameData game) throws DataAccessException {
-        // Input validation at the beginning
         if (game == null || game.gameName() == null || game.gameName().isBlank() || game.game() == null) {
             throw new DataAccessException("Invalid game data");
         }
+
         String insertSql = "INSERT INTO games (whiteUsername, blackUsername, gameName, gameData) VALUES (?, ?, ?, ?)";
         String gameJson = new Gson().toJson(game.game());
+
+        if (game.gameName() == null || game.gameName().isBlank()) {
+            throw new DataAccessException("Game name cannot be null or blank");
+        }
+        if (gameJson == null || gameJson.isBlank()) {
+            throw new DataAccessException("Game JSON serialization failed or empty");
+        }
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS)) {
 
-            stmt.setString(1, game.whiteUsername());
-            stmt.setString(2, game.blackUsername());
+            if (game.whiteUsername() == null || game.whiteUsername().isBlank()) {
+                stmt.setNull(1, Types.VARCHAR);
+            } else {
+                stmt.setString(1, game.whiteUsername());
+            }
+
+            if (game.blackUsername() == null || game.blackUsername().isBlank()) {
+                stmt.setNull(2, Types.VARCHAR);
+            } else {
+                stmt.setString(2, game.blackUsername());
+            }
+
             stmt.setString(3, game.gameName());
             stmt.setString(4, gameJson);
 
-            stmt.executeUpdate();
+            int affectedRows = 0;
+            try {
+                affectedRows = stmt.executeUpdate();
+            } catch (SQLException e) {
+                throw new DataAccessException("SQL Error during game insert: " + e.getSQLState() + " - " + e.getMessage(), e);
+            }
+            if (affectedRows == 0) {
+                throw new DataAccessException("Creating game failed, no rows affected.");
+            }
 
             try (ResultSet rs = stmt.getGeneratedKeys()) {
                 if (rs.next()) {
-                    int gameID = rs.getInt(1);
-                    return gameID;
+                    return rs.getInt(1);
                 } else {
-                    throw new DataAccessException("Failed to retrieve generated game ID");
+                    throw new DataAccessException("Creating game failed, no ID obtained.");
                 }
             }
 
