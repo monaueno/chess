@@ -154,7 +154,7 @@ public class MySqlDataAccess implements DataAccess {
     @Override
     public int createGame(GameData game) throws DataAccessException {
         String insertSql = "INSERT INTO games (whiteUsername, blackUsername, gameName, gameData) VALUES (?, ?, ?, ?)";
-        String gameJson = new Gson().toJson(game.game()); // serialize the ChessGame object
+        String gameJson = new Gson().toJson(game.game());
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS)) {
@@ -168,14 +168,15 @@ public class MySqlDataAccess implements DataAccess {
 
             try (ResultSet rs = stmt.getGeneratedKeys()) {
                 if (rs.next()) {
-                    return rs.getInt(1);
+                    int gameID = rs.getInt(1);
+                    return gameID;
                 } else {
                     throw new DataAccessException("Failed to retrieve generated game ID");
                 }
             }
 
         } catch (SQLException e) {
-            throw new DataAccessException("Failed to insert game", e);
+            throw new DataAccessException("Failed to insert game: " + game.gameName(), e);
         }
     }
 
@@ -260,6 +261,30 @@ public class MySqlDataAccess implements DataAccess {
             stmt.executeUpdate("DELETE FROM users");
         }catch (SQLException ex){
             throw new DataAccessException("Failed to clear database", ex);
+        }
+    }
+    @Override
+    public void setWhitePlayer(int gameID, String username) throws DataAccessException {
+        String sql = "UPDATE games SET whiteUsername = ? WHERE gameID = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            stmt.setInt(2, gameID);
+            stmt.executeUpdate();
+        } catch (SQLException ex) {
+            throw new DataAccessException("Failed to set white player", ex);
+        }
+    }
+    @Override
+    public void setBlackPlayer(int gameID, String username) throws DataAccessException {
+        String sql = "UPDATE games SET blackUsername = ? WHERE gameID = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            stmt.setInt(2, gameID);
+            stmt.executeUpdate();
+        } catch (SQLException ex) {
+            throw new DataAccessException("Failed to set black player", ex);
         }
     }
 }

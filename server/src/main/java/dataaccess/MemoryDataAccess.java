@@ -68,5 +68,34 @@ public class MemoryDataAccess implements DataAccess{
                 game
         ));
     }
+    @Override
+    public void setBlackPlayer(int gameID, String username) throws DataAccessException {
+        GameData old = games.get(gameID);
+        if (old == null) {
+            throw new DataAccessException("Game ID not found: " + gameID);
+        }
+        games.put(gameID, new GameData(
+                gameID,
+                old.whiteUsername(),
+                username,
+                old.gameName(),
+                old.game()
+        ));
+    }
+    @Override
+    public void setWhitePlayer(int gameID, String username) throws DataAccessException {
+        GameData old = games.get(gameID);
+        if (old == null) {
+            throw new DataAccessException("Game ID not found: " + gameID);
+        }
+        games.put(gameID, new GameData(
+                gameID,
+                old.blackUsername(),
+                username,
+                old.gameName(),
+                old.game()
+        ));
+    }
+
 
 }

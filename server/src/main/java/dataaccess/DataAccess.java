@@ -20,4 +20,7 @@ public interface DataAccess {
 
     GameData getGame(int gameID) throws DataAccessException;
     void updateGame(int gameID, ChessGame game) throws DataAccessException;
+
+    void setWhitePlayer(int gameID, String username) throws DataAccessException;
+    void setBlackPlayer(int gameID, String username) throws DataAccessException;
 }

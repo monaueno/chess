@@ -26,11 +26,9 @@ public class CreateGameService {
             throw new DataAccessException("unauthorized");
         }
 
-        int gameID = nextGameID.getAndIncrement();
         ChessGame newGame = new ChessGame();
-        GameData gameData = new GameData(gameID, null, null, request.gameName(), newGame);
-        db.createGame(gameData);
-
+        GameData gameData = new GameData(0, null, null, request.gameName(), newGame);
+        int gameID = db.createGame(gameData);
         return new CreateGameResult(gameID);
     }
 }

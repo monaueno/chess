@@ -35,13 +35,13 @@ public class JoinGameService {
                 if (game.whiteUsername() != null) {
                     throw new DataAccessException("already taken");
                 }
-                game = new GameData(game.gameID(), username, game.blackUsername(), game.gameName(), game.game());
+                db.setWhitePlayer(game.gameID(), username);
             }
             case "BLACK" -> {
                 if (game.blackUsername() != null) {
                     throw new DataAccessException("already taken");
                 }
-                game = new GameData(game.gameID(), game.whiteUsername(), username, game.gameName(), game.game());
+                db.setBlackPlayer(game.gameID(), username);
             }
             default -> throw new DataAccessException("bad request");
         }
