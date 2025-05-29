@@ -37,6 +37,12 @@ public class GameDAOTest{
     }
 
     @Test
+    void createGame_Negative_InvalidGame(){
+        GameData invalidGame = new GameData(0, "", "", "", new ChessGame());
+        assertThrows(DataAccessException.class, () -> db.createGame(invalidGame));
+    }
+
+    @Test
     void getGame_Negative_NotFound() throws Exception {
         assertNull(db.getGame(99999));
     }

@@ -155,6 +155,10 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public int createGame(GameData game) throws DataAccessException {
+        // Input validation at the beginning
+        if (game == null || game.gameName() == null || game.gameName().isBlank() || game.game() == null) {
+            throw new DataAccessException("Invalid game data");
+        }
         String insertSql = "INSERT INTO games (whiteUsername, blackUsername, gameName, gameData) VALUES (?, ?, ?, ?)";
         String gameJson = new Gson().toJson(game.game());
 
