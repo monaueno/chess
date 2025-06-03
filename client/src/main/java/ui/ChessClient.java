@@ -1,14 +1,18 @@
 package ui;
 
 import client.ServerFacade;
+import model.GameData;
+import java.util.List;
 
 import java.util.Scanner;
+
 
 public class ChessClient {
 
     private final Scanner scanner = new Scanner(System.in);
     private ServerFacade facade;
     private String authToken = null;
+    private List<GameData> cachedGames;
 
     public static void main(String[] args) {
         new ChessClient().run();
@@ -112,8 +116,9 @@ public class ChessClient {
             }
             case "list games" -> {
                 var result = facade.listGames(authToken);
+                cachedGames = result.games();
                 int i = 1;
-                for (var game : result.games()) {
+                for (var game : cachedGames) {
                     System.out.printf("%d. %s | White: %s | Black: %s%n",
                             i++, game.gameName(),
                             game.whiteUsername() != null ? game.whiteUsername() : "-",

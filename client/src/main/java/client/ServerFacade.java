@@ -5,6 +5,7 @@ import request.*;
 import result.*;
 import java.io.*;
 import java.net.*;
+import model.AuthResult;
 
 public class ServerFacade {
 
