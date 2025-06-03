@@ -125,7 +125,42 @@ public class ChessClient {
                             game.blackUsername() != null ? game.blackUsername() : "-");
                 }
             }
-            case "play game", "observe game" -> System.out.println("Not implemented yet. Will draw board.");
+            case "play game" -> {
+                if (cachedGames == null || cachedGames.isEmpty()) {
+                    System.out.println("No games available. Use 'list games' first.");
+                    break;
+                }
+
+                try {
+                    System.out.print("Enter game number to play: ");
+                    int index = Integer.parseInt(scanner.nextLine()) -1;
+
+                    if (index < 0 || index >= cachedGames.size()) {
+                        System.out.println("Invalid game number.");
+                        break;
+                    }
+
+                    GameData selectedGame = cachedGames.get(index);
+
+                    System.out.print("Enter color (WHITE or BLACK): ");
+                    String color = scanner.nextLine().trim().toUpperCase();
+
+                    if (!color.equals("WHITE") && !color.equals("BLACK")) {
+                        System.out.println("Invalid color. Please enter 'WHITE' or 'BLACK'.");
+                        break;
+                    }
+
+                    facade.joinGame(selectedGame.gameID(), color, authToken);
+
+                    System.out.printf("Successfullyjoined game '%s' as %s.%n", selectedGame.gameName(), color);
+                } catch(NumberFormatException e){
+                    System.out.println("Please entera valid number.");
+                } catch (Exception e) {
+                    System.out.println("Error: " + e.getMessage());
+                }
+
+            }
+                case"observe game" -> System.out.println("Not implemented yet. Will draw board.");
             default -> System.out.println("Invalid command. Type 'help' to see options.");
         }
     }
