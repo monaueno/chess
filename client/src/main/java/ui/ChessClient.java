@@ -160,7 +160,31 @@ public class ChessClient {
                 }
 
             }
-                case"observe game" -> System.out.println("Not implemented yet. Will draw board.");
+                case "observe game" -> {
+                    if (cachedGames == null || cachedGames.isEmpty()) {
+                        System.out.println("No games available. Use 'list games' first.");
+                        break;
+                    }
+
+                    try {
+                        System.out.print("Enter game number to observe: ");
+                        int index = Integer.parseInt(scanner.nextLine()) - 1;
+
+                        if (index < 0 || index >= cahcedGames.size()) {
+                            System.out.println("Invalid game number.");
+                            break;
+                        }
+
+                        GameData selectedGame = cachedGames.get(index);
+
+                        facade.joinGame(selectedGame.gameID(), null, authToken);
+                        System.out.printf("Now observing game '%s'.%n", selectedGame.gameName());
+                    } catch (NumberFormatException e) {
+                        System.out.println("Please enter a valid number.");
+                    } catch (Exception e) {
+                        System.out.println("Error: " + e.getMessage());
+                    }
+                }
             default -> System.out.println("Invalid command. Type 'help' to see options.");
         }
     }
