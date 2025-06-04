@@ -1,6 +1,7 @@
 package ui;
 
 import client.ServerFacade;
+import model.*;
 import java.util.List;
 
 import java.util.Scanner;
@@ -39,7 +40,6 @@ public class ChessClient {
 
     private void displayPreloginMenu() {
         System.out.println("""
-                === Preloading Menu ===
                 - Help
                 - Register
                 - Login
