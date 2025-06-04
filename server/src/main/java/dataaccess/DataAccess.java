@@ -24,4 +24,6 @@ public interface DataAccess {
 
     void setWhitePlayer(int gameID, String username) throws DataAccessException;
     void setBlackPlayer(int gameID, String username) throws DataAccessException;
+
+    void addObserver(int gameID, String username) throws DataAccessException;
 }

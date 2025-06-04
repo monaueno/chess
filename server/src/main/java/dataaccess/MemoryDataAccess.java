@@ -97,5 +97,14 @@ public class MemoryDataAccess implements DataAccess{
         ));
     }
 
+    @Override
+    public void addObserver(int gameID, String username) throws DataAccessException {
+        GameData game = games.get(gameID);
+        if (game == null) {
+            throw new DataAccessException("Game not found");
+        }
+        game.observers().add(username);
+    }
+
 
 }

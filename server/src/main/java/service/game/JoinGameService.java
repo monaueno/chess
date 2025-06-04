@@ -1,10 +1,12 @@
 package service.game;
 
+import chess.ChessGame;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import model.AuthData;
 import model.GameData;
 import model.JoinGameRequest;
+import model.*;
 
 public class JoinGameService {
     private final DataAccess db;
@@ -14,7 +16,7 @@ public class JoinGameService {
     }
 
     public void joinGame(JoinGameRequest request, String authToken) throws DataAccessException {
-        if (request.playerColor() == null || request.gameID() == 0) {
+        if (request.gameID() == 0) {
             throw new DataAccessException("bad request");
         }
 
@@ -30,14 +32,26 @@ public class JoinGameService {
 
         String username = auth.username();
 
-        switch (request.playerColor().toUpperCase()) {
-            case "WHITE" -> {
+        if (request.playerColor() == null) {
+            db.addObserver(game.gameID(), username);
+            return;
+        }
+
+        ChessGame.TeamColor color;
+        try {
+            color = ChessGame.TeamColor.valueOf(request.playerColor().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new DataAccessException("Invalid team color: " + request.playerColor());
+        }
+
+        switch (color) {
+            case WHITE -> {
                 if (game.whiteUsername() != null) {
                     throw new DataAccessException("already taken");
                 }
                 db.setWhitePlayer(game.gameID(), username);
             }
-            case "BLACK" -> {
+            case BLACK -> {
                 if (game.blackUsername() != null) {
                     throw new DataAccessException("already taken");
                 }
