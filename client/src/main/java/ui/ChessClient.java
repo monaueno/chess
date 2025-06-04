@@ -1,10 +1,7 @@
 package ui;
 
 import client.ServerFacade;
-import model.GameData;
 import java.util.List;
-import model.CreateGameResult;
-import model.ListGamesResult;
 
 import java.util.Scanner;
 
@@ -14,7 +11,7 @@ public class ChessClient {
     private final Scanner scanner = new Scanner(System.in);
     private ServerFacade facade;
     private String authToken = null;
-    private List<GameData> cachedGames;
+    private List<ListGamesResult.GameSummary> cachedGames;
 
     public static void main(String[] args) {
         new ChessClient().run();
@@ -42,7 +39,7 @@ public class ChessClient {
 
     private void displayPreloginMenu() {
         System.out.println("""
-                === Prelogin Menu ===
+                === Preloading Menu ===
                 - Help
                 - Register
                 - Login
@@ -142,7 +139,7 @@ public class ChessClient {
                         break;
                     }
 
-                    GameData selectedGame = cachedGames.get(index);
+                    ListGamesResult.GameSummary selectedGame = cachedGames.get(index);
 
                     System.out.print("Enter color (WHITE or BLACK): ");
                     String color = scanner.nextLine().trim().toUpperCase();
@@ -178,7 +175,7 @@ public class ChessClient {
                             break;
                         }
 
-                        GameData selectedGame = cachedGames.get(index);
+                        ListGamesResult.GameSummary selectedGame = cachedGames.get(index);
 
                         facade.joinGame(selectedGame.gameID(), null, authToken);
                         System.out.printf("Now observing game '%s'.%n", selectedGame.gameName());

@@ -3,6 +3,8 @@ package service.auth;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import model.AuthData;
+import model.LoginRequest;
+import model.LoginResult;
 import model.UserData;
 import org.mindrot.jbcrypt.BCrypt;
 

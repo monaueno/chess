@@ -6,7 +6,7 @@ import model.AuthData;
 import model.UserData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import service.auth.LogoutRequest;
+import model.LogoutRequest;
 import service.auth.LogoutService;
 
 import static org.junit.jupiter.api.Assertions.*;

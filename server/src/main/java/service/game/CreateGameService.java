@@ -3,8 +3,9 @@ package service.game;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import model.AuthData;
-import model.GameData;
 import chess.ChessGame;
+import model.CreateGameRequest;
+import model.CreateGameResult;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

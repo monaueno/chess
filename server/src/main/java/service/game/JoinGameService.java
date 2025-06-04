@@ -4,6 +4,7 @@ import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import model.AuthData;
 import model.GameData;
+import model.JoinGameRequest;
 
 public class JoinGameService {
     private final DataAccess db;

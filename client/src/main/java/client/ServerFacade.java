@@ -1,11 +1,10 @@
 package client;
 
 import com.google.gson.Gson;
-import request.*;
-import result.*;
 import java.io.*;
 import java.net.*;
-import model.AuthResult;
+import model.*;
+
 
 public class ServerFacade {
 
@@ -32,7 +31,7 @@ public class ServerFacade {
         checkResponse(connection);
     }
 
-    public GameResult createGame(String gameName, String authToken) throws IOException {
+    public CreateGameResult createGame(String gameName, String authToken) throws Exception {
         CreateGameRequest request = new CreateGameRequest(gameName);
         return this.<CreateGameRequest, GameResult>makeRequest("/game/create", request, GameResult.class, authToken);
     }

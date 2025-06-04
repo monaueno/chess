@@ -1,17 +1,13 @@
 package dataaccess;
 
-import java.io.IOException;
 import java.sql.*;
 import java.util.List;
 import model.UserData;
 import model.AuthData;
-import model.GameData;
 import com.google.gson.Gson;
 import chess.ChessGame;
 import java.util.ArrayList;
 import org.mindrot.jbcrypt.BCrypt;
-import java.util.Properties;
-import java.io.InputStream;
 
 public class MySqlDataAccess implements DataAccess {
 

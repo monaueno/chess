@@ -4,11 +4,10 @@ import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import dataaccess.MySqlDataAccess;
 import model.AuthData;
-import model.GameData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import service.game.ListGamesResult;
-import service.game.ListGamesResult.GameSummary;
+import model.ListGamesResult;
+import model.ListGamesResult.GameSummary;
 import chess.ChessGame;
 import service.game.ListGamesService;
 

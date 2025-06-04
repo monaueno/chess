@@ -1,3 +1,3 @@
-package service.game;
+package model;
 
 public record JoinGameRequest(String playerColor, int gameID) {}
