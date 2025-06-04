@@ -155,6 +155,7 @@ public class ChessClient {
                     facade.joinGame(selectedGame.gameID(), color, authToken);
 
                     System.out.printf("Successfully joined game '%s' as %s.%n", selectedGame.gameName(), color);
+                    drawBoard(color.equals("WHITE"));
                 } catch(NumberFormatException e){
                     System.out.println("Please enter a valid number.");
                 } catch (Exception e) {
@@ -181,6 +182,7 @@ public class ChessClient {
 
                         facade.joinGame(selectedGame.gameID(), null, authToken);
                         System.out.printf("Now observing game '%s'.%n", selectedGame.gameName());
+                        drawBoard(true);
                     } catch (NumberFormatException e) {
                         System.out.println("Please enter a valid number.");
                     } catch (Exception e) {
@@ -191,4 +193,30 @@ public class ChessClient {
         }
     }
 
+    private void drawBoard(boolean isWhite) {
+        System.out.println("Drawing board from " + (isWhite ? "White" : "Black") + "'s perspective...");
+
+        char[] files = {'a','b','c','d','e','f','g','h'};
+        int[] ranks = {1,2,3,4,5,6,7,8};
+
+        if (!isWhite) {
+            files = new char[] {'h','g','f','e','d','c','b','a'};
+            ranks = new int[] {8,7,6,5,4,3,2,1};
+        }
+
+        for (int r = ranks.length - 1; r >= 0; r--) {
+            System.out.print(ranks[r] + " ");
+            for (int f = 0; f < files.length; f++) {
+                boolean lightSquare = (r + f) % 2 == 0;
+                System.out.print(lightSquare ? "[ ]" : "[##]");
+            }
+            System.out.println();
+        }
+
+        System.out.print(" ");
+        for (char file : files) {
+            System.out.print(" " + file + " ");
+        }
+        System.out.println("\n");
+    }
 }
