@@ -316,4 +316,10 @@ public class MySqlDataAccess implements DataAccess {
             throw new DataAccessException("Failed to set black player", ex);
         }
     }
+
+    @Override
+    public void addObserver(int gameID, String username) throws DataAccessException {
+        System.out.printf("Observer %s added to game %d%n", username, gameID);
+    }
+
 }

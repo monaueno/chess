@@ -21,12 +21,12 @@ public class GameData {
     }
 
     // Getters and setters
-    public int getGameID() { return gameID; }
-    public String getWhiteUsername() { return whiteUsername; }
-    public String getBlackUsername() { return blackUsername; }
-    public String getGameName() { return gameName; }
-    public ChessGame getGame() { return game; }
-    public List<String> getObservers() { return observers; }
+    public int gameID() { return gameID; }
+    public String whiteUsername() { return whiteUsername; }
+    public String blackUsername() { return blackUsername; }
+    public String gameName() { return gameName; }
+    public ChessGame game() { return game; }
+    public List<String> observers() { return observers; }
 
     public void addObserver(String observer) {
         observers.add(observer);
