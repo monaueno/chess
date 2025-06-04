@@ -33,7 +33,7 @@ public class ServerFacade {
 
     public CreateGameResult createGame(String gameName, String authToken) throws Exception {
         CreateGameRequest request = new CreateGameRequest(gameName);
-        return this.<CreateGameRequest, GameResult>makeRequest("/game/create", request, GameResult.class, authToken);
+        return this.<CreateGameRequest, CreateGameResult>makeRequest("/game/create", request, CreateGameResult.class, authToken);
     }
 
     public ListGamesResult listGames(String authToken) throws IOException {
@@ -41,7 +41,7 @@ public class ServerFacade {
     }
 
     public void joinGame(int gameID, String color, String authToken) throws IOException {
-        JoinGameRequest request = new JoinGameRequest(gameID, color);
+        JoinGameRequest request = new JoinGameRequest(color, gameID);
         this.<JoinGameRequest, Void>makeRequest("/game/join", request, Void.class, authToken);
     }
 
