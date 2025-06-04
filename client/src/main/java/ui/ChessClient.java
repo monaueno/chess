@@ -3,6 +3,8 @@ package ui;
 import client.ServerFacade;
 import model.GameData;
 import java.util.List;
+import model.CreateGameResult;
+import model.ListGamesResult;
 
 import java.util.Scanner;
 
@@ -111,7 +113,7 @@ public class ChessClient {
             case "create game" -> {
                 System.out.print("Game name: ");
                 String gameName = scanner.nextLine();
-                var result = facade.createGame(gameName, authToken);
+                CreateGameResult result = facade.createGame(gameName, authToken);
                 System.out.println("Created game with ID: " + result.gameID());
             }
             case "list games" -> {
@@ -152,9 +154,9 @@ public class ChessClient {
 
                     facade.joinGame(selectedGame.gameID(), color, authToken);
 
-                    System.out.printf("Successfullyjoined game '%s' as %s.%n", selectedGame.gameName(), color);
+                    System.out.printf("Successfully joined game '%s' as %s.%n", selectedGame.gameName(), color);
                 } catch(NumberFormatException e){
-                    System.out.println("Please entera valid number.");
+                    System.out.println("Please enter a valid number.");
                 } catch (Exception e) {
                     System.out.println("Error: " + e.getMessage());
                 }
@@ -170,7 +172,7 @@ public class ChessClient {
                         System.out.print("Enter game number to observe: ");
                         int index = Integer.parseInt(scanner.nextLine()) - 1;
 
-                        if (index < 0 || index >= cahcedGames.size()) {
+                        if (index < 0 || index >= cachedGames.size()) {
                             System.out.println("Invalid game number.");
                             break;
                         }
@@ -188,4 +190,5 @@ public class ChessClient {
             default -> System.out.println("Invalid command. Type 'help' to see options.");
         }
     }
+
 }
