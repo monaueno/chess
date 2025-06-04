@@ -25,13 +25,13 @@ public class Server {
             System.exit(1); // fail fast if DB setup fails
         }
 
-        Spark.post("/user", new RegisterHandler(db));
-        Spark.post("/session", new LoginHandler(db));
+        Spark.post("/user/register", new RegisterHandler(db));
+        Spark.post("/user/login", new LoginHandler(db));
         Spark.delete("/db", new ClearHandler(db));
         Spark.delete("/session", new LogoutHandler(db));
-        Spark.post("/game", new CreateGameHandler(db));
-        Spark.get("/game", new ListGamesHandler(db));
-        Spark.put("/game", new JoinGameHandler(db));
+        Spark.post("/game/create", new CreateGameHandler(db));
+        Spark.get("/game/list", new ListGamesHandler(db));
+        Spark.put("/game/join", new JoinGameHandler(db));
 
         // Register your endpoints and handle exceptions here.
 

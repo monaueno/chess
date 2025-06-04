@@ -36,9 +36,20 @@ public class ServerFacade {
         return this.<CreateGameRequest, CreateGameResult>makeRequest("/game/create", request, CreateGameResult.class, authToken);
     }
 
-    public ListGamesResult listGames(String authToken) throws IOException {
-        return this.<Object, ListGamesResult>makeRequest("/game/list", null, ListGamesResult.class, authToken);
+//    public ListGamesResult listGames(String authToken) throws IOException {
+//        return this.<Object, ListGamesResult>makeRequest("/game/list", null, ListGamesResult.class, authToken);
+//    }
+public ListGamesResult listGames(String authToken) throws IOException {
+    HttpURLConnection connection = makeConnection("GET", "/game/list", authToken);
+    connection.connect();
+    checkResponse(connection);
+
+    try (InputStream is = connection.getInputStream()) {
+        String raw = new String(is.readAllBytes());
+        System.out.println("Raw response from server: " + raw);
+        return gson.fromJson(raw, ListGamesResult.class);
     }
+}
 
     public void joinGame(int gameID, String color, String authToken) throws IOException {
         JoinGameRequest request = new JoinGameRequest(color, gameID);
@@ -70,19 +81,28 @@ public class ServerFacade {
         checkResponse(connection);
 
         try (InputStream is = connection.getInputStream()) {
-            Reader reader = new InputStreamReader(is);
-            return gson.fromJson(reader, responseType);
+            String raw = new String(is.readAllBytes());
+            System.out.println("Raw response from server: " + raw);
+            return gson.fromJson(raw, responseType);
+//            Reader reader = new InputStreamReader(is);
+//            return gson.fromJson(reader, responseType);
         }
     }
 
     private void checkResponse(HttpURLConnection connection) throws IOException {
         int status = connection.getResponseCode();
         if (status >= 400) {
-            try (InputStream is = connection.getErrorStream()) {
-                Reader reader = new InputStreamReader(is);
-                ErrorResult error = gson.fromJson(reader, ErrorResult.class);
+            try (InputStream errorStream = connection.getErrorStream()) {
+                String raw = new String(errorStream.readAllBytes());
+                System.out.println("⚠️ Raw ERROR response from server: " + raw);
+                ErrorResult error = gson.fromJson(raw, ErrorResult.class); // this may still fail
                 throw new IOException("Error: " + error.message());
             }
+//            try (InputStream is = connection.getErrorStream()) {
+//                Reader reader = new InputStreamReader(is);
+//                ErrorResult error = gson.fromJson(reader, ErrorResult.class);
+//                throw new IOException("Error: " + error.message());
+//            }
         }
     }
 }

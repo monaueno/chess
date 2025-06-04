@@ -86,7 +86,6 @@ public class ChessClient {
 
     private void displayPostloginMenu() {
         System.out.println("""
-                === Postlogin Menu ===
                 - Help
                 - Logout
                 - Create Game
