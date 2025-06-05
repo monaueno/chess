@@ -1,10 +1,13 @@
 package dataaccess;
 
+import java.lang.reflect.Type;
 import java.sql.*;
 import java.util.List;
 import com.google.gson.Gson;
 import chess.ChessGame;
 import java.util.ArrayList;
+
+import com.google.gson.reflect.TypeToken;
 import org.mindrot.jbcrypt.BCrypt;
 import model.*;
 
@@ -43,7 +46,8 @@ public class MySqlDataAccess implements DataAccess {
                     whiteUsername VARCHAR(255),
                     blackUsername VARCHAR(255),
                     gameName VARCHAR(255),
-                    gameData TEXT NOT NULL
+                    gameData TEXT NOT NULL,
+                    observers TEXT
                 );
             """);
 
@@ -209,21 +213,24 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public GameData getGame(int gameID) throws DataAccessException {
+        String sql = "SELECT * FROM games WHERE gameID = ?";
+
         try (Connection conn = DatabaseManager.getConnection()) {
-            String sql = "SELECT gameID, whiteUsername, blackUsername, gameName, gameData FROM games WHERE gameID = ?";
-            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            String sql2 = "SELECT gameID, whiteUsername, blackUsername, gameName, gameData, observers FROM games WHERE gameID = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(sql2)) {
                 stmt.setInt(1, gameID);
 
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
                         String whiteUsername = rs.getString("whiteUsername");
+                        System.out.println("✔️ Reading from DB - whiteUsername: " + whiteUsername);
                         String blackUsername = rs.getString("blackUsername");
                         String gameName = rs.getString("gameName");
                         String gameJson = rs.getString("gameData");
                         ChessGame game = new Gson().fromJson(gameJson, ChessGame.class);
                         return new GameData(gameID, whiteUsername, blackUsername, gameName, game, new ArrayList<>());
                     } else {
-                        throw new DataAccessException("Game not found");
+                        return null;
                     }
                 }
             }
@@ -294,6 +301,7 @@ public class MySqlDataAccess implements DataAccess {
     public void setWhiteUsername(int gameID, String username) throws DataAccessException {
         GameData game = getGame(gameID);
         GameData updated = new GameData(game.gameID(), username, game.blackUsername(), game.gameName(), game.game(), game.observers());
+        System.out.println("📝 Saving whiteUsername: " + game.whiteUsername());
         updateGameData(gameID, updated);
     }
     @Override

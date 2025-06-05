@@ -61,7 +61,5 @@ public class JoinGameService {
             }
             default -> throw new DataAccessException("bad request");
         }
-
-        db.updateGame(game.gameID(), game.game());
     }
 }
