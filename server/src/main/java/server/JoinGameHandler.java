@@ -99,12 +99,17 @@ public class JoinGameHandler implements Route {
             return gson.toJson(new SuccessMessage("success"));
 
         } catch (DataAccessException e) {
-            switch (e.getMessage()) {
-                case "bad request" -> res.status(400);
-                case "unauthorized" -> res.status(401);
-                case "already taken" -> res.status(403);
-                default -> res.status(500);
+            System.out.println("e.getMessage() = " + e.getMessage());
+            if (e.getMessage().contains("Auth token not found")) {
+                res.status(401); // Unauthorized
+            } else if (e.getMessage().contains("bad request")) {
+                res.status(400); // Bad Request
+            } else if (e.getMessage().contains("already taken")) {
+                res.status(403); // Forbidden
+            } else {
+                res.status(400); // Default error
             }
+
             return gson.toJson(new ErrorMessage("Error: " + e.getMessage()));
         } catch (Exception e) {
             res.status(500);
