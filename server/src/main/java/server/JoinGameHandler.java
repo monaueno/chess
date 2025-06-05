@@ -34,16 +34,26 @@ public class JoinGameHandler implements Route {
             String username = dataAccess.getUsernameFromAuth(authToken);
             service.joinGame(request, authToken);
 
-            String colorRaw = request.color();
+            String colorRaw = request.playerColor();
             if (colorRaw == null) {
                 dataAccess.addObserver(request.gameID(), username);
             } else {
+                GameData game = dataAccess.getGame(request.gameID());
                 ChessGame.TeamColor color = ChessGame.TeamColor.valueOf(colorRaw.toUpperCase());
-                if (color == ChessGame.TeamColor.WHITE) {
-                    dataAccess.setWhiteUsername(request.gameID(), username);
-                } else if (color == ChessGame.TeamColor.BLACK) {
-                    dataAccess.setBlackUsername(request.gameID(), username);
-                }
+
+                GameData updatedGame = new GameData(
+                        game.gameID(),
+                        color == ChessGame.TeamColor.WHITE ? username : game.whiteUsername(),
+                        color == ChessGame.TeamColor.BLACK ? username : game.blackUsername(),
+                        game.gameName(),
+                        game.game(),
+                        game.observers()
+                );
+//                if (color == ChessGame.TeamColor.WHITE) {
+                    dataAccess.updateGameData(request.gameID(), updatedGame);
+//                } else if (color == ChessGame.TeamColor.BLACK) {
+//                    dataAccess.setBlackUsername(request.gameID(), username);
+//                }
             }
 
             res.status(200);

@@ -301,7 +301,7 @@ public class MySqlDataAccess implements DataAccess {
     public void setWhiteUsername(int gameID, String username) throws DataAccessException {
         GameData game = getGame(gameID);
         GameData updated = new GameData(game.gameID(), username, game.blackUsername(), game.gameName(), game.game(), game.observers());
-        System.out.println("📝 Saving whiteUsername: " + game.whiteUsername());
+        System.out.println("Saving whiteUsername: " + username);
         updateGameData(gameID, updated);
     }
     @Override
@@ -309,6 +309,7 @@ public class MySqlDataAccess implements DataAccess {
         GameData game = getGame(gameID);
         GameData updated = new GameData(game.gameID(), game.whiteUsername(), username, game.gameName(), game.game(), game.observers());
         updateGameData(gameID, updated);
+        System.out.println("Saving blackUsername: " + username);
     }
 
     @Override
@@ -334,6 +335,7 @@ public class MySqlDataAccess implements DataAccess {
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
+            System.out.println("updateGameData: whiteUsername = " + game.whiteUsername());
             stmt.setString(1, game.whiteUsername());
             stmt.setString(2, game.blackUsername());
             stmt.setString(3, game.gameName());

@@ -30,36 +30,39 @@ public class JoinGameService {
         }
 
         String username = auth.username();
+        System.out.println("🎯 request.playerColor() = [" + request.playerColor() + "]");
 
-        if (request.color() == null) {
+        if (request.playerColor() == null) {
             db.addObserver(game.gameID(), username);
             game.addObserver(username); // Make sure the in-memory object is updated
             db.updateGame(game.gameID(), game.game()); // Persist the updated state
             return;
-        }
+        } else {
 
-        ChessGame.TeamColor color;
-        try {
-            color = ChessGame.TeamColor.valueOf(request.color().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new DataAccessException("Invalid team color: " + request.color());
-        }
-
-        if (color == ChessGame.TeamColor.WHITE && game.whiteUsername() != null) {
-            throw new DataAccessException("already taken");
-        }
-        if (color == ChessGame.TeamColor.BLACK && game.blackUsername() != null) {
-            throw new DataAccessException("already taken");
-        }
-
-        switch (color) {
-            case WHITE -> {
-                db.setWhiteUsername(game.gameID(), username);
+            ChessGame.TeamColor color;
+            try {
+                color = ChessGame.TeamColor.valueOf(request.playerColor().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new DataAccessException("Invalid team color: " + request.playerColor());
             }
-            case BLACK -> {
-                db.setBlackUsername(game.gameID(), username);
+
+            if (color == ChessGame.TeamColor.WHITE && game.whiteUsername() != null) {
+                throw new DataAccessException("already taken");
             }
-            default -> throw new DataAccessException("bad request");
+            if (color == ChessGame.TeamColor.BLACK && game.blackUsername() != null) {
+                throw new DataAccessException("already taken");
+            }
+
+            switch (color) {
+                case WHITE -> {
+                    db.setWhiteUsername(game.gameID(), username);
+                    System.out.println("✅ Setting whiteUsername to: " + username);
+                }
+                case BLACK -> {
+                    db.setBlackUsername(game.gameID(), username);
+                }
+                default -> throw new DataAccessException("bad request");
+            }
         }
     }
 }

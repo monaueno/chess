@@ -87,6 +87,7 @@ public class MemoryDataAccess implements DataAccess{
     @Override
     public void setWhiteUsername(int gameID, String username) throws DataAccessException {
         GameData old = games.get(gameID);
+        System.out.println("⚪ setWhiteUsername called with: " + username);
         if (old == null) {
             throw new DataAccessException("Game ID not found: " + gameID);
         }
@@ -122,6 +123,7 @@ public class MemoryDataAccess implements DataAccess{
             throw new DataAccessException("Game ID not found: " + gameID);
         }
         games.put(gameID, gameData);
+        System.out.println("📡 updateGameData: writing whiteUsername = " + gameData.whiteUsername());
     }
 }
 
