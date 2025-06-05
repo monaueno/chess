@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import model.JoinGameRequest;
 import service.game.JoinGameService;
+import model.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 

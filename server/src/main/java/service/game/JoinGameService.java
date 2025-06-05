@@ -6,7 +6,6 @@ import dataaccess.DataAccessException;
 import model.AuthData;
 import model.GameData;
 import model.JoinGameRequest;
-import model.*;
 
 public class JoinGameService {
     private final DataAccess db;
@@ -32,16 +31,16 @@ public class JoinGameService {
 
         String username = auth.username();
 
-        if (request.playerColor() == null) {
+        if (request.color() == null) {
             db.addObserver(game.gameID(), username);
             return;
         }
 
         ChessGame.TeamColor color;
         try {
-            color = ChessGame.TeamColor.valueOf(request.playerColor().toUpperCase());
+            color = ChessGame.TeamColor.valueOf(request.color().toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new DataAccessException("Invalid team color: " + request.playerColor());
+            throw new DataAccessException("Invalid team color: " + request.color());
         }
 
         switch (color) {

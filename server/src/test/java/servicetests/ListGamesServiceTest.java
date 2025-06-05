@@ -10,6 +10,7 @@ import model.ListGamesResult;
 import model.ListGamesResult.GameSummary;
 import chess.ChessGame;
 import service.game.ListGamesService;
+import model.*;
 
 import java.util.List;
 

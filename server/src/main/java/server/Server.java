@@ -31,14 +31,19 @@ public class Server {
         Spark.delete("/session", new LogoutHandler(db));
         Spark.post("/game/create", new CreateGameHandler(db));
         Spark.get("/game/list", new ListGamesHandler(db));
-        Spark.put("/game/join", new JoinGameHandler(db));
+        System.out.println("🔍 Registering /game/join route");
+        Spark.post("/game/join", new JoinGameHandler(db));
+        Spark.post("/user/logout", new LogoutHandler(db));
 
         // Register your endpoints and handle exceptions here.
 
         //This line initializes the server and can be removed once you have a functioning endpoint 
+        System.out.println("✅ All routes registered, starting Spark server...");
         Spark.init();
 
         Spark.awaitInitialization();
+        System.out.println("✅ Server initialized on port " + Spark.port());
+        Spark.routes().forEach(route -> System.out.println("📍 Registered: " + route));
         return Spark.port();
     }
 

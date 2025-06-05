@@ -8,6 +8,7 @@ import spark.Request;
 import spark.Response;
 import spark.Route;
 import dataaccess.DataAccess;
+import model.*;
 
 public class JoinGameHandler implements Route {
     private final DataAccess dataAccess;
@@ -19,16 +20,21 @@ public class JoinGameHandler implements Route {
     @Override
     public Object handle(Request req, Response res) {
         Gson gson = new Gson();
+        System.out.println("🔹 JoinGameHandler triggered");
+        System.out.println("🔹 Request body: " + req.body());
+        String authToken = null;
+        System.out.println("🔹 Authorization header: " + authToken);
 
         try {
-            String authToken = req.headers("authorization");
+            authToken = req.headers("authorization");
             JoinGameRequest request = gson.fromJson(req.body(), JoinGameRequest.class);
 
             JoinGameService service = new JoinGameService(dataAccess);
             service.joinGame(request, authToken);
 
             res.status(200);
-            return "{}";
+            res.type("application/json");
+            return gson.toJson(new SuccessMessage("success"));
 
         } catch (DataAccessException e) {
             switch (e.getMessage()) {
@@ -45,4 +51,5 @@ public class JoinGameHandler implements Route {
     }
 
     private record ErrorMessage(String message) {}
+    private record SuccessMessage(String message){}
 }

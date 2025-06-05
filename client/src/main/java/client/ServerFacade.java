@@ -3,6 +3,7 @@ package client;
 import com.google.gson.Gson;
 import java.io.*;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import model.*;
 
 
@@ -53,7 +54,10 @@ public ListGamesResult listGames(String authToken) throws IOException {
 
     public void joinGame(int gameID, String color, String authToken) throws IOException {
         JoinGameRequest request = new JoinGameRequest(color, gameID);
-        this.<JoinGameRequest, Void>makeRequest("/game/join", request, Void.class, authToken);
+        System.out.println("▶️ Sending POST to: " + serverUrl + "/game/join");
+        System.out.println("▶️ Payload: " + gson.toJson(request));
+        System.out.println("JoinGame JSON: " + gson.toJson(request));
+        this.<JoinGameRequest, SuccessResponse>makeRequest("/game/join", request, SuccessResponse.class, authToken);
     }
 
     private HttpURLConnection makeConnection(String method, String endpoint, String authToken) throws IOException {
@@ -89,12 +93,34 @@ public ListGamesResult listGames(String authToken) throws IOException {
         }
     }
 
+    private String sendPost(String endpoint, Object requestBody, String authToken) throws IOException {
+        HttpURLConnection connection = makeConnection("POST", endpoint, authToken);
+
+        if (requestBody != null) {
+            try (OutputStream os = connection.getOutputStream()) {
+                byte[] input = gson.toJson(requestBody).getBytes(StandardCharsets.UTF_8);
+                os.write(input);
+            }
+        }
+
+        int status = connection.getResponseCode();
+        InputStream is = (status >= 400) ? connection.getErrorStream() : connection.getInputStream();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = br.readLine()) != null) {
+                response.append(line.trim());
+            }
+            return response.toString();
+        }
+    }
+
     private void checkResponse(HttpURLConnection connection) throws IOException {
         int status = connection.getResponseCode();
         if (status >= 400) {
             try (InputStream errorStream = connection.getErrorStream()) {
                 String raw = new String(errorStream.readAllBytes());
-                System.out.println("⚠️ Raw ERROR response from server: " + raw);
+                System.out.println("Raw ERROR response from server: " + raw);
                 ErrorResult error = gson.fromJson(raw, ErrorResult.class); // this may still fail
                 throw new IOException("Error: " + error.message());
             }
