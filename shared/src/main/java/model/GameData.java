@@ -10,7 +10,7 @@ public class GameData {
     private String blackUsername;
     private String gameName;
     private ChessGame game;
-    private List<String> observers = new ArrayList<>();
+    private List<String> observers ;
 
     public GameData(int gameID, String whiteUsername, String blackUsername, String gameName, ChessGame game) {
         this.gameID = gameID;
@@ -18,6 +18,16 @@ public class GameData {
         this.blackUsername = blackUsername;
         this.gameName = gameName;
         this.game = game;
+        this.observers = new ArrayList<>();
+    }
+
+    public GameData(int gameID, String whiteUsername, String blackUsername, String gameName, ChessGame game, List<String> observers) {
+        this.gameID = gameID;
+        this.whiteUsername = whiteUsername;
+        this.blackUsername = blackUsername;
+        this.gameName = gameName;
+        this.game = game;
+        this.observers = observers != null ? observers : new ArrayList<>();
     }
 
     // Getters and setters
@@ -30,5 +40,16 @@ public class GameData {
 
     public void addObserver(String observer) {
         observers.add(observer);
+    }
+    public void setWhiteUsername(String whiteUsername) {
+        this.whiteUsername = whiteUsername;
+    }
+
+    public void setBlackUsername(String blackUsername) {
+        this.blackUsername = blackUsername;
+    }
+
+    public void setGameName(String gameName) {
+        this.gameName = gameName;
     }
 }

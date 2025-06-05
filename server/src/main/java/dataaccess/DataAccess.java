@@ -22,8 +22,13 @@ public interface DataAccess {
     GameData getGame(int gameID) throws DataAccessException;
     void updateGame(int gameID, ChessGame game) throws DataAccessException;
 
-    void setWhitePlayer(int gameID, String username) throws DataAccessException;
-    void setBlackPlayer(int gameID, String username) throws DataAccessException;
-
     void addObserver(int gameID, String username) throws DataAccessException;
+
+    String getUsernameFromAuth(String authToken) throws DataAccessException;
+
+    void setWhiteUsername(int i, String username) throws DataAccessException;
+
+    void setBlackUsername(int i, String username) throws DataAccessException;
+
+    void updateGameData(int i, GameData game) throws DataAccessException;
 }

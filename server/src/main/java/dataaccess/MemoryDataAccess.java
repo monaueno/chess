@@ -65,11 +65,12 @@ public class MemoryDataAccess implements DataAccess{
                 old.whiteUsername(),
                 old.blackUsername(),
                 old.gameName(),
-                game
+                game,
+                old.observers()
         ));
     }
     @Override
-    public void setBlackPlayer(int gameID, String username) throws DataAccessException {
+    public void setBlackUsername(int gameID, String username) throws DataAccessException {
         GameData old = games.get(gameID);
         if (old == null) {
             throw new DataAccessException("Game ID not found: " + gameID);
@@ -79,21 +80,23 @@ public class MemoryDataAccess implements DataAccess{
                 old.whiteUsername(),
                 username,
                 old.gameName(),
-                old.game()
+                old.game(),
+                old.observers()
         ));
     }
     @Override
-    public void setWhitePlayer(int gameID, String username) throws DataAccessException {
+    public void setWhiteUsername(int gameID, String username) throws DataAccessException {
         GameData old = games.get(gameID);
         if (old == null) {
             throw new DataAccessException("Game ID not found: " + gameID);
         }
         games.put(gameID, new GameData(
                 gameID,
-                old.blackUsername(),
                 username,
+                old.blackUsername(),
                 old.gameName(),
-                old.game()
+                old.game(),
+                old.observers()
         ));
     }
 
@@ -105,6 +108,20 @@ public class MemoryDataAccess implements DataAccess{
         }
         game.observers().add(username);
     }
-
-
+    @Override
+    public String getUsernameFromAuth(String authToken) throws DataAccessException {
+        AuthData auth = authTokens.get(authToken);
+        if (auth == null) {
+            throw new DataAccessException("Auth token not found: " + authToken);
+        }
+        return auth.username();
+    }
+    @Override
+    public void updateGameData(int gameID, GameData gameData) throws DataAccessException {
+        if (!games.containsKey(gameID)) {
+            throw new DataAccessException("Game ID not found: " + gameID);
+        }
+        games.put(gameID, gameData);
+    }
 }
+

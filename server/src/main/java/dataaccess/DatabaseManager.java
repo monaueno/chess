@@ -97,7 +97,8 @@ public class DatabaseManager {
                 whiteUsername VARCHAR(255),
                 blackUsername VARCHAR(255),
                 gameName VARCHAR(255),
-                gameData TEXT NOT NULL
+                gameData TEXT NOT NULL,
+                observers TEXT
             )
         """);
         } catch (SQLException ex) {

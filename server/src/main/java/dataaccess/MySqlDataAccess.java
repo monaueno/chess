@@ -209,28 +209,26 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public GameData getGame(int gameID) throws DataAccessException {
-        String sql = "SELECT whiteUsername, blackUsername, gameName, gameData FROM games WHERE gameID = ?";
+        try (Connection conn = DatabaseManager.getConnection()) {
+            String sql = "SELECT gameID, whiteUsername, blackUsername, gameName, gameData FROM games WHERE gameID = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, gameID);
 
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, gameID);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    String whiteUsername = rs.getString("whiteUsername");
-                    String blackUsername = rs.getString("blackUsername");
-                    String gameName = rs.getString("gameName");
-                    String gameJson = rs.getString("gameData");
-
-                    ChessGame chessGame = new Gson().fromJson(gameJson, ChessGame.class);
-                    return new GameData(gameID, whiteUsername, blackUsername, gameName, chessGame);
-                } else {
-                    return null;
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        String whiteUsername = rs.getString("whiteUsername");
+                        String blackUsername = rs.getString("blackUsername");
+                        String gameName = rs.getString("gameName");
+                        String gameJson = rs.getString("gameData");
+                        ChessGame game = new Gson().fromJson(gameJson, ChessGame.class);
+                        return new GameData(gameID, whiteUsername, blackUsername, gameName, game, new ArrayList<>());
+                    } else {
+                        throw new DataAccessException("Game not found");
+                    }
                 }
             }
-
         } catch (SQLException e) {
-            throw new DataAccessException("Failed to retrieve game", e);
+            throw new DataAccessException("Unable to get game: " + e.getMessage());
         }
     }
 
@@ -270,7 +268,7 @@ public class MySqlDataAccess implements DataAccess {
                 String gameJson = rs.getString("gameData");
 
                 ChessGame game = new Gson().fromJson(gameJson, ChessGame.class);
-                games.add(new GameData(gameID, white, black, name, game));
+                games.add(new GameData(gameID, white, black, name, game, new ArrayList<>()));
             }
             return games;
         }catch(SQLException ex){
@@ -293,28 +291,16 @@ public class MySqlDataAccess implements DataAccess {
         }
     }
     @Override
-    public void setWhitePlayer(int gameID, String username) throws DataAccessException {
-        String sql = "UPDATE games SET whiteUsername = ? WHERE gameID = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, username);
-            stmt.setInt(2, gameID);
-            stmt.executeUpdate();
-        } catch (SQLException ex) {
-            throw new DataAccessException("Failed to set white player", ex);
-        }
+    public void setWhiteUsername(int gameID, String username) throws DataAccessException {
+        GameData game = getGame(gameID);
+        GameData updated = new GameData(game.gameID(), username, game.blackUsername(), game.gameName(), game.game(), game.observers());
+        updateGameData(gameID, updated);
     }
     @Override
-    public void setBlackPlayer(int gameID, String username) throws DataAccessException {
-        String sql = "UPDATE games SET blackUsername = ? WHERE gameID = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, username);
-            stmt.setInt(2, gameID);
-            stmt.executeUpdate();
-        } catch (SQLException ex) {
-            throw new DataAccessException("Failed to set black player", ex);
-        }
+    public void setBlackUsername(int gameID, String username) throws DataAccessException {
+        GameData game = getGame(gameID);
+        GameData updated = new GameData(game.gameID(), game.whiteUsername(), username, game.gameName(), game.game(), game.observers());
+        updateGameData(gameID, updated);
     }
 
     @Override
@@ -322,4 +308,38 @@ public class MySqlDataAccess implements DataAccess {
         System.out.printf("Observer %s added to game %d%n", username, gameID);
     }
 
+    @Override
+    public String getUsernameFromAuth(String authToken) throws DataAccessException {
+        AuthData auth = getAuth(authToken);
+        if (auth == null) {
+            throw new DataAccessException("Auth token not found: " + authToken);
+        }
+        return auth.username();
+    }
+
+    @Override
+    public void updateGameData(int gameID, GameData game) throws DataAccessException {
+        String sql = "UPDATE games SET whiteUsername = ?, blackUsername = ?, gameName = ?, gameData = ?, observers = ? WHERE gameID = ?";
+        String gameJson = new Gson().toJson(game.game());
+        String observersJson = new Gson().toJson(game.observers());
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, game.whiteUsername());
+            stmt.setString(2, game.blackUsername());
+            stmt.setString(3, game.gameName());
+            stmt.setString(4, gameJson);
+            stmt.setString(5, observersJson);
+            stmt.setInt(6, gameID);
+
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected == 0) {
+                throw new DataAccessException("No game found with ID: " + gameID);
+            }
+
+        } catch (SQLException ex) {
+            throw new DataAccessException("Error updating full game data", ex);
+        }
+    }
 }

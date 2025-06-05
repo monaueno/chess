@@ -1,5 +1,6 @@
 package server;
 
+import chess.ChessGame;
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
 import model.JoinGameRequest;
@@ -22,15 +23,28 @@ public class JoinGameHandler implements Route {
         Gson gson = new Gson();
         System.out.println("🔹 JoinGameHandler triggered");
         System.out.println("🔹 Request body: " + req.body());
-        String authToken = null;
+        // String authToken = req.headers("authorization"); // Removed redundant line
+        String authToken = req.headers("authorization");
         System.out.println("🔹 Authorization header: " + authToken);
 
         try {
             authToken = req.headers("authorization");
             JoinGameRequest request = gson.fromJson(req.body(), JoinGameRequest.class);
-
             JoinGameService service = new JoinGameService(dataAccess);
+            String username = dataAccess.getUsernameFromAuth(authToken);
             service.joinGame(request, authToken);
+
+            String colorRaw = request.color();
+            if (colorRaw == null) {
+                dataAccess.addObserver(request.gameID(), username);
+            } else {
+                ChessGame.TeamColor color = ChessGame.TeamColor.valueOf(colorRaw.toUpperCase());
+                if (color == ChessGame.TeamColor.WHITE) {
+                    dataAccess.setWhiteUsername(request.gameID(), username);
+                } else if (color == ChessGame.TeamColor.BLACK) {
+                    dataAccess.setBlackUsername(request.gameID(), username);
+                }
+            }
 
             res.status(200);
             res.type("application/json");

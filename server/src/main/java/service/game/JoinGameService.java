@@ -33,6 +33,8 @@ public class JoinGameService {
 
         if (request.color() == null) {
             db.addObserver(game.gameID(), username);
+            game.addObserver(username); // Make sure the in-memory object is updated
+            db.updateGame(game.gameID(), game.game()); // Persist the updated state
             return;
         }
 
@@ -43,18 +45,19 @@ public class JoinGameService {
             throw new DataAccessException("Invalid team color: " + request.color());
         }
 
+        if (color == ChessGame.TeamColor.WHITE && game.whiteUsername() != null) {
+            throw new DataAccessException("already taken");
+        }
+        if (color == ChessGame.TeamColor.BLACK && game.blackUsername() != null) {
+            throw new DataAccessException("already taken");
+        }
+
         switch (color) {
             case WHITE -> {
-                if (game.whiteUsername() != null) {
-                    throw new DataAccessException("already taken");
-                }
-                db.setWhitePlayer(game.gameID(), username);
+                db.setWhiteUsername(game.gameID(), username);
             }
             case BLACK -> {
-                if (game.blackUsername() != null) {
-                    throw new DataAccessException("already taken");
-                }
-                db.setBlackPlayer(game.gameID(), username);
+                db.setBlackUsername(game.gameID(), username);
             }
             default -> throw new DataAccessException("bad request");
         }
