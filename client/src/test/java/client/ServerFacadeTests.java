@@ -26,9 +26,9 @@ public class ServerFacadeTests {
     @Test
     public void registerPositive() throws Exception {
         ServerFacade facade = new ServerFacade(port);
-        var result = facade.register("passofftest", "123", "test@example.com");
+        var result = facade.register("passoff", "123", "test@example.com");
         Assertions.assertNotNull(result.authToken());
-        Assertions.assertEquals("passofftest", result.username());
+        Assertions.assertEquals("passoff", result.username());
     }
 
     @Test
