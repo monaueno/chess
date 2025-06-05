@@ -176,7 +176,7 @@ public class ChessClient {
 
                         ListGamesResult.GameSummary selectedGame = cachedGames.get(index);
 
-                        facade.joinGame(selectedGame.gameID(), null, authToken);
+                        facade.joinGame(selectedGame.gameID(), "observe", authToken);
                         System.out.printf("Now observing game '%s'.%n", selectedGame.gameName());
                         drawBoard(true);
                     } catch (NumberFormatException e) {

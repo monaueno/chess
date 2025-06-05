@@ -35,11 +35,53 @@ public class JoinGameHandler implements Route {
             service.joinGame(request, authToken);
 
             String colorRaw = request.playerColor();
-            if (colorRaw == null) {
+            boolean observer = request.asObserver();
+
+            if (observer) {
+                if (colorRaw != null) {
+                    System.out.println("playerColor missing or blank");
+                    res.status(400);
+                    return gson.toJson(new ErrorMessage("Error: observers should not specify a playerColor."));
+                }
                 dataAccess.addObserver(request.gameID(), username);
             } else {
+                if (colorRaw == null || colorRaw.isBlank()) {
+                    res.status(400);
+                    return gson.toJson(new ErrorMessage("Error: missing required playerColor to join as a player."));
+                }
+
+                ChessGame.TeamColor color;
+                try {
+                    color = ChessGame.TeamColor.valueOf(colorRaw.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    res.status(400);
+                    return gson.toJson(new ErrorMessage("Error: Invalid playerColor."));
+                }
+
                 GameData game = dataAccess.getGame(request.gameID());
-                ChessGame.TeamColor color = ChessGame.TeamColor.valueOf(colorRaw.toUpperCase());
+
+                if (color == ChessGame.TeamColor.WHITE) {
+                    String currentWhite = game.whiteUsername();
+                    if (currentWhite != null && !currentWhite.equals(username)) {
+                        res.status(403);
+                        return gson.toJson(new ErrorMessage("White already taken."));
+                    }
+                    dataAccess.setWhiteUsername(request.gameID(), username);
+                }
+
+                else if (color == ChessGame.TeamColor.BLACK) {
+                    String currentBlack = game.blackUsername();
+                    if (currentBlack != null && !currentBlack.equals(username)) {
+                        res.status(403);
+                        return gson.toJson(new ErrorMessage("Black already taken."));
+                    }
+                    dataAccess.setBlackUsername(request.gameID(), username);
+                }
+
+                else{
+                    res.status(400);
+                    return gson.toJson(new ErrorMessage("Error: must input WHITE or BLACK"));
+                }
 
                 GameData updatedGame = new GameData(
                         game.gameID(),
@@ -49,11 +91,7 @@ public class JoinGameHandler implements Route {
                         game.game(),
                         game.observers()
                 );
-//                if (color == ChessGame.TeamColor.WHITE) {
-                    dataAccess.updateGameData(request.gameID(), updatedGame);
-//                } else if (color == ChessGame.TeamColor.BLACK) {
-//                    dataAccess.setBlackUsername(request.gameID(), username);
-//                }
+                dataAccess.updateGameData(request.gameID(), updatedGame);
             }
 
             res.status(200);
