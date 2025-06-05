@@ -101,13 +101,15 @@ public class JoinGameHandler implements Route {
         } catch (DataAccessException e) {
             System.out.println("e.getMessage() = " + e.getMessage());
             if (e.getMessage().contains("Auth token not found")) {
-                res.status(401); // Unauthorized
-            } else if (e.getMessage().contains("bad request")) {
-                res.status(400); // Bad Request
-            } else if (e.getMessage().contains("already taken")) {
-                res.status(403); // Forbidden
+                res.status(401);
+            }else if (e.getMessage().contains("Invalid team color")) {
+                res.status(400);
+            }else if (e.getMessage().contains("bad request")){
+                res.status(400);
+            }else if (e.getMessage().contains("already taken")) {
+                res.status(403);
             } else {
-                res.status(400); // Default error
+                res.status(500); // Default error
             }
 
             return gson.toJson(new ErrorMessage("Error: " + e.getMessage()));
