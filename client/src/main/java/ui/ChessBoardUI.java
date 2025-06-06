@@ -28,16 +28,17 @@ public class ChessBoardUI {
      */
     public void drawBoard(ChessBoard board, boolean whitePerspective) {
 
+        // File labels (flip for Black view)
         System.out.print("    ");
-        for (char file = 'a'; file <= 'h'; file++) {
+        for (int i = 0; i < 8; i++) {
+            char file = (char) ('a' + (whitePerspective ? i : 7 - i));
             System.out.print(" " + file + " ");
         }
         System.out.println();
 
         for (int row = 0; row < 8; row++) {
             int actualRow   = whitePerspective ? 7 - row : row;
-            int displayRank = whitePerspective ? actualRow + 1
-                                               : 8 - actualRow;
+            int displayRank = actualRow + 1;   // rank numbers flip automatically
 
             System.out.printf(" %2d ", displayRank);
 
@@ -59,7 +60,8 @@ public class ChessBoardUI {
 
 
         System.out.print("    ");
-        for (char file = 'a'; file <= 'h'; file++) {
+        for (int i = 0; i < 8; i++) {
+            char file = (char) ('a' + (whitePerspective ? i : 7 - i));
             System.out.print(" " + file + " ");
         }
         System.out.println();
