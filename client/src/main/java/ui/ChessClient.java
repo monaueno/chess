@@ -12,6 +12,7 @@ public class ChessClient {
     private final Scanner scanner = new Scanner(System.in);
     private ServerFacade facade;
     private String authToken = null;
+    private String currentUsername = null;
     private List<ListGamesResult.GameSummary> cachedGames;
 
     public static void main(String[] args) {
@@ -78,6 +79,7 @@ public class ChessClient {
         try {
             var auth = facade.register(username, password, email);
             authToken = auth.authToken();
+            currentUsername = username;
             System.out.println();
             System.out.println("Registered and logged in as " + username);
         } catch (Exception e) {
@@ -95,6 +97,7 @@ public class ChessClient {
         try {
             var auth = facade.login(username, password);
             authToken = auth.authToken();
+            currentUsername = username;
             System.out.println();
             System.out.println("Logged in as " + username);
         } catch (Exception e) {
@@ -125,6 +128,7 @@ public class ChessClient {
             case "logout" -> {
                 facade.logout(authToken);
                 authToken = null;
+                currentUsername = null;
                 System.out.println();
                 System.out.println("Logged out");
             }
@@ -170,15 +174,30 @@ public class ChessClient {
                         break;
                     }
 
-                    facade.joinGame(selectedGame.gameID(), color, authToken);
+                    // If the current user already occupies the chosen color in this game, skip joinGame
+                    if (color.equals("WHITE") && selectedGame.whiteUsername() != null && selectedGame.whiteUsername().equals(currentUsername)) {
+                        System.out.println();
+                        System.out.printf("Rejoined game '%s' as WHITE.%n", selectedGame.gameName());
+                        drawBoard(true);
+                    } else if (color.equals("BLACK") && selectedGame.blackUsername() != null && selectedGame.blackUsername().equals(currentUsername)) {
+                        System.out.println();
+                        System.out.printf("Rejoined game '%s' as BLACK.%n", selectedGame.gameName());
+                        drawBoard(false);
+                    } else {
+                        try {
+                            facade.joinGame(selectedGame.gameID(), color, authToken);
+                            System.out.println();
+                            System.out.printf("Joined game '%s' as %s.%n", selectedGame.gameName(), color);
+                            drawBoard(color.equals("WHITE"));
+                        } catch (Exception e) {
+                            System.out.println("Error: " + e.getMessage());
+                        }
+                    }
 
-                    System.out.println();
-                    System.out.printf("Joined game '%s' as %s.%n", selectedGame.gameName(), color);
-                    drawBoard(color.equals("WHITE"));
                 } catch(NumberFormatException e){
                     System.out.println("Please enter a valid number.");
                 } catch (Exception e) {
-                    System.out.println("Error: " + e.getMessage());
+                    System.out.println(e.getMessage());
                 }
 
             }
@@ -205,7 +224,7 @@ public class ChessClient {
                     } catch (NumberFormatException e) {
                         System.out.println("Please enter a valid number.");
                     } catch (Exception e) {
-                        System.out.println("Error: " + e.getMessage());
+                        System.out.println(e.getMessage());
                     }
                 }
             default -> System.out.println("Invalid command. Type 'help' to see options.");

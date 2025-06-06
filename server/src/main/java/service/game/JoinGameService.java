@@ -21,6 +21,7 @@ public class JoinGameService {
 
         AuthData auth = db.getAuth(authToken);
         if (auth == null) {
+            System.out.println("❌ Auth is null for token: " + authToken);
             throw new DataAccessException("unauthorized");
         }
 
@@ -53,10 +54,10 @@ public class JoinGameService {
             // System.out.println("Comparing: game.whiteUsername=[" + game.whiteUsername() + "] to auth.username=[" + username + "]");
 
             if (color == ChessGame.TeamColor.WHITE && game.whiteUsername() != null && !game.whiteUsername().equals(username)) {
-                throw new DataAccessException("already taken");
+                throw new DataAccessException("this color is already taken");
             }
             if (color == ChessGame.TeamColor.BLACK && game.blackUsername() != null && !game.blackUsername().equals(username)) {
-                throw new DataAccessException("already taken");
+                throw new DataAccessException("this black color already taken");
             }
 
             switch (color) {

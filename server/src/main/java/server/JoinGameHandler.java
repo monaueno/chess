@@ -60,29 +60,6 @@ public class JoinGameHandler implements Route {
 
                 GameData game = dataAccess.getGame(request.gameID());
 
-                if (color == ChessGame.TeamColor.WHITE) {
-                    String currentWhite = game.whiteUsername();
-                    if (currentWhite != null && !currentWhite.equals(username)) {
-                        res.status(403);
-                        return gson.toJson(new ErrorMessage("White already taken."));
-                    }
-                    dataAccess.setWhiteUsername(request.gameID(), username);
-                }
-
-                else if (color == ChessGame.TeamColor.BLACK) {
-                    String currentBlack = game.blackUsername();
-                    if (currentBlack != null && !currentBlack.equals(username)) {
-                        res.status(403);
-                        return gson.toJson(new ErrorMessage("Black already taken."));
-                    }
-                    dataAccess.setBlackUsername(request.gameID(), username);
-                }
-
-                else{
-                    res.status(400);
-                    return gson.toJson(new ErrorMessage("Error: must input WHITE or BLACK"));
-                }
-
                 GameData updatedGame = new GameData(
                         game.gameID(),
                         color == ChessGame.TeamColor.WHITE ? username : game.whiteUsername(),
@@ -112,10 +89,10 @@ public class JoinGameHandler implements Route {
                 res.status(500); // Default error
             }
 
-            return gson.toJson(new ErrorMessage("Error: " + e.getMessage()));
+            return gson.toJson(new ErrorMessage(e.getMessage()));
         } catch (Exception e) {
             res.status(500);
-            return gson.toJson(new ErrorMessage("Error: " + e.getMessage()));
+            return gson.toJson(new ErrorMessage(e.getMessage()));
         }
     }
 

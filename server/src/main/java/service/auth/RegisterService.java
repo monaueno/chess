@@ -22,9 +22,9 @@ public class RegisterService {
                 request.email() == null || request.email().isBlank()) {
             throw new DataAccessException("bad request");
         }
-        //Chec to see if user already exists
+        //Check to see if user already exists
         if(db.getUser(request.username()) != null) {
-            throw new DataAccessException("already taken");
+            throw new DataAccessException("this user is already taken");
         }
         var user = new UserData(request.username(), request.password(), request.email());
         db.createUser(user);
