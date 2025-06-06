@@ -43,7 +43,7 @@ public class ChessBoardUI {
     }
 
     private String getSymbol(ChessPiece piece) {
-        if (piece == null) return EscapeSequences.EMPTY;
+        if (piece == null) {return EscapeSequences.EMPTY;}
 
         return switch (piece.getPieceType()) {
             case KING ->

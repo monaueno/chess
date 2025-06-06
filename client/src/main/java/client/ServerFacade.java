@@ -37,9 +37,6 @@ public class ServerFacade {
         return this.<CreateGameRequest, CreateGameResult>makeRequest("/create", request, CreateGameResult.class, authToken);
     }
 
-//    public ListGamesResult listGames(String authToken) throws IOException {
-//        return this.<Object, ListGamesResult>makeRequest("/game/list", null, ListGamesResult.class, authToken);
-//    }
 public ListGamesResult listGames(String authToken) throws IOException {
     HttpURLConnection connection = makeConnection("GET", "/list", authToken);
     connection.connect();
@@ -88,32 +85,9 @@ public ListGamesResult listGames(String authToken) throws IOException {
             String raw = new String(is.readAllBytes());
             System.out.println("Raw response from server: " + raw);
             return gson.fromJson(raw, responseType);
-//            Reader reader = new InputStreamReader(is);
-//            return gson.fromJson(reader, responseType);
         }
     }
 
-    private String sendPost(String endpoint, Object requestBody, String authToken) throws IOException {
-        HttpURLConnection connection = makeConnection("POST", endpoint, authToken);
-
-        if (requestBody != null) {
-            try (OutputStream os = connection.getOutputStream()) {
-                byte[] input = gson.toJson(requestBody).getBytes(StandardCharsets.UTF_8);
-                os.write(input);
-            }
-        }
-
-        int status = connection.getResponseCode();
-        InputStream is = (status >= 400) ? connection.getErrorStream() : connection.getInputStream();
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
-            StringBuilder response = new StringBuilder();
-            String line;
-            while ((line = br.readLine()) != null) {
-                response.append(line.trim());
-            }
-            return response.toString();
-        }
-    }
 
     private void checkResponse(HttpURLConnection connection) throws IOException {
         int status = connection.getResponseCode();
@@ -124,11 +98,6 @@ public ListGamesResult listGames(String authToken) throws IOException {
                 ErrorResult error = gson.fromJson(raw, ErrorResult.class); // this may still fail
                 throw new IOException(error.message());
             }
-//            try (InputStream is = connection.getErrorStream()) {
-//                Reader reader = new InputStreamReader(is);
-//                ErrorResult error = gson.fromJson(reader, ErrorResult.class);
-//                throw new IOException("Error: " + error.message());
-//            }
         }
     }
 }
