@@ -34,16 +34,17 @@ public class ChessClient {
                 }
             }
         } catch (Exception ex) {
-            System.out.println("Fatal error: " + ex.getMessage());
+            System.out.println(ex.getMessage());
         }
     }
 
     private void displayPreloginMenu() {
+        System.out.println();
         System.out.println("""
-                - Help
                 - Register
                 - Login
                 - Quit
+                - Help
                 """);
     }
 
@@ -68,9 +69,20 @@ public class ChessClient {
         System.out.print("Email: ");
         String email = scanner.nextLine();
 
-        var auth = facade.register(username, password, email);
-        authToken = auth.authToken();
-        System.out.println("Registered and logged in as " + username);
+        if (username.isBlank() || password.isBlank() || email.isBlank()) {
+            System.out.println();
+            System.out.println("Registration failed: All fields are required.");
+            return;
+        }
+
+        try {
+            var auth = facade.register(username, password, email);
+            authToken = auth.authToken();
+            System.out.println("Registered and logged in as " + username);
+        } catch (Exception e) {
+            System.out.println();
+            System.out.println("Registration failed");
+        }
     }
 
     private void handleLogin() throws Exception {
@@ -79,20 +91,28 @@ public class ChessClient {
         System.out.print("Password: ");
         String password = scanner.nextLine();
 
-        var auth = facade.login(username, password);
-        authToken = auth.authToken();
-        System.out.println("Logged in as " + username);
+        try {
+            var auth = facade.login(username, password);
+            authToken = auth.authToken();
+            System.out.println("Logged in as " + username);
+        } catch (Exception e) {
+            System.out.println();
+            System.out.println("USER DOESN'T EXIST: Please register first");
+        }
     }
 
     private void displayPostloginMenu() {
+        System.out.println();
         System.out.println("""
-                - Help
-                - Logout
+                === MENU ===
                 - Create Game
                 - List Games
                 - Play Game
                 - Observe Game
+                - Help
+                - Logout
                 """);
+        System.out.println();
     }
 
     private void handlePostloginInput() throws Exception {

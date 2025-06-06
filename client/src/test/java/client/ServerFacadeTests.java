@@ -17,6 +17,13 @@ public class ServerFacadeTests {
         System.out.println("Started test HTTP server on " + port);
     }
 
+    @BeforeEach
+    public void setup() throws Exception {
+        ServerFacade facade = new ServerFacade(port);
+        facade.clear();
+        facade.register("test", "test", "test");
+    }
+
     @AfterAll
     static void stopServer() {
         server.stop();
@@ -26,9 +33,9 @@ public class ServerFacadeTests {
     @Test
     public void registerPositive() throws Exception {
         ServerFacade facade = new ServerFacade(port);
-        var result = facade.register("12345", "123", "test@example.com");
+        var result = facade.register("mona", "mona", "test@example.com");
         Assertions.assertNotNull(result.authToken());
-        Assertions.assertEquals("12345", result.username());
+        Assertions.assertEquals("mona", result.username());
     }
 
     @Test
@@ -42,9 +49,9 @@ public class ServerFacadeTests {
     @Test
     public void loginPositive() throws Exception {
         ServerFacade facade = new ServerFacade(port);
-        var result = facade.login("mona", "mona");
+        var result = facade.login("test", "test");
         Assertions.assertNotNull(result.authToken());
-        Assertions.assertEquals("mona", result.username());
+        Assertions.assertEquals("test", result.username());
     }
 
     @Test
@@ -58,7 +65,7 @@ public class ServerFacadeTests {
     @Test
     public void logoutPositive() throws Exception {
         ServerFacade facade = new ServerFacade(port);
-        var loginResult = facade.login("mona", "mona");
+        var loginResult = facade.login("test", "test");
         facade.logout(loginResult.authToken());
         Assertions.assertTrue(true);
     }
@@ -74,7 +81,7 @@ public class ServerFacadeTests {
     @Test
     public void createGamePositive() throws Exception {
         ServerFacade facade = new ServerFacade(port);
-        var loginResult = facade.login("mona", "mona");
+        var loginResult = facade.login("test", "test");
         var result = facade.createGame("Test", loginResult.authToken());
         Assertions.assertNotNull(result.gameID());
     }
@@ -90,7 +97,7 @@ public class ServerFacadeTests {
     @Test
     public void listGamesPositive() throws Exception {
         ServerFacade facade = new ServerFacade(port);
-        var loginResult = facade.login("mona", "mona");
+        var loginResult = facade.login("test", "test");
         var games = facade.listGames(loginResult.authToken());
         Assertions.assertNotNull(games);
     }
@@ -106,8 +113,8 @@ public class ServerFacadeTests {
     @Test
     public void joinGamePositive() throws Exception {
         ServerFacade facade = new ServerFacade(port);
-        AuthResult auth = facade.login("mona", "mona");
-        CreateGameResult game = facade.createGame("Test Game", auth.authToken());
+        AuthResult auth = facade.login("test", "test");
+        CreateGameResult game = facade.createGame("Test", auth.authToken());
         facade.joinGame(game.gameID(), "WHITE", auth.authToken());
     }
 

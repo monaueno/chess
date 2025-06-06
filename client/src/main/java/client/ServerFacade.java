@@ -44,16 +44,12 @@ public ListGamesResult listGames(String authToken) throws IOException {
 
     try (InputStream is = connection.getInputStream()) {
         String raw = new String(is.readAllBytes());
-        System.out.println("Raw response from server: " + raw);
         return gson.fromJson(raw, ListGamesResult.class);
     }
 }
 
     public void joinGame(int gameID, String color, String authToken) throws IOException {
         JoinGameRequest request = new JoinGameRequest(color, gameID);
-        System.out.println("Sending POST to: " + serverUrl + "/join");
-        System.out.println("Payload: " + gson.toJson(request));
-        System.out.println("JoinGame JSON: " + gson.toJson(request));
         this.<JoinGameRequest, SuccessResponse>makeRequest("/join", request, SuccessResponse.class, authToken);
     }
 
@@ -83,7 +79,6 @@ public ListGamesResult listGames(String authToken) throws IOException {
 
         try (InputStream is = connection.getInputStream()) {
             String raw = new String(is.readAllBytes());
-            System.out.println("Raw response from server: " + raw);
             return gson.fromJson(raw, responseType);
         }
     }
@@ -94,10 +89,20 @@ public ListGamesResult listGames(String authToken) throws IOException {
         if (status >= 400) {
             try (InputStream errorStream = connection.getErrorStream()) {
                 String raw = new String(errorStream.readAllBytes());
-                System.out.println("Raw ERROR response from server: " + raw);
                 ErrorResult error = gson.fromJson(raw, ErrorResult.class); // this may still fail
                 throw new IOException(error.message());
             }
+        }
+    }
+
+    public void clear() throws Exception {
+        var url = new URL(serverUrl + "/db");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("DELETE");
+        connection.connect();
+
+        if (connection.getResponseCode() != 200) {
+            throw new Exception("Failed to clear database: " + connection.getResponseMessage());
         }
     }
 }

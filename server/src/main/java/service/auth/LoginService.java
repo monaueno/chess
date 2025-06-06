@@ -18,7 +18,8 @@ public class LoginService {
     }
 
     public LoginResult login(LoginRequest request) throws DataAccessException {
-        if (request.username() == null || request.password() == null) {
+        if (request.username() == null || request.username().isBlank() ||
+                request.password() == null || request.password().isBlank()) {
             throw new DataAccessException("bad request");
         }
 

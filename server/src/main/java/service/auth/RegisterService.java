@@ -17,7 +17,9 @@ public class RegisterService {
 
     public RegisterResult register(RegisterRequest request) throws DataAccessException {
         // Validate input
-        if (request.username() == null || request.password() == null || request.email() == null) {
+        if (request.username() == null || request.username().isBlank() ||
+                request.password() == null || request.password().isBlank() ||
+                request.email() == null || request.email().isBlank()) {
             throw new DataAccessException("bad request");
         }
         //Chec to see if user already exists

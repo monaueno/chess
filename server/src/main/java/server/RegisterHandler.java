@@ -22,6 +22,10 @@ public class RegisterHandler implements Route {
         try {
             // Parse JSON request body
             RegisterRequest request = gson.fromJson(req.body(), RegisterRequest.class);
+            if (request == null) {
+                res.status(400);
+                return gson.toJson(new ErrorMessage("Error: malformed request"));
+            }
 
             // Call the service
             RegisterService service = new RegisterService(dataAccess);
