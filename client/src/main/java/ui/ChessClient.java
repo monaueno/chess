@@ -2,6 +2,9 @@ package ui;
 
 import client.ServerFacade;
 import model.*;
+import model.ListGamesResult;
+
+import java.io.IOException;
 import java.util.List;
 
 import java.util.Scanner;
@@ -134,95 +137,101 @@ public class ChessClient {
                 System.out.println();
                 System.out.println("Logged out");
             }
-            case "create game" -> {
-                System.out.print("Game name: ");
-                String gameName = scanner.nextLine();
+            case "create game" -> handleCreateGame();
+            case "list games" -> handleListGames();
+            case "play game" -> handlePlayGame();
+            case "observe game" -> handleObserveGame();
+            default -> System.out.println("Invalid command. Type 'help' to see options.");
+        }
+    }
 
-                try {
-                    if (gameName.isBlank()) {
-                        System.out.println("Game creation failed: name cannot be blank.");
-                        break;
-                    }
-                    CreateGameResult result = facade.createGame(gameName, authToken);
-                    System.out.println("Created game: " + gameName);
-                } catch (Exception e) {
-                    System.out.println("Error: " + e.getMessage());
-                }
+    private void handleCreateGame() {
+        System.out.print("Game name: ");
+        String gameName = scanner.nextLine();
+
+        try {
+            if (gameName.isBlank()) {
+                System.out.println("Game creation failed: name cannot be blank.");
+                return;
             }
-            case "list games" -> {
-                var result = facade.listGames(authToken);
-                cachedGames = result.games();
-                int i = 1;
-                for (var game : cachedGames) {
-                    System.out.printf("%d. %s | White: %s | Black: %s%n",
-                            i++, game.gameName(),
-                            game.whiteUsername() != null ? game.whiteUsername() : "-",
-                            game.blackUsername() != null ? game.blackUsername() : "-");
-                }
+            CreateGameResult result = facade.createGame(gameName, authToken);
+            System.out.println("Created game: " + gameName);
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+
+    private void handleListGames() throws IOException {
+        var result = facade.listGames(authToken);
+        cachedGames = result.games();
+        int i = 1;
+        for (var game : cachedGames) {
+            System.out.printf("%d. %s | White: %s | Black: %s%n",
+                    i++, game.gameName(),
+                    game.whiteUsername() != null ? game.whiteUsername() : "-",
+                    game.blackUsername() != null ? game.blackUsername() : "-");
+        }
+    }
+
+    private void handlePlayGame() {
+        if (cachedGames == null || cachedGames.isEmpty()) {
+            System.out.println("No games available. Use 'list games' first.");
+            return;
+        }
+
+        try {
+            System.out.print("Enter game number to play: ");
+            int index = Integer.parseInt(scanner.nextLine()) -1;
+
+            if (index < 0 || index >= cachedGames.size()) {
+                System.out.println("Invalid game number.");
+                return;
             }
-            case "play game" -> {
-                if (cachedGames == null || cachedGames.isEmpty()) {
-                    System.out.println("No games available. Use 'list games' first.");
-                    break;
-                }
 
+            ListGamesResult.GameSummary selectedGame = cachedGames.get(index);
+
+            System.out.print("Enter color (WHITE or BLACK): ");
+            String color = scanner.nextLine().trim().toUpperCase();
+
+            if (!color.equals("WHITE") && !color.equals("BLACK")) {
+                System.out.println("Invalid color. Please enter 'WHITE' or 'BLACK'.");
+                return;
+            }
+
+            // If the current user already occupies the chosen color in this game, skip joinGame
+            if (color.equals("WHITE") && selectedGame.whiteUsername() != null && selectedGame.whiteUsername().equals(currentUsername)) {
+                System.out.println();
+                System.out.printf("Rejoined game '%s' as WHITE.%n", selectedGame.gameName());
+                ChessBoard board = new ChessBoard();
+                board.resetBoard();
+                new ChessBoardUI().drawBoard(board, true);
+            } else if (color.equals("BLACK") && selectedGame.blackUsername() != null && selectedGame.blackUsername().equals(currentUsername)) {
+                System.out.println();
+                System.out.printf("Rejoined game '%s' as BLACK.%n", selectedGame.gameName());
+                ChessBoard board = new ChessBoard();
+                board.resetBoard();
+                new ChessBoardUI().drawBoard(board, false);
+            } else {
                 try {
-                    System.out.print("Enter game number to play: ");
-                    int index = Integer.parseInt(scanner.nextLine()) -1;
-
-                    if (index < 0 || index >= cachedGames.size()) {
-                        System.out.println("Invalid game number.");
-                        break;
-                    }
-
-                    ListGamesResult.GameSummary selectedGame = cachedGames.get(index);
-
-                    System.out.print("Enter color (WHITE or BLACK): ");
-                    String color = scanner.nextLine().trim().toUpperCase();
-
-                    if (!color.equals("WHITE") && !color.equals("BLACK")) {
-                        System.out.println("Invalid color. Please enter 'WHITE' or 'BLACK'.");
-                        break;
-                    }
-
-                    // If the current user already occupies the chosen color in this game, skip joinGame
-                    if (color.equals("WHITE") && selectedGame.whiteUsername() != null && selectedGame.whiteUsername().equals(currentUsername)) {
-                        System.out.println();
-                        System.out.printf("Rejoined game '%s' as WHITE.%n", selectedGame.gameName());
-                        ChessBoard board = new ChessBoard();
-                        board.resetBoard();
-                        new ChessBoardUI().drawBoard(board, true);
-                    } else if (color.equals("BLACK") && selectedGame.blackUsername() != null && selectedGame.blackUsername().equals(currentUsername)) {
-                        System.out.println();
-                        System.out.printf("Rejoined game '%s' as BLACK.%n", selectedGame.gameName());
-                        ChessBoard board = new ChessBoard();
-                        board.resetBoard();
-                        new ChessBoardUI().drawBoard(board, false);
-                    } else {
-                        try {
-                            facade.joinGame(selectedGame.gameID(), color, authToken);
-                            System.out.println();
-                            System.out.printf("Joined game '%s' as %s.%n", selectedGame.gameName(), color);
-                            ChessBoard board = new ChessBoard();
-                            board.resetBoard();
-                            new ChessBoardUI().drawBoard(board, color.equals("WHITE"));
-                        } catch (Exception e) {
-                            System.out.println(e.getMessage());
-                        }
-
-
-                    }
-
-                } catch(NumberFormatException e){
-                    System.out.println("Please enter a valid number.");
+                    facade.joinGame(selectedGame.gameID(), color, authToken);
+                    System.out.println();
+                    System.out.printf("Joined game '%s' as %s.%n", selectedGame.gameName(), color);
+                    ChessBoard board = new ChessBoard();
+                    board.resetBoard();
+                    new ChessBoardUI().drawBoard(board, color.equals("WHITE"));
                 } catch (Exception e) {
                     System.out.println(e.getMessage());
                 }
 
+
             }
-            case "observe game" -> handleObserveGame();
-            default -> System.out.println("Invalid command. Type 'help' to see options.");
+
+        } catch(NumberFormatException e){
+            System.out.println("Please enter a valid number.");
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
         }
+
     }
 
     private void handleObserveGame() {
@@ -240,15 +249,20 @@ public class ChessClient {
                 return;
             }
 
-            ListGamesResult.GameSummary selectedGame = cachedGames.get(index);
+            observeGame(index);
+        } catch (NumberFormatException e) {
+            System.out.println("Please enter a valid number.");
+        }
+    }
 
+    private void observeGame(int index) {
+        ListGamesResult.GameSummary selectedGame = cachedGames.get(index);
+        try {
             facade.joinGame(selectedGame.gameID(), "observe", authToken);
             System.out.printf("Now observing game '%s'.%n", selectedGame.gameName());
             ChessBoard board = new ChessBoard();
             board.resetBoard();
             new ChessBoardUI().drawBoard(board, true);
-        } catch (NumberFormatException e) {
-            System.out.println("Please enter a valid number.");
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
