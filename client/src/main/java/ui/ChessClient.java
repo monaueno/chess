@@ -6,6 +6,8 @@ import java.util.List;
 
 import java.util.Scanner;
 
+import chess.ChessBoard;
+import ui.ChessBoardUI;
 
 public class ChessClient {
 
@@ -182,7 +184,9 @@ public class ChessClient {
                         // Observer mode: do not attempt to join, just show the board
                         System.out.println();
                         System.out.printf("Observing game '%s'.%n", selectedGame.gameName());
-                        drawBoard(true);
+                        ChessBoard board = new ChessBoard();
+                        board.resetBoard();
+                        new ChessBoardUI().drawBoard(board, true);
                         break;
                     }
 
@@ -195,17 +199,23 @@ public class ChessClient {
                     if (color.equals("WHITE") && selectedGame.whiteUsername() != null && selectedGame.whiteUsername().equals(currentUsername)) {
                         System.out.println();
                         System.out.printf("Rejoined game '%s' as WHITE.%n", selectedGame.gameName());
-                        drawBoard(true);
+                        ChessBoard board = new ChessBoard();
+                        board.resetBoard();
+                        new ChessBoardUI().drawBoard(board, true);
                     } else if (color.equals("BLACK") && selectedGame.blackUsername() != null && selectedGame.blackUsername().equals(currentUsername)) {
                         System.out.println();
                         System.out.printf("Rejoined game '%s' as BLACK.%n", selectedGame.gameName());
-                        drawBoard(false);
+                        ChessBoard board = new ChessBoard();
+                        board.resetBoard();
+                        new ChessBoardUI().drawBoard(board, false);
                     } else {
                         try {
                             facade.joinGame(selectedGame.gameID(), color, authToken);
                             System.out.println();
                             System.out.printf("Joined game '%s' as %s.%n", selectedGame.gameName(), color);
-                            drawBoard(color.equals("WHITE"));
+                            ChessBoard board = new ChessBoard();
+                            board.resetBoard();
+                            new ChessBoardUI().drawBoard(board, color.equals("WHITE"));
                         } catch (Exception e) {
                             System.out.println(e.getMessage());
                         }
@@ -237,7 +247,9 @@ public class ChessClient {
 
                         facade.joinGame(selectedGame.gameID(), "observe", authToken);
                         System.out.printf("Now observing game '%s'.%n", selectedGame.gameName());
-                        drawBoard(true);
+                        ChessBoard board = new ChessBoard();
+                        board.resetBoard();
+                        new ChessBoardUI().drawBoard(board, true);
                     } catch (NumberFormatException e) {
                         System.out.println("Please enter a valid number.");
                     } catch (Exception e) {
@@ -246,32 +258,5 @@ public class ChessClient {
                 }
             default -> System.out.println("Invalid command. Type 'help' to see options.");
         }
-    }
-
-    private void drawBoard(boolean isWhite) {
-        System.out.println();
-
-        char[] files = {'a','b','c','d','e','f','g','h'};
-        int[] ranks = {1,2,3,4,5,6,7,8};
-
-        if (!isWhite) {
-            files = new char[] {'h','g','f','e','d','c','b','a'};
-            ranks = new int[] {8,7,6,5,4,3,2,1};
-        }
-
-        for (int r = ranks.length - 1; r >= 0; r--) {
-            System.out.print(ranks[r] + " ");
-            for (int f = 0; f < files.length; f++) {
-                boolean lightSquare = (r + f) % 2 == 0;
-                System.out.print(lightSquare ? "[ ]" : "[##]");
-            }
-            System.out.println();
-        }
-
-        System.out.print(" ");
-        for (char file : files) {
-            System.out.print(" " + file + " ");
-        }
-        System.out.println("\n");
     }
 }
