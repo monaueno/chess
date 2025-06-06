@@ -26,9 +26,9 @@ public class ServerFacadeTests {
     @Test
     public void registerPositive() throws Exception {
         ServerFacade facade = new ServerFacade(port);
-        var result = facade.register("passoff", "123", "test@example.com");
+        var result = facade.register("123", "123", "test@example.com");
         Assertions.assertNotNull(result.authToken());
-        Assertions.assertEquals("passoff", result.username());
+        Assertions.assertEquals("123", result.username());
     }
 
     @Test
@@ -75,7 +75,7 @@ public class ServerFacadeTests {
     public void createGamePositive() throws Exception {
         ServerFacade facade = new ServerFacade(port);
         var loginResult = facade.login("mona", "mona");
-        var result = facade.createGame("TestGame", loginResult.authToken());
+        var result = facade.createGame("Test", loginResult.authToken());
         Assertions.assertNotNull(result.gameID());
     }
 
