@@ -78,10 +78,11 @@ public class ChessClient {
         try {
             var auth = facade.register(username, password, email);
             authToken = auth.authToken();
+            System.out.println();
             System.out.println("Registered and logged in as " + username);
         } catch (Exception e) {
             System.out.println();
-            System.out.println("Registration failed");
+            System.out.println("USER EXISTS: Please log in.");
         }
     }
 
@@ -94,6 +95,7 @@ public class ChessClient {
         try {
             var auth = facade.login(username, password);
             authToken = auth.authToken();
+            System.out.println();
             System.out.println("Logged in as " + username);
         } catch (Exception e) {
             System.out.println();
@@ -112,7 +114,6 @@ public class ChessClient {
                 - Help
                 - Logout
                 """);
-        System.out.println();
     }
 
     private void handlePostloginInput() throws Exception {
@@ -124,13 +125,14 @@ public class ChessClient {
             case "logout" -> {
                 facade.logout(authToken);
                 authToken = null;
-                System.out.println("Logged out.");
+                System.out.println();
+                System.out.println("Logged out");
             }
             case "create game" -> {
                 System.out.print("Game name: ");
                 String gameName = scanner.nextLine();
                 CreateGameResult result = facade.createGame(gameName, authToken);
-                System.out.println("Created game with ID: " + result.gameID());
+                System.out.println("Created game: " + gameName);
             }
             case "list games" -> {
                 var result = facade.listGames(authToken);
@@ -170,7 +172,8 @@ public class ChessClient {
 
                     facade.joinGame(selectedGame.gameID(), color, authToken);
 
-                    System.out.printf("Successfully joined game '%s' as %s.%n", selectedGame.gameName(), color);
+                    System.out.println();
+                    System.out.printf("Joined game '%s' as %s.%n", selectedGame.gameName(), color);
                     drawBoard(color.equals("WHITE"));
                 } catch(NumberFormatException e){
                     System.out.println("Please enter a valid number.");
@@ -210,7 +213,7 @@ public class ChessClient {
     }
 
     private void drawBoard(boolean isWhite) {
-        System.out.println("Drawing board from " + (isWhite ? "White" : "Black") + "'s perspective...");
+        System.out.println();
 
         char[] files = {'a','b','c','d','e','f','g','h'};
         int[] ranks = {1,2,3,4,5,6,7,8};
