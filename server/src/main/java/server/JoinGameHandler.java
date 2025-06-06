@@ -32,7 +32,6 @@ public class JoinGameHandler implements Route {
             JoinGameRequest request = gson.fromJson(req.body(), JoinGameRequest.class);
             JoinGameService service = new JoinGameService(dataAccess);
             String username = dataAccess.getUsernameFromAuth(authToken);
-            service.joinGame(request, authToken);
 
             String colorRaw = request.playerColor();
             boolean observer = request.asObserver();
@@ -70,7 +69,10 @@ public class JoinGameHandler implements Route {
                 );
                 dataAccess.updateGameData(request.gameID(), updatedGame);
             }
-
+            // Only call joinGame for actual players (not observers)
+            if (!observer) {
+                service.joinGame(request, authToken);
+            }
             res.status(200);
             res.type("application/json");
             return gson.toJson(new SuccessMessage("success"));

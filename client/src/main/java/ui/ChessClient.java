@@ -135,8 +135,17 @@ public class ChessClient {
             case "create game" -> {
                 System.out.print("Game name: ");
                 String gameName = scanner.nextLine();
-                CreateGameResult result = facade.createGame(gameName, authToken);
-                System.out.println("Created game: " + gameName);
+
+                try {
+                    if (gameName.isBlank()) {
+                        System.out.println("Game creation failed: name cannot be blank.");
+                        break;
+                    }
+                    CreateGameResult result = facade.createGame(gameName, authToken);
+                    System.out.println("Created game: " + gameName);
+                } catch (Exception e) {
+                    System.out.println("Error: " + e.getMessage());
+                }
             }
             case "list games" -> {
                 var result = facade.listGames(authToken);
@@ -169,7 +178,15 @@ public class ChessClient {
                     System.out.print("Enter color (WHITE or BLACK): ");
                     String color = scanner.nextLine().trim().toUpperCase();
 
-                    if (!color.equals("WHITE") && !color.equals("BLACK")) {
+                    if (color.equals("OBSERVE")) {
+                        // Observer mode: do not attempt to join, just show the board
+                        System.out.println();
+                        System.out.printf("Observing game '%s'.%n", selectedGame.gameName());
+                        drawBoard(true);
+                        break;
+                    }
+
+                    if (!color.equals("WHITE") && !color.equals("BLACK") && !color.equals("observe")) {
                         System.out.println("Invalid color. Please enter 'WHITE' or 'BLACK'.");
                         break;
                     }
@@ -190,7 +207,7 @@ public class ChessClient {
                             System.out.printf("Joined game '%s' as %s.%n", selectedGame.gameName(), color);
                             drawBoard(color.equals("WHITE"));
                         } catch (Exception e) {
-                            System.out.println("Error: " + e.getMessage());
+                            System.out.println(e.getMessage());
                         }
                     }
 

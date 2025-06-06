@@ -48,7 +48,7 @@ public class Server {
 
         Spark.awaitInitialization();
         System.out.println("✅ Server initialized on port " + Spark.port());
-        Spark.routes().forEach(route -> System.out.println("📍 Registered: " + route));
+        Spark.routes().forEach(route -> System.out.println("Registered: " + route));
         return Spark.port();
     }
 
