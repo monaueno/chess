@@ -58,7 +58,7 @@ public class MemoryDataAccess implements DataAccess{
     public void updateGame(int gameID, ChessGame game) throws DataAccessException {
         GameData old = games.get(gameID);
         if(old == null){
-            throw new DataAccessException("Game ID not found: " + gameID);
+            throw new DataAccessException("Error: Game ID not found: " + gameID);
         }
         games.put(gameID, new GameData(
                 gameID,
@@ -73,7 +73,7 @@ public class MemoryDataAccess implements DataAccess{
     public void setBlackUsername(int gameID, String username) throws DataAccessException {
         GameData old = games.get(gameID);
         if (old == null) {
-            throw new DataAccessException("Game ID not found: " + gameID);
+            throw new DataAccessException("Error: Game ID not found: " + gameID);
         }
         games.put(gameID, new GameData(
                 gameID,
@@ -87,9 +87,9 @@ public class MemoryDataAccess implements DataAccess{
     @Override
     public void setWhiteUsername(int gameID, String username) throws DataAccessException {
         GameData old = games.get(gameID);
-        System.out.println("⚪ setWhiteUsername called with: " + username);
+        System.out.println("setWhiteUsername called with: " + username);
         if (old == null) {
-            throw new DataAccessException("Game ID not found: " + gameID);
+            throw new DataAccessException("Error: Game ID not found: " + gameID);
         }
         games.put(gameID, new GameData(
                 gameID,
@@ -105,7 +105,7 @@ public class MemoryDataAccess implements DataAccess{
     public void addObserver(int gameID, String username) throws DataAccessException {
         GameData game = games.get(gameID);
         if (game == null) {
-            throw new DataAccessException("Game not found");
+            throw new DataAccessException("Error: Game not found");
         }
         game.observers().add(username);
     }
@@ -113,17 +113,17 @@ public class MemoryDataAccess implements DataAccess{
     public String getUsernameFromAuth(String authToken) throws DataAccessException {
         AuthData auth = authTokens.get(authToken);
         if (auth == null) {
-            throw new DataAccessException("Auth token not found: " + authToken);
+            throw new DataAccessException("Error: Auth token not found: " + authToken);
         }
         return auth.username();
     }
     @Override
     public void updateGameData(int gameID, GameData gameData) throws DataAccessException {
         if (!games.containsKey(gameID)) {
-            throw new DataAccessException("Game ID not found: " + gameID);
+            throw new DataAccessException("Error: Game ID not found: " + gameID);
         }
         games.put(gameID, gameData);
-        System.out.println("📡 updateGameData: writing whiteUsername = " + gameData.whiteUsername());
+        System.out.println("updateGameData: writing whiteUsername = " + gameData.whiteUsername());
     }
 }
 

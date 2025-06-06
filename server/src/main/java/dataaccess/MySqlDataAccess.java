@@ -147,7 +147,7 @@ public class MySqlDataAccess implements DataAccess {
             int rowsAffected = stmt.executeUpdate();
 
             if(rowsAffected == 0) {
-                throw new DataAccessException("Auth token not found: " + authToken);
+                throw new DataAccessException("Error: Auth token not found: " + authToken);
             }
         } catch(SQLException ex) {
             throw new DataAccessException("Error deleting auth token", ex);
@@ -157,17 +157,17 @@ public class MySqlDataAccess implements DataAccess {
     @Override
     public int createGame(GameData game) throws DataAccessException {
         if (game == null || game.gameName() == null || game.gameName().isBlank() || game.game() == null) {
-            throw new DataAccessException("Invalid game data");
+            throw new DataAccessException("Error: Invalid game data");
         }
 
         String insertSql = "INSERT INTO games (whiteUsername, blackUsername, gameName, gameData) VALUES (?, ?, ?, ?)";
         String gameJson = new Gson().toJson(game.game());
 
         if (game.gameName() == null || game.gameName().isBlank()) {
-            throw new DataAccessException("Game name cannot be null or blank");
+            throw new DataAccessException("Error: Game name cannot be null or blank");
         }
         if (gameJson == null || gameJson.isBlank()) {
-            throw new DataAccessException("Game JSON serialization failed or empty");
+            throw new DataAccessException("Error: Game JSON serialization failed or empty");
         }
 
         try (Connection conn = DatabaseManager.getConnection();
@@ -192,10 +192,10 @@ public class MySqlDataAccess implements DataAccess {
             try {
                 affectedRows = stmt.executeUpdate();
             } catch (SQLException e) {
-                throw new DataAccessException("SQL Error during game insert: " + e.getSQLState() + " - " + e.getMessage(), e);
+                throw new DataAccessException("Error: SQL Error during game insert: " + e.getSQLState() + " - " + e.getMessage(), e);
             }
             if (affectedRows == 0) {
-                throw new DataAccessException("Creating game failed, no rows affected.");
+                throw new DataAccessException("Error: Creating game failed, no rows affected.");
             }
 
             try (ResultSet rs = stmt.getGeneratedKeys()) {
@@ -321,7 +321,7 @@ public class MySqlDataAccess implements DataAccess {
     public String getUsernameFromAuth(String authToken) throws DataAccessException {
         AuthData auth = getAuth(authToken);
         if (auth == null) {
-            throw new DataAccessException("Auth token not found: " + authToken);
+            throw new DataAccessException("Error: Auth token not found: " + authToken);
         }
         return auth.username();
     }

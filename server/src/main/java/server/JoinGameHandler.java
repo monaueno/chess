@@ -58,6 +58,16 @@ public class JoinGameHandler implements Route {
                 }
 
                 GameData game = dataAccess.getGame(request.gameID());
+                if (game == null) {
+                    res.status(400);
+                    return gson.toJson(new ErrorMessage("Error: game not found"));
+                }
+                if (color == ChessGame.TeamColor.WHITE && game.whiteUsername() != null) {
+                    throw new DataAccessException("Error: white player already taken");
+                }
+                if (color == ChessGame.TeamColor.BLACK && game.blackUsername() != null) {
+                    throw new DataAccessException("Error: black player already taken");
+                }
 
                 GameData updatedGame = new GameData(
                         game.gameID(),

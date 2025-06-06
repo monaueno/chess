@@ -35,12 +35,15 @@ public class RegisterHandler implements Route {
             return gson.toJson(result);
         } catch (DataAccessException e) {
             // Custom error codes based on message
-            switch (e.getMessage()) {
-                case "bad request" -> res.status(400);
-                case "already taken" -> res.status(403);
-                default -> res.status(500);
+            String msg = e.getMessage();
+            if (msg.equals("bad request")) {
+                res.status(400);
+            } else if (msg.contains("taken")) {
+                res.status(403);
+            } else {
+                res.status(500);
             }
-            return gson.toJson(new ErrorMessage("Error: " + e.getMessage()));
+            return gson.toJson(new ErrorMessage("Error: " + msg));
         } catch (Exception e) {
             res.status(500);
             return gson.toJson(new ErrorMessage("Error: " + e.getMessage()));
