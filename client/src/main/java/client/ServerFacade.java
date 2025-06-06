@@ -107,4 +107,13 @@ public ListGamesResult listGames(String authToken) throws IOException {
             throw new Exception("Failed to clear database: " + connection.getResponseMessage());
         }
     }
+
+    public void observeGame(int gameID, String authToken) throws IOException {
+        // GET /observe?gameID=123
+        HttpURLConnection connection =
+                makeConnection("GET", "/observe?gameID=" + gameID, authToken);
+
+        connection.connect();
+        checkResponse(connection);     // throws if status ≥ 400
+    }
 }

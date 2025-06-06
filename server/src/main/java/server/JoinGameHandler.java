@@ -34,55 +34,44 @@ public class JoinGameHandler implements Route {
             String username = dataAccess.getUsernameFromAuth(authToken);
 
             String colorRaw = request.playerColor();
-            boolean observer = request.asObserver();
 
-            if (observer) {
-                if (colorRaw != null) {
-                    System.out.println("playerColor missing or blank");
-                    res.status(400);
-                    return gson.toJson(new ErrorMessage("Error: observers should not specify a playerColor."));
-                }
-                dataAccess.addObserver(request.gameID(), username);
-            } else {
-                if (colorRaw == null || colorRaw.isBlank()) {
-                    res.status(400);
-                    return gson.toJson(new ErrorMessage("Error: missing required playerColor to join as a player."));
-                }
-
-                ChessGame.TeamColor color;
-                try {
-                    color = ChessGame.TeamColor.valueOf(colorRaw.toUpperCase());
-                } catch (IllegalArgumentException e) {
-                    res.status(400);
-                    return gson.toJson(new ErrorMessage("Error: Invalid playerColor."));
-                }
-
-                GameData game = dataAccess.getGame(request.gameID());
-                if (game == null) {
-                    res.status(400);
-                    return gson.toJson(new ErrorMessage("Error: game not found"));
-                }
-                if (color == ChessGame.TeamColor.WHITE && game.whiteUsername() != null) {
-                    throw new DataAccessException("Error: white player already taken");
-                }
-                if (color == ChessGame.TeamColor.BLACK && game.blackUsername() != null) {
-                    throw new DataAccessException("Error: black player already taken");
-                }
-
-                GameData updatedGame = new GameData(
-                        game.gameID(),
-                        color == ChessGame.TeamColor.WHITE ? username : game.whiteUsername(),
-                        color == ChessGame.TeamColor.BLACK ? username : game.blackUsername(),
-                        game.gameName(),
-                        game.game(),
-                        game.observers()
-                );
-                dataAccess.updateGameData(request.gameID(), updatedGame);
+            if (colorRaw == null || colorRaw.isBlank()) {
+                res.status(400);
+                return gson.toJson(new ErrorMessage("Error: missing required playerColor."));
             }
-            // Only call joinGame for actual players (not observers)
-            if (!observer) {
-                service.joinGame(request, authToken);
+
+            ChessGame.TeamColor color;
+            try {
+                color = ChessGame.TeamColor.valueOf(colorRaw.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                res.status(400);
+                return gson.toJson(new ErrorMessage("Error: Invalid playerColor."));
             }
+
+            GameData game = dataAccess.getGame(request.gameID());
+            if (game == null) {
+                res.status(400);
+                return gson.toJson(new ErrorMessage("Error: game not found"));
+            }
+            if (color == ChessGame.TeamColor.WHITE && game.whiteUsername() != null) {
+                throw new DataAccessException("Error: white player already taken");
+            }
+            if (color == ChessGame.TeamColor.BLACK && game.blackUsername() != null) {
+                throw new DataAccessException("Error: black player already taken");
+            }
+
+            GameData updatedGame = new GameData(
+                    game.gameID(),
+                    color == ChessGame.TeamColor.WHITE ? username : game.whiteUsername(),
+                    color == ChessGame.TeamColor.BLACK ? username : game.blackUsername(),
+                    game.gameName(),
+                    game.game(),
+                    game.observers()
+            );
+            dataAccess.updateGameData(request.gameID(), updatedGame);
+
+            service.joinGame(request, authToken);
+
             res.status(200);
             res.type("application/json");
             return gson.toJson(new SuccessMessage("success"));

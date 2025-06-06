@@ -258,7 +258,7 @@ public class ChessClient {
     private void observeGame(int index) {
         ListGamesResult.GameSummary selectedGame = cachedGames.get(index);
         try {
-            facade.joinGame(selectedGame.gameID(), "observe", authToken);
+            facade.observeGame(selectedGame.gameID(), authToken);
             System.out.printf("Now observing game '%s'.%n", selectedGame.gameName());
             ChessBoard board = new ChessBoard();
             board.resetBoard();
