@@ -51,7 +51,6 @@ public ListGamesResult listGames(String authToken) throws IOException {
 }
 
     public SuccessResponse joinGame(int gameID, String playerColor, String authToken) throws IOException {
-        // Build a request that sets asObserver to true when playerColor is "observe"
         JoinGameRequest request = new JoinGameRequest(playerColor, gameID);
         return this.<JoinGameRequest, SuccessResponse>makeRequest("/join", request, SuccessResponse.class, authToken);
     }
@@ -106,22 +105,6 @@ public ListGamesResult listGames(String authToken) throws IOException {
 
         if (connection.getResponseCode() != 200) {
             throw new Exception("Failed to clear database: " + connection.getResponseMessage());
-        }
-    }
-
-    private <T, R> R sendPost(String endpoint, T requestBody, String authToken, Class<R> responseType) throws IOException {
-        HttpURLConnection connection = makeConnection("POST", endpoint, authToken);
-        if (requestBody != null) {
-            try (OutputStream os = connection.getOutputStream()) {
-                os.write(gson.toJson(requestBody).getBytes(StandardCharsets.UTF_8));
-            }
-        }
-
-        checkResponse(connection);
-
-        try (InputStream is = connection.getInputStream()) {
-            String raw = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-            return gson.fromJson(raw, responseType);
         }
     }
 }

@@ -180,17 +180,7 @@ public class ChessClient {
                     System.out.print("Enter color (WHITE or BLACK): ");
                     String color = scanner.nextLine().trim().toUpperCase();
 
-                    if (color.equals("OBSERVE")) {
-                        // Observer mode: do not attempt to join, just show the board
-                        System.out.println();
-                        System.out.printf("Observing game '%s'.%n", selectedGame.gameName());
-                        ChessBoard board = new ChessBoard();
-                        board.resetBoard();
-                        new ChessBoardUI().drawBoard(board, true);
-                        break;
-                    }
-
-                    if (!color.equals("WHITE") && !color.equals("BLACK") && !color.equals("observe")) {
+                    if (!color.equals("WHITE") && !color.equals("BLACK")) {
                         System.out.println("Invalid color. Please enter 'WHITE' or 'BLACK'.");
                         break;
                     }
@@ -219,6 +209,8 @@ public class ChessClient {
                         } catch (Exception e) {
                             System.out.println(e.getMessage());
                         }
+
+
                     }
 
                 } catch(NumberFormatException e){
@@ -228,35 +220,37 @@ public class ChessClient {
                 }
 
             }
-                case "observe game" -> {
-                    if (cachedGames == null || cachedGames.isEmpty()) {
-                        System.out.println("No games available. Use 'list games' first.");
-                        break;
-                    }
-
-                    try {
-                        System.out.print("Enter game number to observe: ");
-                        int index = Integer.parseInt(scanner.nextLine()) - 1;
-
-                        if (index < 0 || index >= cachedGames.size()) {
-                            System.out.println("Invalid game number.");
-                            break;
-                        }
-
-                        ListGamesResult.GameSummary selectedGame = cachedGames.get(index);
-
-                        facade.joinGame(selectedGame.gameID(), "observe", authToken);
-                        System.out.printf("Now observing game '%s'.%n", selectedGame.gameName());
-                        ChessBoard board = new ChessBoard();
-                        board.resetBoard();
-                        new ChessBoardUI().drawBoard(board, true);
-                    } catch (NumberFormatException e) {
-                        System.out.println("Please enter a valid number.");
-                    } catch (Exception e) {
-                        System.out.println(e.getMessage());
-                    }
-                }
+            case "observe game" -> handleObserveGame();
             default -> System.out.println("Invalid command. Type 'help' to see options.");
+        }
+    }
+
+    private void handleObserveGame() {
+        if (cachedGames == null || cachedGames.isEmpty()) {
+            System.out.println("No games available. Use 'list games' first.");
+            return;
+        }
+
+        try {
+            System.out.print("Enter game number to observe: ");
+            int index = Integer.parseInt(scanner.nextLine()) - 1;
+
+            if (index < 0 || index >= cachedGames.size()) {
+                System.out.println("Invalid game number.");
+                return;
+            }
+
+            ListGamesResult.GameSummary selectedGame = cachedGames.get(index);
+
+            facade.joinGame(selectedGame.gameID(), "observe", authToken);
+            System.out.printf("Now observing game '%s'.%n", selectedGame.gameName());
+            ChessBoard board = new ChessBoard();
+            board.resetBoard();
+            new ChessBoardUI().drawBoard(board, true);
+        } catch (NumberFormatException e) {
+            System.out.println("Please enter a valid number.");
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
         }
     }
 }
