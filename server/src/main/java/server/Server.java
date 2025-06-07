@@ -6,6 +6,7 @@ import dataaccess.MySqlDataAccess;
 import dataaccess.DataAccessException;
 import dataaccess.DatabaseManager;
 import dataaccess.DataAccess;
+import webSocket.ChessWSHandler;
 
 public class Server {
 
@@ -39,7 +40,7 @@ public class Server {
         Spark.put("/game", new JoinGameHandler(db));
         Spark.get("/game", new ListGamesHandler(db));
         Spark.get("/observe", new ObserveGameHandler(db));
-
+        Spark.webSocket("/ws", ChessWSHandler.class);
         // Register your endpoints and handle exceptions here.
 
         //This line initializes the server and can be removed once you have a functioning endpoint 
