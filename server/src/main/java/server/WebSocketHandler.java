@@ -1,4 +1,4 @@
-package websocket;
+package server;
 
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
@@ -6,9 +6,11 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import com.google.gson.Gson;
-import chess.websocket.commandsUserGameCommand;
-import chess.websocket.UserGameCommand.CommandType;
-import chess.websocket.messages.ServerMessage;
+import websocket.GameSessionManager;
+import websocket.commands.UserGameCommand;
+import websocket.commands.UserGameCommand.CommandType;
+import websocket.messages.ServerMessage;
+import websocket.MessageSerializer;
 
 @WebSocket
 public class ChessWSHandler {
@@ -28,14 +30,14 @@ public class ChessWSHandler {
         System.out.println("📨 Message received: " + message);
 
         try {
-            UserGameCommand command = MessageSerializer.deserialize(message); i
+            UserGameCommand command = websocket.MessageSerializer.deserialize(message);
 
-            if (command == null || command.commandType == null) {
+            if (command == null || command.getCommandType() == null) {
                 session.getRemote().sendString(gson.toJson(Map.of("serverMessageType", "ERROR", "errorMessage", "Error: Invalid command")));
                 return;
             }
 
-            switch (command.commandType) {
+            switch (command.getCommandType()) {
                 case CONNECT:
                     handleConnect(session, command);
                     break;

@@ -1,6 +1,6 @@
-package chess.websocket;
+package websocket;
 
-import chess.websocket.commands.*;
+import websocket.commands.*;
 import com.google.gson.*;
 
 public class MessageSerializer {
