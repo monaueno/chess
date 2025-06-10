@@ -39,7 +39,7 @@ public class GameplayWebSocketHandler {
 
     @OnWebSocketMessage
     public void onMessage(String message) {
-        System.out.println("📨 Received message: " + message);
+        System.out.println("Received message: " + message);
 
         ServerMessage serverMessage = gson.fromJson(message, ServerMessage.class);
 

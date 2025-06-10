@@ -12,6 +12,7 @@ public class Server {
 
     public int run(int desiredPort) {
         Spark.port(desiredPort);
+        Spark.webSocket("/ws", WebSocketHandler.class);
 
         Spark.staticFiles.location("web");
 
@@ -40,10 +41,8 @@ public class Server {
         Spark.put("/game", new JoinGameHandler(db));
         Spark.get("/game", new ListGamesHandler(db));
         Spark.get("/observe", new ObserveGameHandler(db));
-        Spark.webSocket("/ws", WebSocketHandler.class);
-        // Register your endpoints and handle exceptions here.
 
-        //This line initializes the server and can be removed once you have a functioning endpoint 
+
         System.out.println("✅ All routes registered, starting Spark server...");
         Spark.init();
 

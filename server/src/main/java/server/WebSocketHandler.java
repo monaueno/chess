@@ -1,5 +1,6 @@
 package server;
 
+import chess.ChessMove;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
 import java.io.IOException;
@@ -7,6 +8,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import com.google.gson.Gson;
 import websocket.GameSessionManager;
+import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
 import websocket.commands.UserGameCommand.CommandType;
 import websocket.messages.ServerMessage;
@@ -42,12 +44,12 @@ public class WebSocketHandler {
                 case MAKE_MOVE:
                     handleMakeMove(session, command);
                     break;
-                case LEAVE:
-                    handleLeave(session, command);
-                    break;
-                case RESIGN:
-                    handleResign(session, command);
-                    break;
+//                case LEAVE:
+//                    handleLeave(session, command);
+//                    break;
+//                case RESIGN:
+//                    handleResign(session, command);
+//                    break;
                 default:
                     session.getRemote().sendString(gson.toJson(Map.of("serverMessageType", "ERROR", "errorMessage", "Error: Unknown command")));
             }
@@ -60,6 +62,9 @@ public class WebSocketHandler {
 
     private void handleMakeMove(Session session, UserGameCommand command) {
         System.out.println("Handling Make Move for gameID " + command.getGameID() + ", authToken: " + command.getAuthToken());
+        MakeMoveCommand moveCommand = (MakeMoveCommand) command;
+        ChessMove move = moveCommand.getMove();
+
         GameSessionManager manager = gameSessions.get(command.getGameID());
         if (manager == null) {
             System.out.println("No session manager found for gameID " + command.getGameID());
@@ -72,10 +77,52 @@ public class WebSocketHandler {
             return;
         }
 
-        String moveMessage = String.format("%s attempted a move", username);
-        websocket.messages.NotificationMessage notification = new websocket.messages.NotificationMessage(moveMessage);
+        // TODO: Replace this with actual game retrieval
+        // Placeholder: Create new game and board instance
+        chess.ChessGame game = new chess.ChessGame();
+        game.getBoard().resetBoard();
 
-        manager.broadcastExcept(gson.toJson(notification), session);
+        try {
+            if (!game.validMoves(move.getStartPosition()).contains(move)) {
+                session.getRemote().sendString(gson.toJson(Map.of(
+                    "serverMessageType", "ERROR",
+                    "errorMessage", "Error: Illegal move"
+                )));
+                return;
+            }
+
+            game.makeMove(move);
+
+            // Broadcast updated game state (placeholder for now)
+            websocket.messages.ServerMessage loadGameMsg = new websocket.messages.ServerMessage(websocket.messages.ServerMessage.ServerMessageType.LOAD_GAME);
+            String loadGameJson = gson.toJson(loadGameMsg);
+            manager.broadcast(loadGameJson);
+
+            // Notify others of the move
+            String moveMessage = String.format("%s moved from %s to %s", username,
+                    move.getStartPosition(), move.getEndPosition());
+            websocket.messages.NotificationMessage notification = new websocket.messages.NotificationMessage(moveMessage);
+            manager.broadcastExcept(gson.toJson(notification), session);
+
+            // Check for check or checkmate
+            if (game.isInCheck(game.getTeamTurn())) {
+                websocket.messages.NotificationMessage checkMsg =
+                        new websocket.messages.NotificationMessage(username + " is in check");
+                manager.broadcast(gson.toJson(checkMsg));
+            }
+            // TODO: Detect checkmate/stalemate (if you have methods for it)
+
+        } catch (Exception e) {
+            try {
+                session.getRemote().sendString(gson.toJson(Map.of(
+                    "serverMessageType", "ERROR",
+                    "errorMessage", "Error: Failed to apply move"
+                )));
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+            e.printStackTrace();
+        }
     }
 
     private void handleConnect(Session session, UserGameCommand command) {
