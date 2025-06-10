@@ -18,6 +18,8 @@ public class ChessWSHandler {
 
     @OnWebSocketConnect
     public void onConnect(Session session) {
+        GameSessionManager manager = gameSessions.computeIfAbsent(command.gameID, k -> new GameSessionManager());
+        manager.add(session, username); // you’ll get `username` from auth
         System.out.println("Client connected: " + session);
     }
 
@@ -59,6 +61,9 @@ public class ChessWSHandler {
     @OnWebSocketClose
     public void onClose(Session session, int statusCode, String reason) {
         System.out.println("Connection closed: " + session + " (" + reason + ")");
+        for (GameSessionManager manager : gameSessions.values()) {
+            manager.remove(session);
+        }
     }
 
     @OnWebSocketError
