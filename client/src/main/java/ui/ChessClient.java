@@ -1,15 +1,18 @@
 package ui;
 
 import client.ServerFacade;
+import client.websocket.GameplayWebSocketHandler;
 import model.*;
 import model.ListGamesResult;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 
 import java.util.Scanner;
 
 import chess.ChessBoard;
+import org.eclipse.jetty.websocket.client.WebSocketClient;
 import ui.ChessBoardUI;
 
 public class ChessClient {
@@ -216,6 +219,12 @@ public class ChessClient {
                     facade.joinGame(selectedGame.gameID(), color, authToken);
                     System.out.println();
                     System.out.printf("Joined game '%s' as %s.%n", selectedGame.gameName(), color);
+
+                    WebSocketClient client = new WebSocketClient();
+                    client.start();
+                    URI uri = new URI("ws://localhost:8080/ws");
+                    client.connect(new GameplayWebSocketHandler(), uri);
+
                     ChessBoard board = new ChessBoard();
                     board.resetBoard();
                     new ChessBoardUI().drawBoard(board, color.equals("WHITE"));

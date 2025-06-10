@@ -13,15 +13,13 @@ import websocket.messages.ServerMessage;
 import websocket.MessageSerializer;
 
 @WebSocket
-public class ChessWSHandler {
+public class WebSocketHandler {
 
     private static final Map<Integer, GameSessionManager> gameSessions = new ConcurrentHashMap<>();
     private static final Gson gson = new Gson();
 
     @OnWebSocketConnect
     public void onConnect(Session session) {
-        GameSessionManager manager = gameSessions.computeIfAbsent(command.gameID, k -> new GameSessionManager());
-        manager.add(session, username); // you’ll get `username` from auth
         System.out.println("Client connected: " + session);
     }
 

@@ -1,12 +1,22 @@
 package websocket.messages;
 
-import model.GameData;
-
 public class NotificationMessage extends ServerMessage {
-    public GameData game;
+    private String message;
 
-    public NotificationMessage(GameData game) {
-        this.serverMessageType = ServerMessageType.LOAD_GAME;
-        this.game = game;
+    public NotificationMessage() {
+        super(ServerMessageType.NOTIFICATION);
+    }
+
+    public NotificationMessage(String message) {
+        super(ServerMessageType.NOTIFICATION);
+        this.message = message;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 }
