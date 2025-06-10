@@ -58,6 +58,30 @@ public class WebSocketHandler {
         }
     }
 
+    private void handleMakeMove(Session session, UserGameCommand command) {
+        System.out.println("Handling Make Move for gameID " + command.getGameID() + ", authToken: " + command.getAuthToken());
+        GameSessionManager manager = gameSessions.get(command.getGameID());
+        if (manager == null) {
+            System.out.println("No session manager found for gameID " + command.getGameID());
+            return;
+        }
+
+        String username = manager.getUsername(session);
+        if (username == null) {
+            System.out.println("Could not identify user from session.");
+            return;
+        }
+
+        String moveMessage = String.format("%s attempted a move", username);
+        websocket.messages.NotificationMessage notification = new websocket.messages.NotificationMessage(moveMessage);
+
+        manager.broadcastExcept(gson.toJson(notification), session);
+    }
+
+    private void handleConnect(Session session, UserGameCommand command) {
+        System.out.println("Handling CONNECT for gamID " + command.getGameID() + ", authToken: " + command.getAuthToken());
+    }
+
     @OnWebSocketClose
     public void onClose(Session session, int statusCode, String reason) {
         System.out.println("Connection closed: " + session + " (" + reason + ")");
