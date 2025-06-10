@@ -1,5 +1,8 @@
 package ui;
 
+import chess.ChessGame;
+import chess.ChessMove;
+import chess.ChessPosition;
 import client.ServerFacade;
 import client.websocket.GameplayWebSocketHandler;
 import model.*;
@@ -7,9 +10,12 @@ import model.ListGamesResult;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 
 import java.util.Scanner;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import chess.ChessBoard;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
@@ -22,6 +28,9 @@ public class ChessClient {
     private String authToken = null;
     private String currentUsername = null;
     private List<ListGamesResult.GameSummary> cachedGames;
+    private ChessGame game;
+    private ChessPosition highlightedFrom;
+    private Set<ChessPosition> highlightedTo;
 
     public static void main(String[] args) {
         new ChessClient().run();
@@ -207,13 +216,13 @@ public class ChessClient {
                 System.out.printf("Rejoined game '%s' as WHITE.%n", selectedGame.gameName());
                 ChessBoard board = new ChessBoard();
                 board.resetBoard();
-                new ChessBoardUI().drawBoard(board, true);
+                new ChessBoardUI().drawBoard(board, true, highlightedFrom, highlightedTo);
             } else if (color.equals("BLACK") && selectedGame.blackUsername() != null && selectedGame.blackUsername().equals(currentUsername)) {
                 System.out.println();
                 System.out.printf("Rejoined game '%s' as BLACK.%n", selectedGame.gameName());
                 ChessBoard board = new ChessBoard();
                 board.resetBoard();
-                new ChessBoardUI().drawBoard(board, false);
+                new ChessBoardUI().drawBoard(board, false, highlightedFrom, highlightedTo);
             } else {
                 try {
                     facade.joinGame(selectedGame.gameID(), color, authToken);
@@ -223,11 +232,11 @@ public class ChessClient {
                     WebSocketClient client = new WebSocketClient();
                     client.start();
                     URI uri = new URI("ws://localhost:8080/ws");
-                    client.connect(new GameplayWebSocketHandler(authToken, selectedGame.gameID()), uri);
+                    client.connect(new GameplayWebSocketHandler(authToken, selectedGame.gameID()), uri).get();
 
                     ChessBoard board = new ChessBoard();
                     board.resetBoard();
-                    new ChessBoardUI().drawBoard(board, color.equals("WHITE"));
+                    new ChessBoardUI().drawBoard(board, color.equals("WHITE"), highlightedFrom, highlightedTo);
                 } catch (Exception e) {
                     System.out.println(e.getMessage());
                 }
@@ -271,9 +280,24 @@ public class ChessClient {
             System.out.printf("Now observing game '%s'.%n", selectedGame.gameName());
             ChessBoard board = new ChessBoard();
             board.resetBoard();
-            new ChessBoardUI().drawBoard(board, true);
+            new ChessBoardUI().drawBoard(board, true, highlightedFrom, highlightedTo);
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
+    }
+
+
+    private void handleHighlight() {
+        String input = "d2";
+        int row = 8 - Character.getNumericValue(input.charAt(1)) + 1;
+        int col = input.charAt(0) - 'a' + 1;
+        ChessPosition start = new ChessPosition(row, col);
+
+        List<ChessMove> moves = new ArrayList<>(game.validMoves(start));
+
+        highlightedFrom = start;
+        highlightedTo = moves.stream().map(ChessMove::getEndPosition).collect(Collectors.toSet());
+
+        new ChessBoardUI().drawBoard(new ChessBoard(), true, highlightedFrom, highlightedTo);
     }
 }

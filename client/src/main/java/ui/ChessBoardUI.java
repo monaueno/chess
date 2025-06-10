@@ -5,6 +5,8 @@ import chess.ChessPiece;
 import chess.ChessPosition;
 import chess.ChessGame.TeamColor;
 
+import java.util.Set;
+
 /**
  * Pretty, monospaced ASCII rendering of a chessboard.
  * Light squares use ANSI 47 (light grey); dark squares use ANSI 100 (dark grey).
@@ -21,12 +23,10 @@ public class ChessBoardUI {
     private static final String RESET    = "\u001B[0m";
 
     /**
-     * Renders the board with rank/file labels and pieces.
-     *
-     * @param board            a fully populated ChessBoard
-     * @param whitePerspective true for White / observer view; false for Black view
+     * @param board
+     * @param whitePerspective
      */
-    public void drawBoard(ChessBoard board, boolean whitePerspective) {
+    public void drawBoard(ChessBoard board, boolean whitePerspective, ChessPosition highlightedFrom, Set<ChessPosition> highlightedTo) {
 
         // File labels (flip for Black view)
         System.out.print("    ");
@@ -46,7 +46,16 @@ public class ChessBoardUI {
             for (int col = 0; col < 8; col++) {
                 int actualCol = whitePerspective ? col : 7 - col;
 
-                String bg = ((row + col) % 2 == 0) ? BG_LIGHT : BG_DARK;
+                ChessPosition pos = new ChessPosition(actualRow + 1, actualCol + 1);
+                String bg;
+
+                if (highlightedFrom != null && pos.equals(highlightedFrom)) {
+                    bg = "\u001B[43m";
+                } else if (highlightedTo != null && highlightedTo.contains(pos)) {
+                    bg = "\u001B[42m";
+                } else {
+                    bg = ((row + col) % 2 == 0) ? BG_LIGHT : BG_DARK;
+                }
 
                 ChessPiece piece = board.getPiece(new ChessPosition(actualRow + 1, actualCol + 1));
                 String symbol = getSymbol(piece);
