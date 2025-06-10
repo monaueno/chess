@@ -3,10 +3,14 @@ package websocket.messages;
 import model.GameData;
 
 public class ErrorMessage extends ServerMessage {
-    public GameData game;
+    private String errorMessage;
 
     public ErrorMessage(GameData game) {
-        this.serverMessageType = ServerMessageType.LOAD_GAME;
-        this.game = game;
+        super(ServerMessageType.ERROR);
+        this.errorMessage = errorMessage;
+    }
+
+    public String getErrorMessage() {
+        return  errorMessage;
     }
 }

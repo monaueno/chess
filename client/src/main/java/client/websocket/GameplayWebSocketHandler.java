@@ -67,11 +67,13 @@ public class GameplayWebSocketHandler {
                 break;
 
             case NOTIFICATION:
-                // Handle NotificationMessage if needed
+                NotificationMessage noteMsg = (NotificationMessage) serverMessage;
+                System.out.println("Notification: " + noteMsg.getMessage());
                 break;
 
             case ERROR:
-                // Handle ErrorMessage if needed
+                ErrorMessage errorMsg = (ErrorMessage) serverMessage;
+                System.err.println("Error: " + errorMsg.getErrorMessage());
                 break;
         }
     }
