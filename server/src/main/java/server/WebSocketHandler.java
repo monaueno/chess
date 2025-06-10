@@ -11,6 +11,7 @@ import websocket.GameSessionManager;
 import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
 import websocket.commands.UserGameCommand.CommandType;
+import websocket.messages.NotificationMessage;
 import websocket.messages.ServerMessage;
 import websocket.MessageSerializer;
 
@@ -80,6 +81,9 @@ public class WebSocketHandler {
         websocket.messages.NotificationMessage notification = new websocket.messages.NotificationMessage(message);
         manager.broadcast(gson.toJson(notification));
 
+        String resignationMsg = String.format("%s resigned", username);
+        manager.broadcast(gson.toJson(new NotificationMessage(resignationMsg)));
+
         manager.remove(session);
         System.out.println("Session removed after resignation from game ID " + gameID);
     }
@@ -87,7 +91,10 @@ public class WebSocketHandler {
     private void handleLeave(Session session, UserGameCommand command) {
         int gameID = command.getGameID();
         System.out.println("Handling LEAVE for gameID " + gameID);
-        
+
+        String msg = String.format("%s left the game", username);
+        broadcastToOthers(gameID, new NotificationMessage(msg), session);
+
         GameSessionManager manager = gameSessions.get(gameID);
         if (manager != null) {
             manager.remove(session);
@@ -114,10 +121,12 @@ public class WebSocketHandler {
             return;
         }
 
-        // TODO: Replace this with actual game retrieval
-        // Placeholder: Create new game and board instance
-        chess.ChessGame game = new chess.ChessGame();
-        game.getBoard().resetBoard();
+        // Get the game from the manager
+        chess.ChessGame game = manager.getGame();
+        if (game == null) {
+            System.out.println("Game not found for gameID " + command.getGameID());
+            return;
+        }
 
         try {
             if (!game.validMoves(move.getStartPosition()).contains(move)) {
@@ -164,6 +173,10 @@ public class WebSocketHandler {
 
     private void handleConnect(Session session, UserGameCommand command) {
         int gameID = command.getGameID();
+        String role = (isObserver ? "observer" : color.toString().toLowerCase());
+        String msg = String.format("%s joined as %s", username, role);
+        broadcastToOthers(gameID, new NotificationMessage(msg), session);
+        String msg = String.format("%s joined as an observer", username);
         String authToken = command.getAuthToken();
 
         System.out.println("Handling CONNECT for gamID " + command.getGameID() + ", authToken: " + command.getAuthToken());

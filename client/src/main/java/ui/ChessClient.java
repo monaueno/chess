@@ -10,11 +10,8 @@ import model.ListGamesResult;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
-import java.util.Scanner;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import chess.ChessBoard;
@@ -32,6 +29,7 @@ public class ChessClient {
     private ChessPosition highlightedFrom;
     private Set<ChessPosition> highlightedTo;
     private ChessBoard board;
+    private boolean whitePerspective = true;
 
     public static void main(String[] args) {
         new ChessClient().run();
@@ -154,7 +152,7 @@ public class ChessClient {
             case "list games" -> handleListGames();
             case "play game" -> handlePlayGame();
             case "observe game" -> handleObserveGame();
-            case "h d2" -> handleHighlight("d2");
+            case String s when s.startsWith("h ") -> handleHighlight(s.substring(2).trim());
             default -> System.out.println("Invalid command. Type 'help' to see options.");
         }
     }
@@ -195,7 +193,7 @@ public class ChessClient {
 
         try {
             System.out.print("Enter game number to play: ");
-            int index = Integer.parseInt(scanner.nextLine()) -1;
+            int index = Integer.parseInt(scanner.nextLine()) - 1;
 
             if (index < 0 || index >= cachedGames.size()) {
                 System.out.println("Invalid game number.");
@@ -206,6 +204,7 @@ public class ChessClient {
 
             System.out.print("Enter color (WHITE or BLACK): ");
             String color = scanner.nextLine().trim().toUpperCase();
+            whitePerspective = color.equals("WHITE");
 
             if (!color.equals("WHITE") && !color.equals("BLACK")) {
                 System.out.println("Invalid color. Please enter 'WHITE' or 'BLACK'.");
@@ -222,7 +221,7 @@ public class ChessClient {
                 this.game.setBoard(board);
                 this.board = board;
 
-                new ChessBoardUI().drawBoard(board, true, highlightedFrom, highlightedTo);
+                new ChessBoardUI().drawBoard(board, whitePerspective, highlightedFrom, highlightedTo);
 
             } else if (color.equals("BLACK") && selectedGame.blackUsername() != null && selectedGame.blackUsername().equals(currentUsername)) {
                 System.out.println();
@@ -233,7 +232,7 @@ public class ChessClient {
                 this.game = new ChessGame();
                 this.game.setBoard(board);
 
-                new ChessBoardUI().drawBoard(board, false, highlightedFrom, highlightedTo);
+                new ChessBoardUI().drawBoard(board, whitePerspective, highlightedFrom, highlightedTo);
             } else {
                 try {
                     facade.joinGame(selectedGame.gameID(), color, authToken);
@@ -247,7 +246,7 @@ public class ChessClient {
 
                     ChessBoard board = new ChessBoard();
                     board.resetBoard();
-                    new ChessBoardUI().drawBoard(board, color.equals("WHITE"), highlightedFrom, highlightedTo);
+                    new ChessBoardUI().drawBoard(board, whitePerspective, highlightedFrom, highlightedTo);
                 } catch (Exception e) {
                     System.out.println(e.getMessage());
                 }
@@ -255,7 +254,7 @@ public class ChessClient {
 
             }
 
-        } catch(NumberFormatException e){
+        } catch (NumberFormatException e) {
             System.out.println("Please enter a valid number.");
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -299,20 +298,45 @@ public class ChessClient {
 
 
     private void handleHighlight(String input) {
-        int row = 8 - Character.getNumericValue(input.charAt(1)) + 1;
-        int col = input.charAt(0) - 'a' + 1;
-        ChessPosition start = new ChessPosition(row, col);
+        try {
+            if (input.length() != 2 || input.charAt(0) < 'a' || input.charAt(0) > 'h' || !Character.isDigit(input.charAt(1))) {
+                System.out.println("Invalid input. Use format like 'h d2'.");
+                return;
+            }
 
-        if (game == null) {
-            System.out.println("Game not loaded yet.");
-            return;
+            int file = input.charAt(0) - 'a' + 1;
+            int rank = Character.getNumericValue(input.charAt(1));
+
+            if (rank < 1 || rank > 8) {
+                System.out.println("Invalid rank. Use numbers 1 through 8.");
+                return;
+            }
+
+            int row = rank;
+            int col = file;
+
+            ChessPosition start = new ChessPosition(row, col);
+
+            if (game == null) {
+                System.out.println("Game not loaded yet.");
+                return;
+            }
+
+            Collection<ChessMove> valid = game.validMoves(start);
+            if (valid == null) {
+                System.out.println("No piece at that position.");
+                return;
+            } else if (valid.isEmpty()) {
+                System.out.println("No legal moves.");
+                return;
+            }
+
+            highlightedFrom = start;
+            highlightedTo = valid.stream().map(ChessMove::getEndPosition).collect(Collectors.toSet());
+
+            new ChessBoardUI().drawBoard(game.getBoard(), whitePerspective, highlightedFrom, highlightedTo);
+        } catch (Exception e) {
+            System.out.println("Invalid input. Use format like 'h d2'.");
         }
-
-        List<ChessMove> moves = new ArrayList<>(game.validMoves(start));
-
-        highlightedFrom = start;
-        highlightedTo = moves.stream().map(ChessMove::getEndPosition).collect(Collectors.toSet());
-
-        new ChessBoardUI().drawBoard(new ChessBoard(), true, highlightedFrom, highlightedTo);
     }
 }
