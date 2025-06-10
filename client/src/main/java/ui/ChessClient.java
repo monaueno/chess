@@ -154,7 +154,7 @@ public class ChessClient {
             case "list games" -> handleListGames();
             case "play game" -> handlePlayGame();
             case "observe game" -> handleObserveGame();
-            case "h d2" -> handleHighlight();
+            case "h d2" -> handleHighlight("d2");
             default -> System.out.println("Invalid command. Type 'help' to see options.");
         }
     }
@@ -298,14 +298,15 @@ public class ChessClient {
     }
 
 
-    private void handleHighlight() {
-        if (command.startsWith("h ")) {
-            handleHighlight(command.substring(2).trim());
-        }
-
+    private void handleHighlight(String input) {
         int row = 8 - Character.getNumericValue(input.charAt(1)) + 1;
         int col = input.charAt(0) - 'a' + 1;
         ChessPosition start = new ChessPosition(row, col);
+
+        if (game == null) {
+            System.out.println("Game not loaded yet.");
+            return;
+        }
 
         List<ChessMove> moves = new ArrayList<>(game.validMoves(start));
 
