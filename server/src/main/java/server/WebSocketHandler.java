@@ -126,7 +126,16 @@ public class WebSocketHandler {
     }
 
     private void handleConnect(Session session, UserGameCommand command) {
+        int gameID = command.getGameID();
+        String authToken = command.getAuthToken();
+
         System.out.println("Handling CONNECT for gamID " + command.getGameID() + ", authToken: " + command.getAuthToken());
+
+        gameSessions.putIfAbsent(gameID, new GameSessionManager());
+        GameSessionManager manager = gameSessions.get(gameID);
+
+        manager.add(session, authToken);
+
     }
 
     @OnWebSocketClose
