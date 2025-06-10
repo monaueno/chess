@@ -11,7 +11,7 @@ public class GameData {
     private String blackUsername;
     private String gameName;
     private ChessGame game;
-    private List<String> observers ;
+    private List<String> observers;
     private ChessBoard board;
 
     public GameData(int gameID, String whiteUsername, String blackUsername, String gameName, ChessGame game) {
@@ -33,16 +33,34 @@ public class GameData {
     }
 
     // Getters and setters
-    public int gameID() { return gameID; }
-    public String whiteUsername() { return whiteUsername; }
-    public String blackUsername() { return blackUsername; }
-    public String gameName() { return gameName; }
-    public ChessGame game() { return game; }
-    public List<String> observers() { return observers; }
+    public int gameID() {
+        return gameID;
+    }
+
+    public String whiteUsername() {
+        return whiteUsername;
+    }
+
+    public String blackUsername() {
+        return blackUsername;
+    }
+
+    public String gameName() {
+        return gameName;
+    }
+
+    public ChessGame game() {
+        return game;
+    }
+
+    public List<String> observers() {
+        return observers;
+    }
 
     public void addObserver(String observer) {
         observers.add(observer);
     }
+
     public void setWhiteUsername(String whiteUsername) {
         this.whiteUsername = whiteUsername;
     }
@@ -54,6 +72,17 @@ public class GameData {
     public void setGameName(String gameName) {
         this.gameName = gameName;
     }
-    public ChessBoard getBoard() { return board; }
 
+    public ChessBoard getBoard() {
+        return board;
+    }
+
+    public GameData(ChessGame game) {
+        this.game = game;
+        this.gameID = -1;
+        this.whiteUsername = null;
+        this.blackUsername = null;
+        this.gameName = null;
+        this.observers = new ArrayList<>();
+    }
 }

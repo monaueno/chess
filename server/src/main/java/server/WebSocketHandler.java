@@ -1,6 +1,7 @@
 package server;
 
 import chess.ChessMove;
+import model.GameData;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
 import java.io.IOException;
@@ -11,6 +12,7 @@ import websocket.GameSessionManager;
 import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
 import websocket.commands.UserGameCommand.CommandType;
+import websocket.messages.LoadGameMessage;
 import websocket.messages.NotificationMessage;
 import websocket.messages.ServerMessage;
 import websocket.MessageSerializer;
@@ -92,16 +94,33 @@ public class WebSocketHandler {
         int gameID = command.getGameID();
         System.out.println("Handling LEAVE for gameID " + gameID);
 
+        GameSessionManager manager = gameSessions.get(gameID);
+        if (manager == null) {
+            System.out.println("No session manager found for gameID " + gameID);
+            return;
+        }
+
+        String username = manager.getUsername(session);
+        if (username == null) {
+            System.out.println("Could not identify user from session");
+            return;
+        }
+
         String msg = String.format("%s left the game", username);
         broadcastToOthers(gameID, new NotificationMessage(msg), session);
 
+        manager.remove(session);
+        System.out.println("Session removed from game ID " + gameID);
+    }
+
+    private void broadcastToOthers(int gameID, NotificationMessage notificationMessage, Session session) {
         GameSessionManager manager = gameSessions.get(gameID);
-        if (manager != null) {
-            manager.remove(session);
-            System.out.println("Session removed from game ID " + gameID);
-        } else {
+        if (manager == null) {
             System.out.println("No session manager found for gameID " + gameID);
+            return;
         }
+        String messageJson = gson.toJson(notificationMessage);
+        manager.broadcastExcept(messageJson, session);
     }
 
     private void handleMakeMove(Session session, UserGameCommand command) {
@@ -139,8 +158,8 @@ public class WebSocketHandler {
 
             game.makeMove(move);
 
-            // Broadcast updated game state (placeholder for now)
-            websocket.messages.ServerMessage loadGameMsg = new websocket.messages.ServerMessage(websocket.messages.ServerMessage.ServerMessageType.LOAD_GAME);
+            GameData gameData = new GameData(game);  // Wrap current ChessGame state
+            LoadGameMessage loadGameMsg = new LoadGameMessage(gameData);
             String loadGameJson = gson.toJson(loadGameMsg);
             manager.broadcast(loadGameJson);
 
@@ -173,19 +192,33 @@ public class WebSocketHandler {
 
     private void handleConnect(Session session, UserGameCommand command) {
         int gameID = command.getGameID();
-        String role = (isObserver ? "observer" : color.toString().toLowerCase());
-        String msg = String.format("%s joined as %s", username, role);
-        broadcastToOthers(gameID, new NotificationMessage(msg), session);
-        String msg = String.format("%s joined as an observer", username);
         String authToken = command.getAuthToken();
 
-        System.out.println("Handling CONNECT for gamID " + command.getGameID() + ", authToken: " + command.getAuthToken());
+        System.out.println("Handling CONNECT for gameID " + gameID + ", authToken: " + authToken);
 
         gameSessions.putIfAbsent(gameID, new GameSessionManager());
         GameSessionManager manager = gameSessions.get(gameID);
-
         manager.add(session, authToken);
 
+        String username = manager.getUsername(session);
+        if (username == null) {
+            System.out.println("Could not identify user from session.");
+            return;
+        }
+
+        String role;
+        if (command instanceof websocket.commands.ConnectCommand connectCommand) {
+            if (connectCommand.getPlayerColor() == null) {
+                role = "observer";
+            } else {
+                role = connectCommand.getPlayerColor().toString().toLowerCase();
+            }
+        } else {
+            role = "player";
+        }
+
+        String msg = String.format("%s joined as %s", username, role);
+        broadcastToOthers(gameID, new NotificationMessage(msg), session);
     }
 
     @OnWebSocketClose
