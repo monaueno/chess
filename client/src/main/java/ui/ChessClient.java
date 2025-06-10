@@ -223,7 +223,7 @@ public class ChessClient {
                     WebSocketClient client = new WebSocketClient();
                     client.start();
                     URI uri = new URI("ws://localhost:8080/ws");
-                    client.connect(new GameplayWebSocketHandler(), uri);
+                    client.connect(new GameplayWebSocketHandler(authToken, selectedGame.gameID()), uri);
 
                     ChessBoard board = new ChessBoard();
                     board.resetBoard();

@@ -44,12 +44,12 @@ public class WebSocketHandler {
                 case MAKE_MOVE:
                     handleMakeMove(session, command);
                     break;
-//                case LEAVE:
-//                    handleLeave(session, command);
-//                    break;
-//                case RESIGN:
-//                    handleResign(session, command);
-//                    break;
+                case LEAVE:
+                    handleLeave(session, command);
+                    break;
+                case RESIGN:
+                    handleResign(session, command);
+                    break;
                 default:
                     session.getRemote().sendString(gson.toJson(Map.of("serverMessageType", "ERROR", "errorMessage", "Error: Unknown command")));
             }
@@ -57,6 +57,43 @@ public class WebSocketHandler {
         } catch (Exception e) {
             e.printStackTrace();
             session.getRemote().sendString(gson.toJson(Map.of("serverMessageType", "ERROR", "errorMessage", "Error: Failed to parse command")));
+        }
+    }
+
+    private void handleResign(Session session, UserGameCommand command) {
+        int gameID = command.getGameID();
+        System.out.println("Handling RESIGN for gameID " + gameID);
+
+        GameSessionManager manager = gameSessions.get(gameID);
+        if (manager == null) {
+            System.out.println("No session manager found for gameID " + gameID);
+            return;
+        }
+
+        String username = manager.getUsername(session);
+        if (username == null) {
+            System.out.println("Could not identify user from session.");
+            return;
+        }
+
+        String message = username + " has resigned.";
+        websocket.messages.NotificationMessage notification = new websocket.messages.NotificationMessage(message);
+        manager.broadcast(gson.toJson(notification));
+
+        manager.remove(session);
+        System.out.println("Session removed after resignation from game ID " + gameID);
+    }
+
+    private void handleLeave(Session session, UserGameCommand command) {
+        int gameID = command.getGameID();
+        System.out.println("Handling LEAVE for gameID " + gameID);
+        
+        GameSessionManager manager = gameSessions.get(gameID);
+        if (manager != null) {
+            manager.remove(session);
+            System.out.println("Session removed from game ID " + gameID);
+        } else {
+            System.out.println("No session manager found for gameID " + gameID);
         }
     }
 

@@ -65,7 +65,14 @@ public class ChessBoard {
      * position
      */
     public ChessPiece getPiece(ChessPosition position) {
-        return squares[position.getRow() - 1][position.getColumn() - 1];
+        int row = position.getRow() - 1;
+        int col = position.getColumn() - 1;
+
+        if (row < 0 || row >= 8 || col < 0 || col >= 8) {
+            throw new IndexOutOfBoundsException("Invalid ChessPosition: " + position);
+        }
+
+        return squares[row][col];
     }
 
     /**
