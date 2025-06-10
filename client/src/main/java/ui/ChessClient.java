@@ -31,6 +31,7 @@ public class ChessClient {
     private ChessGame game;
     private ChessPosition highlightedFrom;
     private Set<ChessPosition> highlightedTo;
+    private ChessBoard board;
 
     public static void main(String[] args) {
         new ChessClient().run();
@@ -153,6 +154,7 @@ public class ChessClient {
             case "list games" -> handleListGames();
             case "play game" -> handlePlayGame();
             case "observe game" -> handleObserveGame();
+            case "h d2" -> handleHighlight();
             default -> System.out.println("Invalid command. Type 'help' to see options.");
         }
     }
@@ -210,18 +212,27 @@ public class ChessClient {
                 return;
             }
 
-            // If the current user already occupies the chosen color in this game, skip joinGame
             if (color.equals("WHITE") && selectedGame.whiteUsername() != null && selectedGame.whiteUsername().equals(currentUsername)) {
                 System.out.println();
                 System.out.printf("Rejoined game '%s' as WHITE.%n", selectedGame.gameName());
                 ChessBoard board = new ChessBoard();
                 board.resetBoard();
+
+                this.game = new ChessGame();
+                this.game.setBoard(board);
+                this.board = board;
+
                 new ChessBoardUI().drawBoard(board, true, highlightedFrom, highlightedTo);
+
             } else if (color.equals("BLACK") && selectedGame.blackUsername() != null && selectedGame.blackUsername().equals(currentUsername)) {
                 System.out.println();
                 System.out.printf("Rejoined game '%s' as BLACK.%n", selectedGame.gameName());
                 ChessBoard board = new ChessBoard();
                 board.resetBoard();
+
+                this.game = new ChessGame();
+                this.game.setBoard(board);
+
                 new ChessBoardUI().drawBoard(board, false, highlightedFrom, highlightedTo);
             } else {
                 try {
@@ -288,7 +299,10 @@ public class ChessClient {
 
 
     private void handleHighlight() {
-        String input = "d2";
+        if (command.startsWith("h ")) {
+            handleHighlight(command.substring(2).trim());
+        }
+
         int row = 8 - Character.getNumericValue(input.charAt(1)) + 1;
         int col = input.charAt(0) - 'a' + 1;
         ChessPosition start = new ChessPosition(row, col);

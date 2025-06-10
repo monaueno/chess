@@ -48,7 +48,6 @@ public class ChessBoardUI {
 
                 ChessPosition pos = new ChessPosition(actualRow + 1, actualCol + 1);
                 String bg;
-
                 if (highlightedFrom != null && pos.equals(highlightedFrom)) {
                     bg = "\u001B[43m";
                 } else if (highlightedTo != null && highlightedTo.contains(pos)) {

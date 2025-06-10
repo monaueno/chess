@@ -1,7 +1,12 @@
 package client.websocket;
 
+import chess.ChessBoard;
+import chess.ChessGame;
+import ui.ChessBoardUI;
 import websocket.commands.UserGameCommand;
 import websocket.commands.UserGameCommand.CommandType;
+import websocket.messages.ErrorMessage;
+import websocket.messages.NotificationMessage;
 import websocket.messages.ServerMessage;
 import com.google.gson.Gson;
 import org.eclipse.jetty.websocket.api.Session;
@@ -10,6 +15,10 @@ import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketError;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
+import websocket.messages.LoadGameMessage;
+import java.util.Set;
+import chess.ChessPosition;
+
 
 @WebSocket
 public class GameplayWebSocketHandler {
@@ -18,16 +27,22 @@ public class GameplayWebSocketHandler {
     private final int gameID;
     private Session session;
     private static final Gson gson = new Gson();
+    private ChessBoard board;
+    private ChessGame game = new ChessGame();
+    private final boolean playerIsWhite = true;
+    private ChessPosition highlightedFrom;
+    private Set<ChessPosition> highlightedTo;
 
     public GameplayWebSocketHandler(String authToken, int gameID) {
         this.authToken = authToken;
         this.gameID = gameID;
     }
 
+
     @OnWebSocketConnect
     public void onConnect(Session session) {
         this.session = session;
-        System.out.println("✅ WebSocket connected.");
+        System.out.println("WebSocket connected.");
 
         UserGameCommand connectCommand = new UserGameCommand(CommandType.CONNECT, authToken, gameID);
         try {
@@ -41,17 +56,22 @@ public class GameplayWebSocketHandler {
     public void onMessage(String message) {
         System.out.println("Received message: " + message);
 
-        ServerMessage serverMessage = gson.fromJson(message, ServerMessage.class);
+        ServerMessage serverMessage = MessageSerializer.deserializeServerMessage(message);
 
         switch (serverMessage.getServerMessageType()) {
             case LOAD_GAME:
-                // TODO: handle game state update
+                LoadGameMessage lgMsg = (LoadGameMessage) serverMessage;
+                this.board = lgMsg.getGame().getBoard();
+                game.setBoard(this.board);
+                new ChessBoardUI().drawBoard(board, playerIsWhite, highlightedFrom, highlightedTo);
                 break;
+
             case NOTIFICATION:
-                // TODO: show notification to user
+                // Handle NotificationMessage if needed
                 break;
+
             case ERROR:
-                // TODO: display error
+                // Handle ErrorMessage if needed
                 break;
         }
     }
@@ -66,3 +86,4 @@ public class GameplayWebSocketHandler {
         System.err.println("WebSocket error: " + t.getMessage());
     }
 }
+

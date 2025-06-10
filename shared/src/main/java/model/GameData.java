@@ -1,5 +1,6 @@
 package model;
 
+import chess.ChessBoard;
 import chess.ChessGame;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +12,7 @@ public class GameData {
     private String gameName;
     private ChessGame game;
     private List<String> observers ;
+    private ChessBoard board;
 
     public GameData(int gameID, String whiteUsername, String blackUsername, String gameName, ChessGame game) {
         this.gameID = gameID;
@@ -52,4 +54,6 @@ public class GameData {
     public void setGameName(String gameName) {
         this.gameName = gameName;
     }
+    public ChessBoard getBoard() { return board; }
+
 }
