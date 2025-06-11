@@ -66,6 +66,7 @@ public class MySqlDataAccess implements DataAccess {
             stmt.setString(1, user.username());
             stmt.setString(2, hashedPassword);
             stmt.setString(3, user.email());
+            System.out.println("➕ Creating user: " + user.username());
 
             stmt.executeUpdate();
         } catch (SQLException ex) {
@@ -79,6 +80,7 @@ public class MySqlDataAccess implements DataAccess {
 
         try (Connection conn = DatabaseManager.getConnection();
         PreparedStatement stmt = conn.prepareStatement(sql)){
+            System.out.println("🔍 Checking for user: " + username);
             stmt.setString(1, username);
 
             try (ResultSet rs = stmt.executeQuery()){

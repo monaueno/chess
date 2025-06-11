@@ -101,6 +101,7 @@ public class ChessClient {
         } catch (Exception e) {
             System.out.println();
             System.out.println("USER EXISTS: Please log in.");
+            System.out.println(e.getMessage());
         }
     }
 
@@ -119,6 +120,7 @@ public class ChessClient {
         } catch (Exception e) {
             System.out.println();
             System.out.println("USER DOESN'T EXIST: Please register first");
+            System.out.println(e.getMessage());
         }
     }
 
