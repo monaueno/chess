@@ -2,6 +2,7 @@ package client.websocket;
 
 import chess.ChessBoard;
 import chess.ChessGame;
+import model.GameData;
 import ui.ChessBoardUI;
 import websocket.commands.UserGameCommand;
 import websocket.commands.UserGameCommand.CommandType;
@@ -61,8 +62,10 @@ public class GameplayWebSocketHandler {
         switch (serverMessage.getServerMessageType()) {
             case LOAD_GAME:
                 LoadGameMessage lgMsg = (LoadGameMessage) serverMessage;
-                this.board = lgMsg.getGame().getBoard();
-                game.setBoard(this.board);
+                GameData data = lgMsg.getGame();
+                this.game = data.game();
+                this.board = data.getBoard();
+                game.setBoard(board);
                 new ChessBoardUI().drawBoard(board, playerIsWhite, highlightedFrom, highlightedTo);
                 break;
 

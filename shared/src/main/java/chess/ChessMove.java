@@ -37,6 +37,15 @@ public class ChessMove {
         this.promotionPiece = promotionPiece;
     }
 
+    @Override
+    public String toString() {
+        String moveStr = startPosition.toString() + "-" + endPosition.toString();
+        if (promotionPiece != null) {
+            moveStr += "=" + promotionPiece;
+        }
+        return moveStr;
+    }
+
     /**
      * @return ChessPosition of starting location
      */

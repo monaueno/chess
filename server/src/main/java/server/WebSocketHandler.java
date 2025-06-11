@@ -163,19 +163,22 @@ public class WebSocketHandler {
             String loadGameJson = gson.toJson(loadGameMsg);
             manager.broadcast(loadGameJson);
 
-            // Notify others of the move
-            String moveMessage = String.format("%s moved from %s to %s", username,
-                    move.getStartPosition(), move.getEndPosition());
-            websocket.messages.NotificationMessage notification = new websocket.messages.NotificationMessage(moveMessage);
+            String moveNotation = move.toString(); // Assuming ChessMove has a proper toString override like e2-e4
+            String moveMessage = String.format("%s moved %s", username, move.getStartPosition().toString(), move.getEndPosition().toString());
+            NotificationMessage notification = new NotificationMessage(moveMessage);
             manager.broadcastExcept(gson.toJson(notification), session);
 
-            // Check for check or checkmate
-            if (game.isInCheck(game.getTeamTurn())) {
-                websocket.messages.NotificationMessage checkMsg =
-                        new websocket.messages.NotificationMessage(username + " is in check");
+            // Check for check, checkmate, or stalemate
+            if (game.isInCheckmate(game.getTeamTurn())) {
+                NotificationMessage checkmateMsg = new NotificationMessage(game.getTeamTurn() + " is in checkmate");
+                manager.broadcast(gson.toJson(checkmateMsg));
+            } else if (game.isInCheck(game.getTeamTurn())) {
+                NotificationMessage checkMsg = new NotificationMessage(game.getTeamTurn() + " is in check");
                 manager.broadcast(gson.toJson(checkMsg));
+            } else if (game.isInStalemate(game.getTeamTurn())) {
+                NotificationMessage stalemateMsg = new NotificationMessage(game.getTeamTurn() + " is in stalemate");
+                manager.broadcast(gson.toJson(stalemateMsg));
             }
-            // TODO: Detect checkmate/stalemate (if you have methods for it)
 
         } catch (Exception e) {
             try {
@@ -219,6 +222,14 @@ public class WebSocketHandler {
 
         String msg = String.format("%s joined as %s", username, role);
         broadcastToOthers(gameID, new NotificationMessage(msg), session);
+
+        GameData gameData = new GameData(manager.getGame());
+        LoadGameMessage loadGameMsg = new LoadGameMessage(gameData);
+        try {
+            session.getRemote().sendString(gson.toJson(loadGameMsg));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @OnWebSocketClose
