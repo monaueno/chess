@@ -27,6 +27,7 @@ public class GameplayWebSocketHandler {
 
     private final String authToken;
     private final int gameID;
+    private final Runnable onGameLoadedCallback;
     private Session session;
     private static final Gson gson = new Gson();
     private ChessBoard board;
@@ -36,9 +37,10 @@ public class GameplayWebSocketHandler {
     private Set<ChessPosition> highlightedTo;
     private final java.util.Scanner scanner = new java.util.Scanner(System.in);
 
-    public GameplayWebSocketHandler(String authToken, int gameID) {
+    public GameplayWebSocketHandler(String authToken, int gameID, Runnable onGameLoadedCallback) {
         this.authToken = authToken;
         this.gameID = gameID;
+        this.onGameLoadedCallback = onGameLoadedCallback;
     }
 
 
@@ -69,7 +71,9 @@ public class GameplayWebSocketHandler {
                 this.board = data.getBoard();
                 game.setBoard(board);
                 System.out.println("\nUpdated board after move:");
-                promptForMove();
+                if (onGameLoadedCallback != null) {
+                    onGameLoadedCallback.run();
+                }
                 break;
 
             case NOTIFICATION:

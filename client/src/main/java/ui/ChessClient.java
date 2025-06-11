@@ -244,7 +244,7 @@ public class ChessClient {
                     WebSocketClient client = new WebSocketClient();
                     client.start();
                     URI uri = new URI("ws://localhost:8080/ws");
-                    client.connect(new GameplayWebSocketHandler(authToken, selectedGame.gameID()), uri).get();
+                    client.connect(new GameplayWebSocketHandler(authToken, selectedGame.gameID(), this::prompFortMove), uri).get();
 
                     ChessBoard board = new ChessBoard();
                     board.resetBoard();
@@ -262,6 +262,10 @@ public class ChessClient {
             System.out.println(e.getMessage());
         }
 
+    }
+
+    private void prompFortMove() {
+        System.out.print("Enter move (e.g., e2 e4): ");
     }
 
     private void handleObserveGame() {
@@ -342,3 +346,4 @@ public class ChessClient {
         }
     }
 }
+
