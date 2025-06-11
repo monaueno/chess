@@ -83,6 +83,8 @@ public class WebSocketHandler {
         websocket.messages.NotificationMessage notification = new websocket.messages.NotificationMessage(message);
         manager.broadcast(gson.toJson(notification));
 
+        manager.getGame().setGameOver(true);
+
         String resignationMsg = String.format("%s resigned", username);
         manager.broadcast(gson.toJson(new NotificationMessage(resignationMsg)));
 
@@ -104,6 +106,14 @@ public class WebSocketHandler {
         if (username == null) {
             System.out.println("Could not identify user from session");
             return;
+        }
+
+        GameData gameData = manager.getGameData();
+        if (gameData.whiteUsername() != null && gameData.whiteUsername().equals(username)) {
+            gameData.setWhiteUsername(null);
+        }
+        if (gameData.blackUsername() != null && gameData.blackUsername().equals(username)) {
+            gameData.setBlackUsername(null);
         }
 
         String msg = String.format("%s left the game", username);
@@ -158,7 +168,7 @@ public class WebSocketHandler {
 
             game.makeMove(move);
 
-            GameData gameData = new GameData(game);  // Wrap current ChessGame state
+            GameData gameData = new GameData(game);
             LoadGameMessage loadGameMsg = new LoadGameMessage(gameData);
             String loadGameJson = gson.toJson(loadGameMsg);
             manager.broadcast(loadGameJson);
@@ -209,21 +219,20 @@ public class WebSocketHandler {
             return;
         }
 
+        GameData gameData = manager.getGameData();
+
         String role;
-        if (command instanceof websocket.commands.ConnectCommand connectCommand) {
-            if (connectCommand.getPlayerColor() == null) {
-                role = "observer";
-            } else {
-                role = connectCommand.getPlayerColor().toString().toLowerCase();
-            }
+        if (username.equals(gameData.whiteUsername())) {
+            role = "white";
+        } else if(username.equals(gameData.blackUsername())) {
+            role = "black";
         } else {
-            role = "player";
+            role = "observer";
         }
 
         String msg = String.format("%s joined as %s", username, role);
         broadcastToOthers(gameID, new NotificationMessage(msg), session);
 
-        GameData gameData = new GameData(manager.getGame());
         LoadGameMessage loadGameMsg = new LoadGameMessage(gameData);
         try {
             session.getRemote().sendString(gson.toJson(loadGameMsg));

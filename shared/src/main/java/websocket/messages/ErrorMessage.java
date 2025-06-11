@@ -5,9 +5,9 @@ import model.GameData;
 public class ErrorMessage extends ServerMessage {
     private String errorMessage;
 
-    public ErrorMessage(GameData game) {
+    public ErrorMessage(String message) {
         super(ServerMessageType.ERROR);
-        this.errorMessage = errorMessage;
+        this.errorMessage = "Error: " + message;
     }
 
     public String getErrorMessage() {

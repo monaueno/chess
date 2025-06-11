@@ -16,6 +16,10 @@ public class ChessGame {
     private ChessBoard board;
     private TeamColor currentTurn;
     private ChessMove lastMove;
+    private boolean gameOver = false;
+    public void setGameOver(boolean over) { this.gameOver = over; }
+    public boolean isGameOver() { return gameOver; }
+
 
     public ChessGame() {
         this.board = new ChessBoard();
@@ -186,6 +190,9 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
+        if (isGameOver()) {
+            throw new IllegalStateException("Game is over");
+        }
         ChessPosition start = move.getStartPosition();
         ChessPosition end = move.getEndPosition();
         ChessPiece movingPiece = board.getPiece(start);
@@ -248,6 +255,10 @@ public class ChessGame {
         this.lastMove = move;
 
         currentTurn = (currentTurn == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE;
+
+        if (isInCheckmate(currentTurn) || isInStalemate(currentTurn)) {
+            setGameOver(true);
+        }
     }
 
     /**

@@ -1,6 +1,7 @@
 package websocket;
 
 import chess.ChessGame;
+import model.GameData;
 import org.eclipse.jetty.websocket.api.Session;
 
 import java.io.IOException;
@@ -50,13 +51,17 @@ public class GameSessionManager {
         }
     }
 
-private ChessGame game;
+    private GameData gameData;
 
-public ChessGame getGame() {
-    return game;
-}
+    public GameData getGameData() {
+        return gameData;
+    }
 
-public void setGame(ChessGame game) {
-    this.game = game;
-}
+    public void setGameData(GameData gameData) {
+        this.gameData = gameData;
+    }
+
+    public ChessGame getGame() {
+        return gameData != null ? gameData.game() : null;
+    }
 }
