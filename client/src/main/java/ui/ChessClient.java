@@ -152,7 +152,10 @@ public class ChessClient {
             }
             case "create game" -> handleCreateGame();
             case "list games" -> handleListGames();
-            case "play game" -> handlePlayGame();
+            case "play game" -> {
+                handlePlayGame();
+                return;
+            }
             case "observe game" -> handleObserveGame();
             case String s when s.startsWith("h ") -> handleHighlight(s.substring(2).trim());
             default -> System.out.println("Invalid command. Type 'help' to see options.");
