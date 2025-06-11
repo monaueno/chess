@@ -93,7 +93,13 @@ public class GameplayWebSocketHandler {
 
             case ERROR:
                 ErrorMessage errorMsg = (ErrorMessage) serverMessage;
-                System.err.println("Error: " + errorMsg.getErrorMessage());
+                System.err.println(errorMsg.getErrorMessage());
+
+                if ((playerIsWhite && game.getTeamTurn() == ChessGame.TeamColor.WHITE) ||
+                        (!playerIsWhite && game.getTeamTurn() == ChessGame.TeamColor.BLACK)) {
+                    promptForMove();
+                }
+
                 break;
         }
     }
@@ -124,6 +130,17 @@ public class GameplayWebSocketHandler {
         String input = scanner.nextLine().trim().toLowerCase();
         if (input.equalsIgnoreCase("quit")) {
             System.out.println("Exiting game.");
+            return;
+        }
+
+        if (input.equalsIgnoreCase("quit")) {
+            System.out.println("Exiting game.");
+            handleResignOrLeave();
+            try {
+                session.close();
+            } catch (Exception e) {
+                System.err.println("Error closing session: " + e.getMessage());
+            }
             return;
         }
 

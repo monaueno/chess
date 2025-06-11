@@ -7,6 +7,7 @@ import model.GameData;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import com.google.gson.Gson;
@@ -174,10 +175,30 @@ public class WebSocketHandler {
         }
 
         try {
-            if (!game.validMoves(move.getStartPosition()).contains(move)) {
+            Collection<ChessMove> validMoves = game.validMoves(move.getStartPosition());
+
+            System.out.println("Trying move: " + move);
+            if (game.getBoard() == null) {
+                System.out.println("Board is null before move validation.");
+            } else {
+                System.out.println("Board is present.");
+                System.out.println("Piece at start: " + game.getBoard().getPiece(move.getStartPosition()));
+            }
+            System.out.println("Valid moves: " + validMoves);
+
+
+            if (validMoves == null) {
                 session.getRemote().sendString(gson.toJson(Map.of(
-                    "serverMessageType", "ERROR",
-                    "errorMessage", "Error: Illegal move"
+                        "serverMessageType", "ERROR",
+                        "errorMessage", "Error: Cannot retrieve valid moves — board might be uninitialized"
+                )));
+                return;
+            }
+
+            if (!validMoves.contains(move)) {
+                session.getRemote().sendString(gson.toJson(Map.of(
+                        "serverMessageType", "ERROR",
+                        "errorMessage", "Error: Illegal move"
                 )));
                 return;
             }
@@ -210,7 +231,7 @@ public class WebSocketHandler {
             try {
                 session.getRemote().sendString(gson.toJson(Map.of(
                     "serverMessageType", "ERROR",
-                    "errorMessage", "Error: Failed to apply move"
+                        "errorMessage", "Error: Failed to apply move - " + e.getMessage()
                 )));
             } catch (IOException ioException) {
                 ioException.printStackTrace();
