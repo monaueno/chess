@@ -4,6 +4,7 @@ import chess.ChessBoard;
 import chess.ChessGame;
 import model.GameData;
 import ui.ChessBoardUI;
+import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
 import websocket.commands.UserGameCommand.CommandType;
 import websocket.messages.ErrorMessage;
@@ -33,6 +34,7 @@ public class GameplayWebSocketHandler {
     private final boolean playerIsWhite = true;
     private ChessPosition highlightedFrom;
     private Set<ChessPosition> highlightedTo;
+    private final java.util.Scanner scanner = new java.util.Scanner(System.in);
 
     public GameplayWebSocketHandler(String authToken, int gameID) {
         this.authToken = authToken;
@@ -48,6 +50,7 @@ public class GameplayWebSocketHandler {
         UserGameCommand connectCommand = new UserGameCommand(CommandType.CONNECT, authToken, gameID);
         try {
             session.getRemote().sendString(gson.toJson(connectCommand));
+            promptForMove(); // Start user input loop once
         } catch (Exception e) {
             System.err.println("Failed to send CONNECT command: " + e.getMessage());
         }
@@ -66,6 +69,7 @@ public class GameplayWebSocketHandler {
                 this.game = data.game();
                 this.board = data.getBoard();
                 game.setBoard(board);
+                System.out.println("\nUpdated board after move:");
                 new ChessBoardUI().drawBoard(board, playerIsWhite, highlightedFrom, highlightedTo);
                 break;
 
@@ -81,6 +85,45 @@ public class GameplayWebSocketHandler {
         }
     }
 
+    private ChessPosition parsePosition(String pos) {
+        int row = 8 - Character.getNumericValue(pos.charAt(1)); // e.g., '2' → 6
+        int col = pos.charAt(0) - 'a' + 1; // e.g., 'e' → 5
+        return new ChessPosition(row, col);
+    }
+
+    public void sendMove(String from, String to) {
+        ChessPosition fromPos = parsePosition(from);
+        ChessPosition toPos = parsePosition(to);
+        MakeMoveCommand moveCommand = new MakeMoveCommand(authToken, gameID, fromPos, toPos);
+
+        System.out.println("Sending move JSON: " + gson.toJson(moveCommand));
+
+        try {
+            session.getRemote().sendString(gson.toJson(moveCommand));
+            // Do not draw board here; wait for LOAD_GAME message which will trigger UI update.
+        } catch (Exception e) {
+            System.err.println("Failed to send move: " + e.getMessage());
+        }
+    }
+
+    private void promptForMove() {
+        new Thread(() -> {
+            while (true) {
+                System.out.print("Enter move (e.g., e2 e4): ");
+                String input = scanner.nextLine().trim();
+                if (input.equalsIgnoreCase("quit")) break;
+
+                if (!input.matches("^[a-h][1-8]\\s+[a-h][1-8]$")) {
+                    System.out.println("Invalid move format. Use: e2 e4");
+                    continue;
+                }
+
+                String[] parts = input.split("\\s+");
+                sendMove(parts[0], parts[1]);
+            }
+        }).start();
+    }
+
     @OnWebSocketClose
     public void onClose(int statusCode, String reason) {
         System.out.println("WebSocket closed: " + reason);
@@ -91,4 +134,3 @@ public class GameplayWebSocketHandler {
         System.err.println("WebSocket error: " + t.getMessage());
     }
 }
-

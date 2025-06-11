@@ -1,6 +1,7 @@
 package server;
 
 import chess.ChessMove;
+import dataaccess.DataAccess;
 import model.GameData;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
@@ -22,6 +23,11 @@ public class WebSocketHandler {
 
     private static final Map<Integer, GameSessionManager> gameSessions = new ConcurrentHashMap<>();
     private static final Gson gson = new Gson();
+    private final DataAccess db;
+
+    public WebSocketHandler(DataAccess db) {
+        this.db = db;
+    }
 
     @OnWebSocketConnect
     public void onConnect(Session session) {
@@ -109,6 +115,11 @@ public class WebSocketHandler {
         }
 
         GameData gameData = manager.getGameData();
+
+        if (gameData == null) {
+            System.out.println("GameData is null after loading. Aborting.");
+            return;
+        }
         if (gameData.whiteUsername() != null && gameData.whiteUsername().equals(username)) {
             gameData.setWhiteUsername(null);
         }
@@ -211,7 +222,38 @@ public class WebSocketHandler {
 
         gameSessions.putIfAbsent(gameID, new GameSessionManager());
         GameSessionManager manager = gameSessions.get(gameID);
-        manager.add(session, authToken);
+
+        GameData gameData;
+        try {
+            gameData = db.getGame(gameID);
+            if (gameData == null) {
+                try {
+                    session.getRemote().sendString(gson.toJson(
+                            Map.of("serverMessageType", "ERROR",
+                                    "errorMessage", "Error: Game not found")));
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
+                return;
+            }
+        } catch (dataaccess.DataAccessException e) {
+            try {
+                try {
+                    session.getRemote().sendString(gson.toJson(
+                            Map.of("serverMessageType", "ERROR",
+                                    "errorMessage", "Error: Failed to access game data")));
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            e.printStackTrace();
+            return;
+        }
+        manager.setGameData(gameData);            // store in session manager   // wrap it
+        manager.add(session, authToken);      // store it so it won't be null next time
+
 
         String username = manager.getUsername(session);
         if (username == null) {
@@ -219,12 +261,10 @@ public class WebSocketHandler {
             return;
         }
 
-        GameData gameData = manager.getGameData();
-
         String role;
         if (username.equals(gameData.whiteUsername())) {
             role = "white";
-        } else if(username.equals(gameData.blackUsername())) {
+        } else if (username.equals(gameData.blackUsername())) {
             role = "black";
         } else {
             role = "observer";
