@@ -74,7 +74,7 @@ public class GameData {
     }
 
     public ChessBoard getBoard() {
-        return board;
+        return this.game.getBoard();
     }
 
     public GameData(ChessGame game) {

@@ -213,48 +213,26 @@ public class ChessClient {
                 return;
             }
 
-            if (color.equals("WHITE") && selectedGame.whiteUsername() != null && selectedGame.whiteUsername().equals(currentUsername)) {
+            try {
+                facade.joinGame(selectedGame.gameID(), color, authToken);
                 System.out.println();
-                System.out.printf("Rejoined game '%s' as WHITE.%n", selectedGame.gameName());
-                ChessBoard board = new ChessBoard();
-                board.resetBoard();
+                System.out.printf("Joined game '%s' as %s.%n", selectedGame.gameName(), color);
 
-                this.game = new ChessGame();
-                this.game.setBoard(board);
-                this.board = board;
+                WebSocketClient client = new WebSocketClient();
+                client.start();
+                URI uri = new URI("ws://localhost:8080/ws");
 
-                new ChessBoardUI().drawBoard(board, whitePerspective, highlightedFrom, highlightedTo);
+                GameplayWebSocketHandler handler = new GameplayWebSocketHandler(authToken, selectedGame.gameID(), this::promptForMove);
+                client.connect(handler, uri).get();
 
-            } else if (color.equals("BLACK") && selectedGame.blackUsername() != null && selectedGame.blackUsername().equals(currentUsername)) {
-                System.out.println();
-                System.out.printf("Rejoined game '%s' as BLACK.%n", selectedGame.gameName());
-                ChessBoard board = new ChessBoard();
-                board.resetBoard();
-
-                this.game = new ChessGame();
-                this.game.setBoard(board);
-
-                new ChessBoardUI().drawBoard(board, whitePerspective, highlightedFrom, highlightedTo);
-            } else {
-                try {
-                    facade.joinGame(selectedGame.gameID(), color, authToken);
-                    System.out.println();
-                    System.out.printf("Joined game '%s' as %s.%n", selectedGame.gameName(), color);
-
-                    WebSocketClient client = new WebSocketClient();
-                    client.start();
-                    URI uri = new URI("ws://localhost:8080/ws");
-                    client.connect(new GameplayWebSocketHandler(authToken, selectedGame.gameID(), this::prompFortMove), uri).get();
-
-                    ChessBoard board = new ChessBoard();
-                    board.resetBoard();
-                    new ChessBoardUI().drawBoard(board, whitePerspective, highlightedFrom, highlightedTo);
-                } catch (Exception e) {
-                    System.out.println(e.getMessage());
+                while(!handler.hasExited()) {
+                    Thread.sleep(1000);
                 }
 
-
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
             }
+
 
         } catch (NumberFormatException e) {
             System.out.println("Please enter a valid number.");
@@ -264,8 +242,7 @@ public class ChessClient {
 
     }
 
-    private void prompFortMove() {
-        System.out.print("Enter move (e.g., e2 e4): ");
+    private void promptForMove() {
     }
 
     private void handleObserveGame() {
@@ -346,4 +323,3 @@ public class ChessClient {
         }
     }
 }
-

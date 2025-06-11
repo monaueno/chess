@@ -36,18 +36,18 @@ public class GameplayWebSocketHandler {
     private ChessPosition highlightedFrom;
     private Set<ChessPosition> highlightedTo;
     private final java.util.Scanner scanner = new java.util.Scanner(System.in);
+    private volatile boolean exited = false;
 
-    public GameplayWebSocketHandler(String authToken, int gameID, Runnable onGameLoadedCallback) {
+    public GameplayWebSocketHandler(String authToken, int gameID, Runnable promptForMove) {
         this.authToken = authToken;
         this.gameID = gameID;
-        this.onGameLoadedCallback = onGameLoadedCallback;
+        this.onGameLoadedCallback = promptForMove;
     }
 
 
     @OnWebSocketConnect
     public void onConnect(Session session) {
         this.session = session;
-        System.out.println("WebSocket connected.");
 
         UserGameCommand connectCommand = new UserGameCommand(CommandType.CONNECT, authToken, gameID);
         try {
@@ -59,7 +59,6 @@ public class GameplayWebSocketHandler {
 
     @OnWebSocketMessage
     public void onMessage(String message) {
-        System.out.println("Received message: " + message);
 
         ServerMessage serverMessage = MessageSerializer.deserializeServerMessage(message);
 
@@ -70,9 +69,20 @@ public class GameplayWebSocketHandler {
                 this.game = data.game();
                 this.board = data.getBoard();
                 game.setBoard(board);
-                System.out.println("\nUpdated board after move:");
-                if (onGameLoadedCallback != null) {
-                    onGameLoadedCallback.run();
+
+                if (board == null) {
+                    System.err.println("Error: board is null in LOAD_GAME");
+                    return;
+                }
+
+                new ChessBoardUI().drawBoard(board, playerIsWhite, highlightedFrom, highlightedTo);
+
+
+                // Only prompt if it's your turn
+                System.out.println("Current turn: " + game.getTeamTurn());
+                if ((playerIsWhite && game.getTeamTurn() == ChessGame.TeamColor.WHITE) ||
+                        (!playerIsWhite && game.getTeamTurn() == ChessGame.TeamColor.BLACK)) {
+                    promptForMove();
                 }
                 break;
 
@@ -110,32 +120,31 @@ public class GameplayWebSocketHandler {
     }
 
     private void promptForMove() {
-        new Thread(() -> {
-            while (true) {
-                new ChessBoardUI().drawBoard(board, playerIsWhite, highlightedFrom,highlightedTo);
-                System.out.print("Enter move (e.g., e2 e4): ");
-                String input = scanner.nextLine().trim().toLowerCase();
-                if (input.equalsIgnoreCase("quit")) break;
+        System.out.print("\nEnter move: ");
+        String input = scanner.nextLine().trim().toLowerCase();
+        if (input.equalsIgnoreCase("quit")) {
+            System.out.println("Exiting game.");
+            return;
+        }
 
-                if (!input.matches("^[a-h][1-8]\\s+[a-h][1-8]$")) {
-                    System.out.println("Invalid move format. Use: e2 e4");
-                    continue;
-                }
+        if (!input.matches("^[a-h][1-8]\\s+[a-h][1-8]$")) {
+            System.out.println("Invalid format. Use: e2 e4");
+            promptForMove(); // retry
+            return;
+        }
 
-                if (input.equalsIgnoreCase("quit")) {
-                    try {
-                        session.close();
-                    } catch (Exception e) {
-                        System.err.println("Failed to close session: " + e.getMessage());
-                    }
-                    break;
-                }
-
-                String[] parts = input.split("\\s+");
-                sendMove(parts[0], parts[1]);
-            }
-        }).start();
+        String[] parts = input.split("\\s+");
+        sendMove(parts[0], parts[1]);
     }
+
+    public boolean hasExited() {
+        return exited;
+    }
+
+    private void handleResignOrLeave(){
+        exited = true;
+    }
+
 
     @OnWebSocketClose
     public void onClose(int statusCode, String reason) {
