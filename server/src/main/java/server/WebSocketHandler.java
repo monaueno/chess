@@ -2,6 +2,7 @@ package server;
 
 import chess.ChessMove;
 import dataaccess.DataAccess;
+import dataaccess.MySqlDataAccess;
 import model.GameData;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
@@ -24,9 +25,13 @@ public class WebSocketHandler {
     private static final Map<Integer, GameSessionManager> gameSessions = new ConcurrentHashMap<>();
     private static final Gson gson = new Gson();
     private final DataAccess db;
+    private static DataAccess sharedDB;
 
-    public WebSocketHandler(DataAccess db) {
-        this.db = db;
+    public static void setSharedDB(DataAccess db) { sharedDB = db;}
+
+    public WebSocketHandler() {
+        this.db = sharedDB;
+        System.out.println("🚀 WebSocketHandler created. sharedDB = " + sharedDB);
     }
 
     @OnWebSocketConnect

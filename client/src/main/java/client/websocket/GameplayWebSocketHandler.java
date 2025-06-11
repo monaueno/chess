@@ -50,7 +50,6 @@ public class GameplayWebSocketHandler {
         UserGameCommand connectCommand = new UserGameCommand(CommandType.CONNECT, authToken, gameID);
         try {
             session.getRemote().sendString(gson.toJson(connectCommand));
-            promptForMove(); // Start user input loop once
         } catch (Exception e) {
             System.err.println("Failed to send CONNECT command: " + e.getMessage());
         }
@@ -70,7 +69,7 @@ public class GameplayWebSocketHandler {
                 this.board = data.getBoard();
                 game.setBoard(board);
                 System.out.println("\nUpdated board after move:");
-                new ChessBoardUI().drawBoard(board, playerIsWhite, highlightedFrom, highlightedTo);
+                promptForMove();
                 break;
 
             case NOTIFICATION:
@@ -109,13 +108,23 @@ public class GameplayWebSocketHandler {
     private void promptForMove() {
         new Thread(() -> {
             while (true) {
+                new ChessBoardUI().drawBoard(board, playerIsWhite, highlightedFrom,highlightedTo);
                 System.out.print("Enter move (e.g., e2 e4): ");
-                String input = scanner.nextLine().trim();
+                String input = scanner.nextLine().trim().toLowerCase();
                 if (input.equalsIgnoreCase("quit")) break;
 
                 if (!input.matches("^[a-h][1-8]\\s+[a-h][1-8]$")) {
                     System.out.println("Invalid move format. Use: e2 e4");
                     continue;
+                }
+
+                if (input.equalsIgnoreCase("quit")) {
+                    try {
+                        session.close();
+                    } catch (Exception e) {
+                        System.err.println("Failed to close session: " + e.getMessage());
+                    }
+                    break;
                 }
 
                 String[] parts = input.split("\\s+");

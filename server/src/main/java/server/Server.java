@@ -12,20 +12,23 @@ public class Server {
 
     public int run(int desiredPort) {
         Spark.port(desiredPort);
-        Spark.webSocket("/ws", WebSocketHandler.class);
 
         Spark.staticFiles.location("web");
 
-        DataAccess db = null;
+        DataAccess db;
         try {
             DatabaseManager.createDatabase();
             DatabaseManager.createTables();
-            db = new MySqlDataAccess();
-        } catch (DataAccessException ex) {
-            System.err.println("Failed to initialize database: " + ex.getMessage());
-            ex.printStackTrace();
-            System.exit(1); // fail fast if DB setup fails
+            db = new MySqlDataAccess();          // can throw DataAccessException
+        } catch (DataAccessException e) {
+            System.err.println("DB init failed: " + e.getMessage());
+            return -1;                           // fail fast
         }
+
+        /* ❷ Provide it to the WebSocket handler BEFORE registering */
+        WebSocketHandler.setSharedDB(db);
+
+        Spark.webSocket("/ws", WebSocketHandler.class);
 
         Spark.post("/register", new RegisterHandler(db));
         Spark.post("/login", new LoginHandler(db));
