@@ -252,13 +252,6 @@ public class WebSocketHandler {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            // Send move notification to all users (including the one who made the move)
-            String moveText = String.format("%s made the move %s to %s", username, move.getStartPosition(), move.getEndPosition());
-            try {
-                s.getRemote().sendString(gson.toJson(new NotificationMessage(moveText)));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
     }
 

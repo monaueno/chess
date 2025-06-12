@@ -142,7 +142,7 @@ public class GameplayWebSocketHandler {
                             String to = (char)('a' + lastMove.getEndPosition().getColumn() - 1) + String.valueOf(lastMove.getEndPosition().getRow());
                             String moveText = String.format("%s made the move %s to %s", username, from, to);
                             System.out.println(moveText);
-                        }l
+                        }
 
                         if (playerColor == game.getTeamTurn()) {
                             System.out.println("✅ It's your turn! Enter your move (e.g., e2 e4), or type 'resign' or 'exit':");
@@ -203,8 +203,11 @@ public class GameplayWebSocketHandler {
 
             case ERROR:
                 ErrorMessage errorMsg = (ErrorMessage) serverMessage;
-                System.err.println(errorMsg.getErrorMessage());
+                System.out.println("❌ Error: " + errorMsg.getErrorMessage());
 
+                if (!game.isGameOver()) {
+                    promptForMove();
+                }
                 break;
         }
     }
