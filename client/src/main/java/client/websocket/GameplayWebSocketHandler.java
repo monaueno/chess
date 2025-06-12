@@ -164,8 +164,14 @@ public class GameplayWebSocketHandler {
                                     String input = scanner.nextLine().trim();
 
                                     if (input.equalsIgnoreCase("resign")) {
-                                        sendResignCommand();
-                                        break;
+                                        System.out.print("Are you sure you want to resign? (y/n): ");
+                                        String confirm = scanner.nextLine().trim().toLowerCase();
+                                        if (confirm.equals("y")) {
+                                            sendResignCommand();
+                                            break;
+                                        } else {
+                                            continue;
+                                        }
                                     } else if (input.equalsIgnoreCase("exit")) {
                                         sendLeaveCommand();
                                         break;
