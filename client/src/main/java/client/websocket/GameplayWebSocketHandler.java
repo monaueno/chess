@@ -93,7 +93,7 @@ public class GameplayWebSocketHandler {
                         this.playerColor = ChessGame.TeamColor.WHITE;
                     } else if (username.equals(data.blackUsername())) {
                         this.playerColor = ChessGame.TeamColor.BLACK;
-                    } else {
+                    } else if (!isObserver) {
                         System.err.println("⚠️ Username does not match either white or black player.");
                         return;
                     }
@@ -113,13 +113,20 @@ public class GameplayWebSocketHandler {
                     System.out.println("✅ Done drawing board.");
 
                     if (game.isGameOver()) {
+                        System.out.println("✅ Game is over.");
+
                         if (game.isInCheckmate(ChessGame.TeamColor.WHITE)) {
-                            System.out.println("Notification: Checkmate! Game over. Black wins.");
+                            System.out.println("Checkmate! Black wins.");
                         } else if (game.isInCheckmate(ChessGame.TeamColor.BLACK)) {
-                            System.out.println("Notification: Checkmate! Game over. White wins.");
+                            System.out.println("Checkmate! White wins.");
+                        } else if (game.getResignedPlayer() != null) {
+                            String resigned = game.getResignedPlayer();
+                            String winner = resigned.equals(data.whiteUsername()) ? data.blackUsername() : data.whiteUsername();
+                            System.out.println(resigned + " has resigned. " + winner + " wins.");
                         } else {
-                            System.out.println("Notification: Game is over. It's a draw.");
+                            System.out.println("It's a draw.");
                         }
+
                         System.out.println("Only 'exit' is allowed.");
                         new Thread(() -> {
                             while (true) {
@@ -135,9 +142,7 @@ public class GameplayWebSocketHandler {
                         }).start();
                         return;
                     }
-
-
-                        if (!game.isGameOver()) {
+                    if (!game.isGameOver()) {
                         System.out.println("Current turn: " + game.getTeamTurn());
                         if (game.getMoveHistory() != null && !game.getMoveHistory().isEmpty()) {
                             ChessMove lastMove = game.getMoveHistory().get(game.getMoveHistory().size() - 1);
@@ -147,9 +152,9 @@ public class GameplayWebSocketHandler {
                             System.out.println(moveText);
                         }
 
-                            if (!isObserver && game.getTeamTurn().equals(playerColor)) {
-                                onGameLoadedCallback.run();
-                            }
+                        if (!isObserver && game.getTeamTurn().equals(playerColor)) {
+                            onGameLoadedCallback.run();
+                        }
 
                         if (playerColor == game.getTeamTurn()) {
                             System.out.println("✅ It's your turn! Enter your move (e.g., e2 e4), or type 'resign' or 'exit':");
@@ -196,29 +201,34 @@ public class GameplayWebSocketHandler {
                                     }
                                 }).start();
                             } else {
-                                System.out.println("⏳ You are observing the game. You may only type 'exit':");
+                                System.out.println("⏳ You are observing the game. Type a square like 'e2' to highlight moves, or 'exit' to leave:");
                                 new Thread(() -> {
-                                    while (true) {
+                                    boolean running = true;
+                                    while (running) {
                                         System.out.print("Command: ");
                                         String input = scanner.nextLine().trim();
-
                                         if (input.equalsIgnoreCase("exit")) {
                                             sendLeaveCommand();
+                                            running = false;
                                             break;
+                                        } else if (input.matches("^[a-h][1-8]$")) {
+                                            handleHighlight(input);
                                         } else {
-                                            System.out.println("You are an observer. Only 'exit' is allowed.");
+                                            System.out.println("Invalid command. Type a square like 'e2' to highlight moves, or 'exit' to leave.");
                                         }
                                     }
                                 }).start();
                             }
                         }
                     }
-                } catch (DataAccessException e) {
+                } // <-- FIX: closes if (!game.isGameOver()) block before break
+                catch (DataAccessException e) {
                     System.err.println("Failed to load game from data access: " + e.getMessage());
                     return;
                 }
 
                 break;
+
 
             case NOTIFICATION:
                 NotificationMessage noteMsg = (NotificationMessage) serverMessage;
@@ -274,7 +284,8 @@ public class GameplayWebSocketHandler {
             highlightedFrom = start;
             highlightedTo = valid.stream().map(ChessMove::getEndPosition).collect(Collectors.toSet());
 
-            new ChessBoardUI().drawBoard(game.getBoard(), playerIsWhite, highlightedFrom, highlightedTo);
+            // Always draw observer board from white's perspective
+            new ChessBoardUI().drawBoard(game.getBoard(), isObserver || playerIsWhite, highlightedFrom, highlightedTo);
             promptForMove();
         } catch (Exception e) {
             System.out.println("Invalid input. Use format like 'd2'.");
@@ -340,7 +351,7 @@ public class GameplayWebSocketHandler {
 
                     highlightedFrom = from;
                     highlightedTo = destinations;
-                    new ChessBoardUI().drawBoard(board, playerColor == ChessGame.TeamColor.WHITE, from, destinations);
+                    new ChessBoardUI().drawBoard(board, isObserver || playerColor == ChessGame.TeamColor.WHITE, from, destinations);
                 } else {
                     System.out.println("❌ No valid moves from " + input);
                 }

@@ -22,6 +22,7 @@ public class ChessGame {
     public void setGameOver(boolean over) { this.gameOver = over; }
     public boolean isGameOver() { return gameOver; }
     private final List<ChessMove> moveHistory = new ArrayList<>();
+    private String resignedPlayer = null;
 
 
     public ChessGame() {
@@ -49,6 +50,14 @@ public class ChessGame {
 
     public List<ChessMove> getMoveHistory() {
         return moveHistory;
+    }
+
+    public void setResignedPlayer(String username) {
+        this.resignedPlayer = username;
+    }
+
+    public String getResignedPlayer() {
+        return resignedPlayer;
     }
 
     /**

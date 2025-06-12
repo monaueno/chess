@@ -282,9 +282,38 @@ public class WebSocketHandler {
         if (username == null) return;
 
         ChessGame game = manager.getGame(gameID);
+        if (game.isGameOver()) {
+            sendError(session, "Game is already over. Cannot resign.");
+            return;
+        }
+        game.setResignedPlayer(username);
         game.setGameOver(true);
 
-        NotificationMessage resignationMsg = new NotificationMessage(username + " has resigned.");
+        GameData gameData = manager.getGameData(gameID);
+        if (gameData != null) {
+            try {
+                db.updateGameData(gameID, gameData);
+            } catch (DataAccessException e) {
+                sendError(session, "Failed to update game data: " + e.getMessage());
+            }
+        }
+
+        try {
+            db.updateGame(gameID, game);
+        } catch (DataAccessException e) {
+            sendError(session, "Failed to update game: " + e.getMessage());
+            return;
+        }
+
+        String winner = "Opponent";
+        if (gameData != null) {
+            if (username.equals(gameData.whiteUsername())) {
+                winner = gameData.blackUsername();
+            } else if (username.equals(gameData.blackUsername())) {
+                winner = gameData.whiteUsername();
+            }
+        }
+        NotificationMessage resignationMsg = new NotificationMessage(username + " has resigned. " + winner + " wins!");
         manager.broadcast(gson.toJson(resignationMsg));
         manager.remove(session);
     }
