@@ -120,7 +120,9 @@ public class WebSocketHandler {
             }
             return;
         }
-        if (gameData.whiteUsername() == null) {
+        if (username.equals(gameData.whiteUsername()) || username.equals(gameData.blackUsername())) {
+            // Already assigned; do nothing
+        } else if (gameData.whiteUsername() == null) {
             gameData.setWhiteUsername(username);
         } else if (gameData.blackUsername() == null) {
             gameData.setBlackUsername(username);
@@ -147,20 +149,33 @@ public class WebSocketHandler {
         ChessMove move = moveCommand.getMove();
 
         GameSessionManager manager = gameSessions.get(command.getGameID());
-        if (manager == null) return;
+        if (manager == null) {
+            System.out.println("manager is null");
+            return;
+        }
 
         String username = manager.getUsername(session);
-        if (username == null) return;
+        if (username == null) {
+            System.out.println("username is null");
+            return;
+        }
 
         ChessGame game = manager.getGame(command.getGameID());
-        if (game == null) return;
+        if (game == null) {
+            System.out.println("game is null");
+            return;
+        }
 
         GameData gameData = manager.getGameData(command.getGameID());
-        if (gameData == null) return;
+        if (gameData == null) {
+            System.out.println("gamedata is null");
+            return;
+        }
 
         Collection<ChessMove> validMoves = game.validMoves(move.getStartPosition());
         if (validMoves == null || !validMoves.contains(move)) {
             sendError(session, "Illegal move");
+            System.out.println("no valid moves");
             return;
         }
 
@@ -168,20 +183,36 @@ public class WebSocketHandler {
         boolean isBlack = username.equals(gameData.blackUsername());
         ChessGame.TeamColor playerColor = isWhite ? ChessGame.TeamColor.WHITE : isBlack ? ChessGame.TeamColor.BLACK : null;
 
+
+        System.out.println("DEBUG — TeamTurn is " + game.getTeamTurn());
+        System.out.println("DEBUG — playerColor is " + playerColor);
+        System.out.println("DEBUG — game.whiteUsername = " + gameData.whiteUsername());
+        System.out.println("DEBUG — username = " + username);
         if (playerColor == null || playerColor != game.getTeamTurn()) {
             sendError(session, "It's not your turn.");
+            System.out.println("not your turn");
             return;
         }
 
         try {
             game.makeMove(move, playerColor);
+            db.updateGame(command.getGameID(), game);
+            db.updateBoard(command.getGameID(), game.getBoard());
         } catch (Exception e) {
             sendError(session, "Failed to apply move - " + e.getMessage());
+            System.out.println("couldn't apply move");
             return;
         }
 
-        gameData.setGame(game);
-        gameData.setBoard(game.getBoard());
+        try {
+            db.updateGameData(command.getGameID(), gameData);
+        } catch (DataAccessException e) {
+            sendError(session, "Failed to persist gameData: " + e.getMessage());
+            System.out.println("gamedata's not responding");
+            return;
+        }
+
+        System.out.println("✅ Move applied: " + move.getStartPosition() + " -> " + move.getEndPosition());
 
         for (Session s : manager.getSessions()) {
             String otherUser = manager.getUsername(s);

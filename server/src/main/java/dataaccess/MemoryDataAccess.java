@@ -2,6 +2,7 @@ package dataaccess;
 
 import java.util.HashMap;
 import java.util.Map;
+import chess.ChessBoard;
 import model.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -122,8 +123,18 @@ public class MemoryDataAccess implements DataAccess{
         if (!games.containsKey(gameID)) {
             throw new DataAccessException("Error: Game ID not found: " + gameID);
         }
+
         games.put(gameID, gameData);
         System.out.println("updateGameData: writing whiteUsername = " + gameData.whiteUsername());
+    }
+
+    @Override
+    public void updateBoard(int gameID, ChessBoard board) throws DataAccessException {
+        GameData gameData = games.get(gameID);
+        if (gameData == null) {
+            throw new DataAccessException("Game not found");
+        }
+        gameData.setBoard(board);
     }
 }
 

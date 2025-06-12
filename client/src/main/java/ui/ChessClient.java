@@ -5,6 +5,7 @@ import chess.ChessMove;
 import chess.ChessPosition;
 import client.ServerFacade;
 import client.websocket.GameplayWebSocketHandler;
+import dataaccess.MySqlDataAccess;
 import model.*;
 import model.ListGamesResult;
 
@@ -39,7 +40,7 @@ public class ChessClient {
         System.out.println("Welcome to CS 240 Chess!");
         try {
             int port = 8080; // or read from args
-            facade = new ServerFacade(port);
+            facade = new ServerFacade(port, new MySqlDataAccess());
 
             while (true) {
                 if (authToken == null) {
@@ -224,7 +225,13 @@ public class ChessClient {
                 client.start();
                 URI uri = new URI("ws://localhost:8080/ws");
 
-                GameplayWebSocketHandler handler = new GameplayWebSocketHandler(authToken, selectedGame.gameID(), currentUsername, this::promptForMove);
+                GameplayWebSocketHandler handler = new GameplayWebSocketHandler(
+                        authToken,
+                        selectedGame.gameID(),
+                        currentUsername,
+                        this::promptForMove,
+                        facade.getDataAccess()
+                );
                 client.connect(handler, uri).get();
 
                 while(!handler.hasExited()) {

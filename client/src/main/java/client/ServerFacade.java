@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+
+import dataaccess.DataAccess;
 import model.*;
 import model.JoinGameRequest;
 import model.SuccessResponse;
@@ -13,9 +15,11 @@ public class ServerFacade {
 
     private final String serverUrl;
     private final Gson gson = new Gson();
+    private final DataAccess dataAccess;
 
-    public ServerFacade(int port) {
+    public ServerFacade(int port, DataAccess dataAccess) {
         this.serverUrl = "http://localhost:" + port;
+        this.dataAccess = dataAccess;
     }
 
     public AuthResult register(String username, String password, String email) throws IOException {
@@ -115,5 +119,9 @@ public ListGamesResult listGames(String authToken) throws IOException {
 
         connection.connect();
         checkResponse(connection);     // throws if status ≥ 400
+    }
+
+    public DataAccess getDataAccess() {
+        return this.dataAccess;
     }
 }

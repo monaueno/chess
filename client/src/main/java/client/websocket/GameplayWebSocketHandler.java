@@ -3,6 +3,7 @@ package client.websocket;
 import chess.ChessBoard;
 import chess.ChessGame;
 import chess.ChessMove;
+import dataaccess.DataAccessException;
 import model.GameData;
 import ui.ChessBoardUI;
 import websocket.commands.MakeMoveCommand;
@@ -19,6 +20,7 @@ import org.eclipse.jetty.websocket.api.annotations.OnWebSocketError;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 import websocket.messages.LoadGameMessage;
+import dataaccess.DataAccess;
 
 import java.util.Collection;
 import java.util.Set;
@@ -44,13 +46,17 @@ public class GameplayWebSocketHandler {
     private volatile boolean exited = false;
     private ChessGame.TeamColor playerColor;
     private String username;
+    private final DataAccess dataAccess;
 
-    public GameplayWebSocketHandler(String authToken, int gameID, String username, Runnable promptForMove) {
+    public GameplayWebSocketHandler(String authToken, int gameID, String username, Runnable promptForMove, DataAccess dataAccess) {
         this.authToken = authToken;
         this.gameID = gameID;
         this.username = username;
         this.onGameLoadedCallback = promptForMove;
+        this.dataAccess = dataAccess;
     }
+
+
 
 
     @OnWebSocketConnect
@@ -73,78 +79,84 @@ public class GameplayWebSocketHandler {
 
         switch (serverMessage.getServerMessageType()) {
             case LOAD_GAME:
-                LoadGameMessage lgMsg = (LoadGameMessage) serverMessage;
-                GameData data = lgMsg.getGame();
-                this.game = data.game();
-                this.board = data.getBoard();
+                try {
+                    GameData data = dataAccess.getGame(gameID);
+                    this.game = data.game();
+                    this.board = data.getBoard();
+                    this.game = data.game();
+                    this.board = data.getBoard();
 
-                if (username.equals(data.whiteUsername())) {
-                    this.playerColor = ChessGame.TeamColor.WHITE;
-                } else if (username.equals(data.blackUsername())) {
-                    this.playerColor = ChessGame.TeamColor.BLACK;
-                } else {
-                    System.err.println("⚠️ Username does not match either white or black player.");
-                    return;
-                }
+                    if (username.equals(data.whiteUsername())) {
+                        this.playerColor = ChessGame.TeamColor.WHITE;
+                    } else if (username.equals(data.blackUsername())) {
+                        this.playerColor = ChessGame.TeamColor.BLACK;
+                    } else {
+                        System.err.println("⚠️ Username does not match either white or black player.");
+                        return;
+                    }
 
-                this.playerIsWhite = (this.playerColor == ChessGame.TeamColor.WHITE);
+                    this.playerIsWhite = (this.playerColor == ChessGame.TeamColor.WHITE);
 
-                if (board == null) {
-                    System.err.println("Error: board is null in LOAD_GAME");
-                    return;
-                }
+                    if (board == null) {
+                        System.err.println("Error: board is null in LOAD_GAME");
+                        return;
+                    }
 
-                game.setBoard(board);
+                    game.setBoard(board);
 
-                System.out.println("🧩 Re-drawing board after LOAD_GAME...");
-                new ChessBoardUI().drawBoard(board, playerColor == ChessGame.TeamColor.WHITE, highlightedFrom, highlightedTo);
-                System.out.println("✅ Done drawing board.");
-                System.out.println("Current turn: " + game.getTeamTurn());
-                System.out.println("Move attempted by: " + username + " playing as " + playerColor);
+                    System.out.println("🧩 Re-drawing board after LOAD_GAME...");
+                    new ChessBoardUI().drawBoard(board, playerColor == ChessGame.TeamColor.WHITE, highlightedFrom, highlightedTo);
+                    System.out.println("✅ Done drawing board.");
+                    System.out.println("Current turn: " + game.getTeamTurn());
+                    System.out.println("Move attempted by: " + username + " playing as " + playerColor);
 
-                if (playerColor == game.getTeamTurn()) {
-                    System.out.println("✅ It's your turn! Enter your move (e.g., e2 e4), or type 'resign' or 'exit':");
-                    new Thread(() -> {
-                        while (true) {
-                            System.out.print("Enter move: ");
-                            String input = scanner.nextLine().trim();
+                    if (playerColor == game.getTeamTurn()) {
+                        System.out.println("✅ It's your turn! Enter your move (e.g., e2 e4), or type 'resign' or 'exit':");
+                        new Thread(() -> {
+                            while (true) {
+                                System.out.print("Enter move: ");
+                                String input = scanner.nextLine().trim();
 
-                            if (input.equalsIgnoreCase("resign")) {
-                                sendResignCommand();
-                                break;
-                            } else if (input.equalsIgnoreCase("exit")) {
-                                sendLeaveCommand();
-                                break;
-                            } else if (input.matches("^[a-h][1-8]\\s+[a-h][1-8]$")) {
-                                String[] parts = input.split("\\s+");
-                                sendMove(parts[0], parts[1]);
-                                break;
-                            } else if (input.matches("[a-h][1-8]")) {
-                                handleHighlight(input);
-                                return;
-                            } else {
-                                System.out.println("Invalid input. Try again:");
+                                if (input.equalsIgnoreCase("resign")) {
+                                    sendResignCommand();
+                                    break;
+                                } else if (input.equalsIgnoreCase("exit")) {
+                                    sendLeaveCommand();
+                                    break;
+                                } else if (input.matches("^[a-h][1-8]\\s+[a-h][1-8]$")) {
+                                    String[] parts = input.split("\\s+");
+                                    sendMove(parts[0], parts[1]);
+                                    break;
+                                } else if (input.matches("[a-h][1-8]")) {
+                                    handleHighlight(input);
+                                    return;
+                                } else {
+                                    System.out.println("Invalid input. Try again:");
+                                }
                             }
-                        }
-                    }).start();
-                } else {
-                    System.out.println("⏳ Waiting for opponent to move. You may still type 'resign' or 'exit':");
-                    new Thread(() -> {
-                        while (true) {
-                            System.out.print("Command: ");
-                            String input = scanner.nextLine().trim();
+                        }).start();
+                    } else {
+                        System.out.println("⏳ Waiting for opponent to move. You may still type 'resign' or 'exit':");
+                        new Thread(() -> {
+                            while (true) {
+                                System.out.print("Command: ");
+                                String input = scanner.nextLine().trim();
 
-                            if (input.equalsIgnoreCase("resign")) {
-                                sendResignCommand();
-                                break;
-                            } else if (input.equalsIgnoreCase("exit")) {
-                                sendLeaveCommand();
-                                break;
-                            } else {
-                                System.out.println("Not your turn. Only 'resign' or 'exit' allowed.");
+                                if (input.equalsIgnoreCase("resign")) {
+                                    sendResignCommand();
+                                    break;
+                                } else if (input.equalsIgnoreCase("exit")) {
+                                    sendLeaveCommand();
+                                    break;
+                                } else {
+                                    System.out.println("Not your turn. Only 'resign' or 'exit' allowed.");
+                                }
                             }
-                        }
-                    }).start();
+                        }).start();
+                    }
+                } catch (DataAccessException e) {
+                    System.err.println("Failed to load game from data access: " + e.getMessage());
+                    return;
                 }
 
                 break;
@@ -247,6 +259,10 @@ public class GameplayWebSocketHandler {
             } else if (input.equals("exit")) {
                 System.out.println("Exiting game.");
                 sendLeaveCommand();
+                return;
+            } else if (input.matches("^[a-h][1-8]\\s+[a-h][1-8]$")) {
+                String[] parts = input.split("\\s+");
+                sendMove(parts[0], parts[1]);
                 return;
             } else if (input.matches("^[a-h][1-8]$")) {
                 ChessPosition from = parsePosition(input);

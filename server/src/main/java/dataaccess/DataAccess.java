@@ -1,4 +1,5 @@
 package dataaccess;
+import chess.ChessBoard;
 import model.UserData;
 import model.AuthData;
 import model.GameData;
@@ -32,4 +33,5 @@ public interface DataAccess {
 
     void updateGameData(int i, GameData game) throws DataAccessException;
 
+    void updateBoard(int gameID, ChessBoard board) throws DataAccessException;
 }
