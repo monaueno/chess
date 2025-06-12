@@ -65,4 +65,9 @@ public class GameSessionManager {
         GameData data = getGameData(gameID);
         return data != null ? data.game() : null;
     }
+
+    public Session[] getSessions() {
+        Set<Session> sessions = sessionToUsername.keySet();
+        return sessions.toArray(new Session[0]);
+    }
 }

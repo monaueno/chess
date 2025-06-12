@@ -72,6 +72,7 @@ public class GameplayWebSocketHandler {
                 GameData data = lgMsg.getGame();
                 this.game = data.game();
                 this.board = data.getBoard();
+
                 if (username.equals(data.whiteUsername())) {
                     this.playerColor = ChessGame.TeamColor.WHITE;
                 } else if (username.equals(data.blackUsername())) {
@@ -80,25 +81,62 @@ public class GameplayWebSocketHandler {
                     System.err.println("⚠️ Username does not match either white or black player.");
                     return;
                 }
-                game.setBoard(board);
 
                 if (board == null) {
                     System.err.println("Error: board is null in LOAD_GAME");
                     return;
                 }
 
+                game.setBoard(board);
+
                 System.out.println("🧩 Re-drawing board after LOAD_GAME...");
                 new ChessBoardUI().drawBoard(board, playerIsWhite, highlightedFrom, highlightedTo);
                 System.out.println("✅ Done drawing board.");
-
-
-                // Only prompt if it's your turn
                 System.out.println("Current turn: " + game.getTeamTurn());
                 System.out.println("Move attempted by: " + username + " playing as " + playerColor);
-                if ((playerIsWhite && game.getTeamTurn() == ChessGame.TeamColor.WHITE) ||
-                        (!playerIsWhite && game.getTeamTurn() == ChessGame.TeamColor.BLACK)) {
-                    promptForMove();
+
+                if (lgMsg.isYourTurn()) {
+                    System.out.println("✅ It's your turn! Enter your move (e.g., e2 e4), or type 'resign' or 'exit':");
+                    new Thread(() -> {
+                        while (true) {
+                            System.out.print("Enter move: ");
+                            String input = scanner.nextLine().trim();
+
+                            if (input.equalsIgnoreCase("resign")) {
+                                sendResignCommand();
+                                break;
+                            } else if (input.equalsIgnoreCase("exit")) {
+                                sendLeaveCommand();
+                                break;
+                            } else if (input.matches("^[a-h][1-8]\\s+[a-h][1-8]$")) {
+                                String[] parts = input.split("\\s+");
+                                sendMove(parts[0], parts[1]);
+                                break;
+                            } else {
+                                System.out.println("Invalid input. Try again:");
+                            }
+                        }
+                    }).start();
+                } else {
+                    System.out.println("⏳ Waiting for opponent to move. You may still type 'resign' or 'exit':");
+                    new Thread(() -> {
+                        while (true) {
+                            System.out.print("Command: ");
+                            String input = scanner.nextLine().trim();
+
+                            if (input.equalsIgnoreCase("resign")) {
+                                sendResignCommand();
+                                break;
+                            } else if (input.equalsIgnoreCase("exit")) {
+                                sendLeaveCommand();
+                                break;
+                            } else {
+                                System.out.println("Not your turn. Only 'resign' or 'exit' allowed.");
+                            }
+                        }
+                    }).start();
                 }
+
                 break;
 
             case NOTIFICATION:
@@ -109,11 +147,6 @@ public class GameplayWebSocketHandler {
             case ERROR:
                 ErrorMessage errorMsg = (ErrorMessage) serverMessage;
                 System.err.println(errorMsg.getErrorMessage());
-
-                if ((playerIsWhite && game.getTeamTurn() == ChessGame.TeamColor.WHITE) ||
-                        (!playerIsWhite && game.getTeamTurn() == ChessGame.TeamColor.BLACK)) {
-                    promptForMove();
-                }
 
                 break;
         }
@@ -181,6 +214,24 @@ public class GameplayWebSocketHandler {
 
     private void handleResignOrLeave(){
         exited = true;
+    }
+
+    private void sendResignCommand() {
+        UserGameCommand resign = new UserGameCommand(CommandType.RESIGN, authToken, gameID);
+        try {
+            session.getRemote().sendString(gson.toJson(resign));
+        } catch (Exception e) {
+            System.err.println("Failed to send RESIGN command: " + e.getMessage());
+        }
+    }
+
+    private void sendLeaveCommand() {
+        UserGameCommand leave = new UserGameCommand(CommandType.LEAVE, authToken, gameID);
+        try {
+            session.getRemote().sendString(gson.toJson(leave));
+        } catch (Exception e) {
+            System.err.println("Failed to send LEAVE command: " + e.getMessage());
+        }
     }
 
 

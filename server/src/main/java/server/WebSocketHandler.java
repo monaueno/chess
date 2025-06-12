@@ -14,6 +14,7 @@ import com.google.gson.Gson;
 import websocket.GameSessionManager;
 import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
+import websocket.commands.UserGameCommand.CommandType;
 import websocket.messages.LoadGameMessage;
 import websocket.messages.NotificationMessage;
 
@@ -176,13 +177,18 @@ public class WebSocketHandler {
         gameData.setGame(game);
         gameData.setBoard(game.getBoard());
 
-        boolean yourTurn = username.equals(gameData.whiteUsername()) ?
-                game.getTeamTurn() == ChessGame.TeamColor.WHITE :
-                game.getTeamTurn() == ChessGame.TeamColor.BLACK;
-
-        LoadGameMessage updatedGameMsg = new LoadGameMessage(gameData, yourTurn);
-
-        manager.broadcast(gson.toJson(updatedGameMsg));
+        for (Session s : manager.getSessions()) {
+            String otherUser = manager.getUsername(s);
+            boolean theirTurn = (otherUser != null &&
+                    ((game.getTeamTurn() == ChessGame.TeamColor.WHITE && otherUser.equals(gameData.whiteUsername())) ||
+                            (game.getTeamTurn() == ChessGame.TeamColor.BLACK && otherUser.equals(gameData.blackUsername()))));
+            LoadGameMessage updatedGameMsg = new LoadGameMessage(gameData, theirTurn);
+            try {
+                s.getRemote().sendString(gson.toJson(updatedGameMsg));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
         String moveMessage = String.format("%s moved %s", username, move.getStartPosition(), move.getEndPosition());
         manager.broadcastExcept(gson.toJson(new NotificationMessage(moveMessage)), session);
