@@ -149,18 +149,32 @@ public class WebSocketHandler {
     }
 
     private void handleMakeMove(Session session, UserGameCommand command) {
-        MakeMoveCommand moveCommand = (MakeMoveCommand) command;
-        ChessMove move = moveCommand.getMove();
-
         GameSessionManager manager = gameSessions.get(command.getGameID());
         if (manager == null) {
             System.out.println("manager is null");
             return;
         }
 
+        MakeMoveCommand moveCommand = (MakeMoveCommand) command;
+        ChessMove move = moveCommand.getMove();
+
         String username = manager.getUsername(session);
         if (username == null) {
             System.out.println("username is null");
+            return;
+        }
+
+        // Validate that the authToken belongs to this user
+        String token = command.getAuthToken();
+        String userFromToken;
+        try {
+            userFromToken = db.getUsernameFromAuth(token);
+        } catch (Exception e) {
+            sendError(session, "Invalid authentication token.");
+            return;
+        }
+        if (!username.equals(userFromToken)) {
+            sendError(session, "Invalid authentication token.");
             return;
         }
 
@@ -240,6 +254,14 @@ public class WebSocketHandler {
             String checkingPlayer = (opponent == ChessGame.TeamColor.WHITE) ? "black" : "white";
             manager.broadcast(gson.toJson(new NotificationMessage("Check by " + checkingPlayer + " against " + checkedPlayer + "!")));
         }
+
+        // Notify all other clients of the move
+        String moveSummary = username + " moved from "
+            + move.getStartPosition() + " to " + move.getEndPosition();
+        manager.broadcastExcept(
+            gson.toJson(new NotificationMessage(moveSummary)),
+            session
+        );
 
         for (Session s : manager.getSessions()) {
             String otherUser = manager.getUsername(s);

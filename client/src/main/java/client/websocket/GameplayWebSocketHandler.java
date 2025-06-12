@@ -145,7 +145,7 @@ public class GameplayWebSocketHandler {
                             ChessMove lastMove = game.getMoveHistory().get(game.getMoveHistory().size() - 1);
                             String from = (char)('a' + lastMove.getStartPosition().getColumn() - 1) + String.valueOf(lastMove.getStartPosition().getRow());
                             String to = (char)('a' + lastMove.getEndPosition().getColumn() - 1) + String.valueOf(lastMove.getEndPosition().getRow());
-                            String moveText = String.format("%s made the move %s to %s", username, from, to);
+                            String moveText = String.format("%s made the move %s to %s", game.getTeamTurn() == ChessGame.TeamColor.WHITE ? data.blackUsername() : data.whiteUsername(), from, to);
                             System.out.println(moveText);
                             System.out.println("Current turn: " + game.getTeamTurn());
                             System.out.println();
@@ -237,12 +237,12 @@ public class GameplayWebSocketHandler {
 
             case NOTIFICATION:
                 NotificationMessage noteMsg = (NotificationMessage) serverMessage;
-                System.out.println("Notification: " + noteMsg.getMessage());
+                System.out.println(noteMsg.getMessage());
                 break;
 
             case ERROR:
                 ErrorMessage errorMsg = (ErrorMessage) serverMessage;
-                System.out.println("❌ Error: " + errorMsg.getErrorMessage());
+                System.out.println("Error: " + errorMsg.getErrorMessage());
 
                 if (!game.isGameOver()) {
                     promptForMove();
