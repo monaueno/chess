@@ -291,6 +291,14 @@ public class WebSocketHandler {
         if (username.equals(gameData.whiteUsername())) gameData.setWhiteUsername(null);
         if (username.equals(gameData.blackUsername())) gameData.setBlackUsername(null);
 
+        // Persist the cleared slot to the database
+        try {
+            db.updateGameData(gameID, gameData);
+        } catch (DataAccessException e) {
+            sendError(session, "Failed to persist gameData after leave: " + e.getMessage());
+            return;
+        }
+
         broadcastToOthers(gameID, new NotificationMessage(username + " left the game"), session);
         manager.remove(session);
     }
@@ -298,9 +306,16 @@ public class WebSocketHandler {
     private void handleResign(Session session, UserGameCommand command) {
         int gameID = command.getGameID();
         GameSessionManager manager = gameSessions.get(gameID);
+        String username = manager.getUsername(session);
+        GameData gameData = manager.getGameData(gameID);
+
+        if (!username.equals(gameData.whiteUsername()) && !username.equals(gameData.blackUsername())) {
+            sendError(session, "Error: Only players can resign.");
+            return;
+        }
+
         if (manager == null) return;
 
-        String username = manager.getUsername(session);
         if (username == null) return;
 
         ChessGame game = manager.getGame(gameID);
@@ -311,7 +326,6 @@ public class WebSocketHandler {
         game.setResignedPlayer(username);
         game.setGameOver(true);
 
-        GameData gameData = manager.getGameData(gameID);
         if (gameData != null) {
             try {
                 db.updateGameData(gameID, gameData);
