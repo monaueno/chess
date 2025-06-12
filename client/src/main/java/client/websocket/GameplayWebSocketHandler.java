@@ -37,10 +37,13 @@ public class GameplayWebSocketHandler {
     private Set<ChessPosition> highlightedTo;
     private final java.util.Scanner scanner = new java.util.Scanner(System.in);
     private volatile boolean exited = false;
+    private ChessGame.TeamColor playerColor;
+    private String username;
 
-    public GameplayWebSocketHandler(String authToken, int gameID, Runnable promptForMove) {
+    public GameplayWebSocketHandler(String authToken, int gameID, String username, Runnable promptForMove) {
         this.authToken = authToken;
         this.gameID = gameID;
+        this.username = username;
         this.onGameLoadedCallback = promptForMove;
     }
 
@@ -69,6 +72,14 @@ public class GameplayWebSocketHandler {
                 GameData data = lgMsg.getGame();
                 this.game = data.game();
                 this.board = data.getBoard();
+                if (username.equals(data.whiteUsername())) {
+                    this.playerColor = ChessGame.TeamColor.WHITE;
+                } else if (username.equals(data.blackUsername())) {
+                    this.playerColor = ChessGame.TeamColor.BLACK;
+                } else {
+                    System.err.println("⚠️ Username does not match either white or black player.");
+                    return;
+                }
                 game.setBoard(board);
 
                 if (board == null) {
@@ -76,11 +87,14 @@ public class GameplayWebSocketHandler {
                     return;
                 }
 
+                System.out.println("🧩 Re-drawing board after LOAD_GAME...");
                 new ChessBoardUI().drawBoard(board, playerIsWhite, highlightedFrom, highlightedTo);
+                System.out.println("✅ Done drawing board.");
 
 
                 // Only prompt if it's your turn
                 System.out.println("Current turn: " + game.getTeamTurn());
+                System.out.println("Move attempted by: " + username + " playing as " + playerColor);
                 if ((playerIsWhite && game.getTeamTurn() == ChessGame.TeamColor.WHITE) ||
                         (!playerIsWhite && game.getTeamTurn() == ChessGame.TeamColor.BLACK)) {
                     promptForMove();

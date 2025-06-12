@@ -219,13 +219,31 @@ public class WebSocketHandler {
                 )));
                 return;
             }
+            GameData gameData = manager.getGameData(command.getGameID());
 
-            game.makeMove(move);
+            System.out.println("🔎 Pre-move turn check:");
+            System.out.println("Player username: " + username);
+            System.out.println("White username: " + gameData.whiteUsername());
+            System.out.println("Black username: " + gameData.blackUsername());
+            System.out.println("Current game turn: " + game.getTeamTurn());
+            System.out.println("Player attempting move as: " +
+                    (username.equals(gameData.whiteUsername()) ? "WHITE" :
+                            username.equals(gameData.blackUsername()) ? "BLACK" : "OBSERVER"));
 
-            GameData gameData = new GameData(game);
-            LoadGameMessage loadGameMsg = new LoadGameMessage(gameData);
-            String loadGameJson = gson.toJson(loadGameMsg);
-            manager.broadcast(loadGameJson);
+            game.makeMove(move, username.equals(gameData.whiteUsername()) ? ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK);
+
+
+            System.out.println("Player username: " + username);
+            System.out.println("White username: " + gameData.whiteUsername());
+            System.out.println("Black username: " + gameData.blackUsername());
+
+            gameData.setGame(game);
+            gameData.setBoard(game.getBoard());
+
+            LoadGameMessage updatedGameMsg = new LoadGameMessage(gameData);
+            String updatedGameJson = gson.toJson(updatedGameMsg);
+            System.out.println("Broadcasted updated board: " + updatedGameJson);
+            manager.broadcast(updatedGameJson);
 
             String moveNotation = move.toString(); // Assuming ChessMove has a proper toString override like e2-e4
             String moveMessage = String.format("%s moved %s", username, move.getStartPosition().toString(), move.getEndPosition().toString());
@@ -284,13 +302,7 @@ public class WebSocketHandler {
             ChessGame game = gameData.getGame();
             game.setBoard(gameData.getBoard());
 
-            System.out.println("DEBUG: Piece at e2 (6,4) = " + game.getBoard().getPiece(new ChessPosition(6, 4)));
-
             activeGames.put(gameID, game);
-
-            System.out.println("DEBUG: GameData board = " + gameData.getBoard());
-            System.out.println("Board after setBoard: " + game.getBoard());
-            System.out.println("Piece at e2: " + game.getBoard().getPiece(new ChessPosition(6, 4)));
 
         } catch (dataaccess.DataAccessException e) {
             try {
@@ -306,7 +318,23 @@ public class WebSocketHandler {
         manager.setGameData(gameID, gameData);            // store in session manager   // wrap it
         manager.add(session, authToken);      // store it so it won't be null next time
 
-        String username = manager.getUsername(session);
+        String username;
+
+        try {
+            username = db.getUsernameFromAuth(authToken);
+            manager.add(session, username);
+        } catch (dataaccess.DataAccessException e) {
+            System.out.println("Failed to get username from authToken: " + e.getMessage());
+            try {
+                session.getRemote().sendString(gson.toJson(Map.of(
+                    "serverMessageType", "ERROR",
+                    "errorMessage", "Error: Failed to retrieve username"
+                )));
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+            return;
+        }
         if (username == null) {
             System.out.println("Could not identify user from session.");
             return;

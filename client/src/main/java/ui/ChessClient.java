@@ -225,7 +225,7 @@ public class ChessClient {
                 client.start();
                 URI uri = new URI("ws://localhost:8080/ws");
 
-                GameplayWebSocketHandler handler = new GameplayWebSocketHandler(authToken, selectedGame.gameID(), this::promptForMove);
+                GameplayWebSocketHandler handler = new GameplayWebSocketHandler(authToken, selectedGame.gameID(), currentUsername, this::promptForMove);
                 client.connect(handler, uri).get();
 
                 while(!handler.hasExited()) {

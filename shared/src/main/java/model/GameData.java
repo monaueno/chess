@@ -89,4 +89,14 @@ public class GameData {
     public ChessGame getGame() {
         return game;
     }
+
+    public void setBoard(ChessBoard board) {
+        if (this.game != null) {
+            this.game.setBoard(board);
+        }
+    }
+
+    public void setGame(ChessGame game) {
+        this.game = game;
+    }
 }

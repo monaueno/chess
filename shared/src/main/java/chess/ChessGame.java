@@ -189,7 +189,7 @@ public class ChessGame {
      * @param move chess move to perform
      * @throws InvalidMoveException if move is invalid
      */
-    public void makeMove(ChessMove move) throws InvalidMoveException {
+    public void makeMove(ChessMove move, TeamColor playerColor) throws InvalidMoveException {
         if (isGameOver()) {
             throw new IllegalStateException("Game is over");
         }
@@ -201,7 +201,7 @@ public class ChessGame {
             throw new InvalidMoveException("No piece at start position.");
         }
 
-        if (movingPiece.getTeamColor() != currentTurn) {
+        if (playerColor != this.currentTurn) {
             throw new InvalidMoveException("It's not your turn.");
         }
 

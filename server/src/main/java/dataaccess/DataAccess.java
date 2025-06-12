@@ -31,4 +31,5 @@ public interface DataAccess {
     void setBlackUsername(int i, String username) throws DataAccessException;
 
     void updateGameData(int i, GameData game) throws DataAccessException;
+
 }
