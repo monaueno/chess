@@ -136,7 +136,13 @@ public class GameplayWebSocketHandler {
 
                         if (!game.isGameOver()) {
                         System.out.println("Current turn: " + game.getTeamTurn());
-                        System.out.println("Move attempted by: " + username + " playing as " + playerColor);
+                        if (game.getMoveHistory() != null && !game.getMoveHistory().isEmpty()) {
+                            ChessMove lastMove = game.getMoveHistory().get(game.getMoveHistory().size() - 1);
+                            String from = (char)('a' + lastMove.getStartPosition().getColumn() - 1) + String.valueOf(lastMove.getStartPosition().getRow());
+                            String to = (char)('a' + lastMove.getEndPosition().getColumn() - 1) + String.valueOf(lastMove.getEndPosition().getRow());
+                            String moveText = String.format("%s made the move %s to %s", username, from, to);
+                            System.out.println(moveText);
+                        }l
 
                         if (playerColor == game.getTeamTurn()) {
                             System.out.println("✅ It's your turn! Enter your move (e.g., e2 e4), or type 'resign' or 'exit':");

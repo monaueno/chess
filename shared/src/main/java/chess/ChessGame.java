@@ -2,7 +2,9 @@ package chess;
 
 import chess.ChessMove;
 import chess.ChessPosition;
+
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.ArrayList;
 
@@ -19,6 +21,7 @@ public class ChessGame {
     private boolean gameOver = false;
     public void setGameOver(boolean over) { this.gameOver = over; }
     public boolean isGameOver() { return gameOver; }
+    private final List<ChessMove> moveHistory = new ArrayList<>();
 
 
     public ChessGame() {
@@ -42,6 +45,10 @@ public class ChessGame {
      */
     public void setTeamTurn(TeamColor team) {
         this.currentTurn = team;
+    }
+
+    public List<ChessMove> getMoveHistory() {
+        return moveHistory;
     }
 
     /**

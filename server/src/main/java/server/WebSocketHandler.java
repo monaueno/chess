@@ -206,6 +206,7 @@ public class WebSocketHandler {
 
         try {
             game.makeMove(move, playerColor);
+            game.getMoveHistory().add(move);
             db.updateGame(command.getGameID(), game);
             db.updateBoard(command.getGameID(), game.getBoard());
         } catch (Exception e) {
@@ -251,10 +252,14 @@ public class WebSocketHandler {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            // Send move notification to all users (including the one who made the move)
+            String moveText = String.format("%s made the move %s to %s", username, move.getStartPosition(), move.getEndPosition());
+            try {
+                s.getRemote().sendString(gson.toJson(new NotificationMessage(moveText)));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-
-        String moveMessage = String.format("%s moved %s", username, move.getStartPosition(), move.getEndPosition());
-        manager.broadcastExcept(gson.toJson(new NotificationMessage(moveMessage)), session);
     }
 
     private void handleLeave(Session session, UserGameCommand command) {
