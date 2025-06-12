@@ -106,53 +106,82 @@ public class GameplayWebSocketHandler {
 
                     System.out.println("🧩 Re-drawing board after LOAD_GAME...");
                     new ChessBoardUI().drawBoard(board, playerColor == ChessGame.TeamColor.WHITE, highlightedFrom, highlightedTo);
+
                     System.out.println("✅ Done drawing board.");
-                    System.out.println("Current turn: " + game.getTeamTurn());
-                    System.out.println("Move attempted by: " + username + " playing as " + playerColor);
 
-                    if (playerColor == game.getTeamTurn()) {
-                        System.out.println("✅ It's your turn! Enter your move (e.g., e2 e4), or type 'resign' or 'exit':");
-                        new Thread(() -> {
-                            while (true) {
-                                System.out.print("Enter move: ");
-                                String input = scanner.nextLine().trim();
-
-                                if (input.equalsIgnoreCase("resign")) {
-                                    sendResignCommand();
-                                    break;
-                                } else if (input.equalsIgnoreCase("exit")) {
-                                    sendLeaveCommand();
-                                    break;
-                                } else if (input.matches("^[a-h][1-8]\\s+[a-h][1-8]$")) {
-                                    String[] parts = input.split("\\s+");
-                                    sendMove(parts[0], parts[1]);
-                                    break;
-                                } else if (input.matches("[a-h][1-8]")) {
-                                    handleHighlight(input);
-                                    return;
-                                } else {
-                                    System.out.println("Invalid input. Try again:");
-                                }
-                            }
-                        }).start();
-                    } else {
-                        System.out.println("⏳ Waiting for opponent to move. You may still type 'resign' or 'exit':");
+                    if (game.isGameOver()) {
+                        if (game.isInCheckmate(ChessGame.TeamColor.WHITE)) {
+                            System.out.println("Notification: Checkmate! Game over. Black wins.");
+                        } else if (game.isInCheckmate(ChessGame.TeamColor.BLACK)) {
+                            System.out.println("Notification: Checkmate! Game over. White wins.");
+                        } else {
+                            System.out.println("Notification: Game is over. It's a draw.");
+                        }
+                        System.out.println("Only 'exit' is allowed.");
                         new Thread(() -> {
                             while (true) {
                                 System.out.print("Command: ");
-                                String input = scanner.nextLine().trim();
-
-                                if (input.equalsIgnoreCase("resign")) {
-                                    sendResignCommand();
-                                    break;
-                                } else if (input.equalsIgnoreCase("exit")) {
+                                String input = scanner.nextLine().trim().toLowerCase();
+                                if (input.equals("exit")) {
                                     sendLeaveCommand();
                                     break;
                                 } else {
-                                    System.out.println("Not your turn. Only 'resign' or 'exit' allowed.");
+                                    System.out.println("Game is over. Only 'exit' is allowed.");
                                 }
                             }
                         }).start();
+                        return;
+                    }
+
+
+                        if (!game.isGameOver()) {
+                        System.out.println("Current turn: " + game.getTeamTurn());
+                        System.out.println("Move attempted by: " + username + " playing as " + playerColor);
+
+                        if (playerColor == game.getTeamTurn()) {
+                            System.out.println("✅ It's your turn! Enter your move (e.g., e2 e4), or type 'resign' or 'exit':");
+                            new Thread(() -> {
+                                while (true) {
+                                    System.out.print("Enter move: ");
+                                    String input = scanner.nextLine().trim();
+
+                                    if (input.equalsIgnoreCase("resign")) {
+                                        sendResignCommand();
+                                        break;
+                                    } else if (input.equalsIgnoreCase("exit")) {
+                                        sendLeaveCommand();
+                                        break;
+                                    } else if (input.matches("^[a-h][1-8]\\s+[a-h][1-8]$")) {
+                                        String[] parts = input.split("\\s+");
+                                        sendMove(parts[0], parts[1]);
+                                        break;
+                                    } else if (input.matches("[a-h][1-8]")) {
+                                        handleHighlight(input);
+                                        return;
+                                    } else {
+                                        System.out.println("Invalid input. Try again:");
+                                    }
+                                }
+                            }).start();
+                        } else {
+                            System.out.println("⏳ Waiting for opponent to move. You may still type 'resign' or 'exit':");
+                            new Thread(() -> {
+                                while (true) {
+                                    System.out.print("Command: ");
+                                    String input = scanner.nextLine().trim();
+
+                                    if (input.equalsIgnoreCase("resign")) {
+                                        sendResignCommand();
+                                        break;
+                                    } else if (input.equalsIgnoreCase("exit")) {
+                                        sendLeaveCommand();
+                                        break;
+                                    } else {
+                                        System.out.println("Not your turn. Only 'resign' or 'exit' allowed.");
+                                    }
+                                }
+                            }).start();
+                        }
                     }
                 } catch (DataAccessException e) {
                     System.err.println("Failed to load game from data access: " + e.getMessage());

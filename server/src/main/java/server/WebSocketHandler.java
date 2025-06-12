@@ -142,6 +142,10 @@ public class WebSocketHandler {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        if (gameData.getGame().isGameOver()) {
+            return;
+        }
     }
 
     private void handleMakeMove(Session session, UserGameCommand command) {
@@ -163,6 +167,12 @@ public class WebSocketHandler {
         ChessGame game = manager.getGame(command.getGameID());
         if (game == null) {
             System.out.println("game is null");
+            return;
+        }
+
+        // Prevent moves if the game is over
+        if (game.isGameOver()) {
+            sendError(session, "Game is over. No moves can be made.");
             return;
         }
 
@@ -213,6 +223,22 @@ public class WebSocketHandler {
         }
 
         System.out.println("✅ Move applied: " + move.getStartPosition() + " -> " + move.getEndPosition());
+
+        ChessGame.TeamColor opponent = (playerColor == ChessGame.TeamColor.WHITE) ? ChessGame.TeamColor.BLACK : ChessGame.TeamColor.WHITE;
+
+        if (game.isInCheckmate(opponent)) {
+            game.setGameOver(true);
+            String winner = (playerColor == ChessGame.TeamColor.WHITE) ? "White" : "Black";
+            manager.broadcast(gson.toJson(new NotificationMessage("Checkmate! Game over. " + winner + " wins.")));
+        } else if (game.isInStalemate(opponent)) {
+            game.setGameOver(true);
+            manager.broadcast(gson.toJson(new NotificationMessage("Stalemate! Game over. It's a draw.")));
+        }  else if (game.isInCheck(opponent)) {
+            System.out.println("check");
+            String checkedPlayer = (opponent == ChessGame.TeamColor.WHITE) ? "white" : "black";
+            String checkingPlayer = (opponent == ChessGame.TeamColor.WHITE) ? "black" : "white";
+            manager.broadcast(gson.toJson(new NotificationMessage("Check by " + checkingPlayer + " against " + checkedPlayer + "!")));
+        }
 
         for (Session s : manager.getSessions()) {
             String otherUser = manager.getUsername(s);
