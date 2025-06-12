@@ -23,6 +23,7 @@ import websocket.messages.LoadGameMessage;
 import dataaccess.DataAccess;
 
 import java.util.Collection;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -42,18 +43,20 @@ public class GameplayWebSocketHandler {
     private boolean playerIsWhite;
     private ChessPosition highlightedFrom;
     private Set<ChessPosition> highlightedTo;
-    private final java.util.Scanner scanner = new java.util.Scanner(System.in);
+    private final Scanner scanner = new Scanner(System.in);
     private volatile boolean exited = false;
     private ChessGame.TeamColor playerColor;
     private String username;
     private final DataAccess dataAccess;
+    private final boolean isObserver;
 
-    public GameplayWebSocketHandler(String authToken, int gameID, String username, Runnable promptForMove, DataAccess dataAccess) {
+    public GameplayWebSocketHandler(String authToken, int gameID, String username, Runnable promptForMove, DataAccess dataAccess, boolean isObserver) {
         this.authToken = authToken;
         this.gameID = gameID;
         this.username = username;
         this.onGameLoadedCallback = promptForMove;
         this.dataAccess = dataAccess;
+        this.isObserver = isObserver;
     }
 
 
@@ -144,6 +147,10 @@ public class GameplayWebSocketHandler {
                             System.out.println(moveText);
                         }
 
+                            if (!isObserver && game.getTeamTurn().equals(playerColor)) {
+                                onGameLoadedCallback.run();
+                            }
+
                         if (playerColor == game.getTeamTurn()) {
                             System.out.println("✅ It's your turn! Enter your move (e.g., e2 e4), or type 'resign' or 'exit':");
                             new Thread(() -> {
@@ -170,23 +177,40 @@ public class GameplayWebSocketHandler {
                                 }
                             }).start();
                         } else {
-                            System.out.println("⏳ Waiting for opponent to move. You may still type 'resign' or 'exit':");
-                            new Thread(() -> {
-                                while (true) {
-                                    System.out.print("Command: ");
-                                    String input = scanner.nextLine().trim();
+                            if (!isObserver) {
+                                System.out.println("⏳ Waiting for opponent to move. You may still type 'resign' or 'exit':");
+                                new Thread(() -> {
+                                    while (true) {
+                                        System.out.print("Command: ");
+                                        String input = scanner.nextLine().trim();
 
-                                    if (input.equalsIgnoreCase("resign")) {
-                                        sendResignCommand();
-                                        break;
-                                    } else if (input.equalsIgnoreCase("exit")) {
-                                        sendLeaveCommand();
-                                        break;
-                                    } else {
-                                        System.out.println("Not your turn. Only 'resign' or 'exit' allowed.");
+                                        if (input.equalsIgnoreCase("resign")) {
+                                            sendResignCommand();
+                                            break;
+                                        } else if (input.equalsIgnoreCase("exit")) {
+                                            sendLeaveCommand();
+                                            break;
+                                        } else {
+                                            System.out.println("Not your turn. Only 'resign' or 'exit' allowed.");
+                                        }
                                     }
-                                }
-                            }).start();
+                                }).start();
+                            } else {
+                                System.out.println("⏳ You are observing the game. You may only type 'exit':");
+                                new Thread(() -> {
+                                    while (true) {
+                                        System.out.print("Command: ");
+                                        String input = scanner.nextLine().trim();
+
+                                        if (input.equalsIgnoreCase("exit")) {
+                                            sendLeaveCommand();
+                                            break;
+                                        } else {
+                                            System.out.println("You are an observer. Only 'exit' is allowed.");
+                                        }
+                                    }
+                                }).start();
+                            }
                         }
                     }
                 } catch (DataAccessException e) {
@@ -286,6 +310,10 @@ public class GameplayWebSocketHandler {
     }
 
     private void promptForMove() {
+        if (isObserver) {
+            System.out.println("You are an observer. Only 'exit' is allowed.");
+            return;
+        }
         while (true) {
             System.out.print("\nEnter move (e.g., e2 e4), or a square (e.g., e2) to preview, or 'resign'/'exit': ");
             String input = scanner.nextLine().trim().toLowerCase();

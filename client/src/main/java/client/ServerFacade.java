@@ -113,12 +113,13 @@ public ListGamesResult listGames(String authToken) throws IOException {
     }
 
     public void observeGame(int gameID, String authToken) throws IOException {
-        // GET /observe?gameID=123
         HttpURLConnection connection =
                 makeConnection("GET", "/observe?gameID=" + gameID, authToken);
-
         connection.connect();
-        checkResponse(connection);     // throws if status ≥ 400
+        checkResponse(connection);
+        try (InputStream is = connection.getInputStream()) {
+            is.readAllBytes();
+        }
     }
 
     public DataAccess getDataAccess() {

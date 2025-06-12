@@ -230,7 +230,8 @@ public class ChessClient {
                         selectedGame.gameID(),
                         currentUsername,
                         this::promptForMove,
-                        facade.getDataAccess()
+                        facade.getDataAccess(),
+                        false
                 );
                 client.connect(handler, uri).get();
 
@@ -280,11 +281,29 @@ public class ChessClient {
         try {
             facade.observeGame(selectedGame.gameID(), authToken);
             System.out.printf("Now observing game '%s'.%n", selectedGame.gameName());
-            ChessBoard board = new ChessBoard();
-            board.resetBoard();
-            new ChessBoardUI().drawBoard(board, true, highlightedFrom, highlightedTo);
+
+            WebSocketClient client = new WebSocketClient();
+            client.start();
+            URI uri = new URI("ws://localhost:8080/ws");
+
+            GameplayWebSocketHandler handler = new GameplayWebSocketHandler(
+                    authToken,
+                    selectedGame.gameID(),
+                    currentUsername,
+                    () -> {}, // no prompt for observers
+                    facade.getDataAccess(),
+                    true // ✅ this tells it you're observing
+            );
+
+            client.connect(handler, uri).get();
+
+            // 🛑 Wait here until the observer exits manually (by typing 'exit')
+            while (!handler.hasExited()) {
+                Thread.sleep(500);
+            }
+
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.out.println("Failed to observe game: " + e.getMessage());
         }
     }
 }
