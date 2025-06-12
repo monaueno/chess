@@ -2,6 +2,7 @@ package client.websocket;
 
 import chess.ChessBoard;
 import chess.ChessGame;
+import chess.ChessMove;
 import model.GameData;
 import ui.ChessBoardUI;
 import websocket.commands.MakeMoveCommand;
@@ -18,7 +19,11 @@ import org.eclipse.jetty.websocket.api.annotations.OnWebSocketError;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 import websocket.messages.LoadGameMessage;
+
+import java.util.Collection;
 import java.util.Set;
+import java.util.stream.Collectors;
+
 import chess.ChessPosition;
 
 
@@ -183,33 +188,38 @@ public class GameplayWebSocketHandler {
     }
 
     private void promptForMove() {
-        System.out.print("\nEnter move: ");
-        String input = scanner.nextLine().trim().toLowerCase();
-        if (input.equalsIgnoreCase("quit")) {
-            System.out.println("Exiting game.");
-            return;
-        }
+        while (true) {
+            System.out.print("\nEnter move (e.g., e2 e4), or a square (e.g., e2) to preview, or 'resign'/'exit': ");
+            String input = scanner.nextLine().trim().toLowerCase();
 
-        if (input.equalsIgnoreCase("quit")) {
-            System.out.println("Exiting game.");
-            handleResignOrLeave();
-            try {
-                session.close();
-            } catch (Exception e) {
-                System.err.println("Error closing session: " + e.getMessage());
+            if (input.equals("resign")) {
+                System.out.println("Resigning game.");
+                sendResignCommand();
+                return;
+            } else if (input.equals("exit")) {
+                System.out.println("Exiting game.");
+                sendLeaveCommand();
+                return;
+            } else if (input.matches("^[a-h][1-8]$")) {
+                ChessPosition from = parsePosition(input);
+                Collection<ChessMove> moves = game.validMoves(from);
+                if (moves != null && !moves.isEmpty()) {
+                    Set<ChessPosition> destinations = moves.stream()
+                            .map(ChessMove::getEndPosition)
+                            .collect(Collectors.toSet());
+
+                    highlightedFrom = from;
+                    highlightedTo = destinations;
+                    new ChessBoardUI().drawBoard(board, playerColor == ChessGame.TeamColor.WHITE, from, destinations);
+                } else {
+                    System.out.println("❌ No valid moves from " + input);
+                }
+            } else {
+                System.out.println("Invalid input. Try again.");
             }
-            return;
         }
-
-        if (!input.matches("^[a-h][1-8]\\s+[a-h][1-8]$")) {
-            System.out.println("Invalid format. Use: e2 e4");
-            promptForMove(); // retry
-            return;
-        }
-
-        String[] parts = input.split("\\s+");
-        sendMove(parts[0], parts[1]);
     }
+
 
     public boolean hasExited() {
         return exited;

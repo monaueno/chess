@@ -184,6 +184,16 @@ public class ChessGame {
     }
 
     /**
+     * Makes a move for the side whose turn it currently is.
+     *
+     * @param move the chess move to perform
+     * @throws InvalidMoveException if the move is invalid
+     */
+    public void makeMove(ChessMove move) throws InvalidMoveException {
+        makeMove(move, this.currentTurn);
+    }
+
+    /**
      * Makes a move in a chess game
      *
      * @param move chess move to perform
@@ -198,17 +208,21 @@ public class ChessGame {
         ChessPiece movingPiece = board.getPiece(start);
 
         if (movingPiece == null) {
-            throw new InvalidMoveException("No piece at start position.");
+            throw new InvalidMoveException("Error: No piece at start position.");
         }
 
         if (playerColor != this.currentTurn) {
-            throw new InvalidMoveException("It's not your turn.");
+            throw new InvalidMoveException("Error: It's not your turn.");
         }
 
         Collection<ChessMove> legalMoves = validMoves(start);
 
         if (legalMoves == null || !legalMoves.contains(move)) {
-            throw new InvalidMoveException("Invalid move.");
+            throw new InvalidMoveException("Error: Invalid move.");
+        }
+
+        if (movingPiece.getTeamColor() != playerColor) {
+            throw new InvalidMoveException("Error: Cannot move opponent's piece.");
         }
 
         // Handle en passant capture
