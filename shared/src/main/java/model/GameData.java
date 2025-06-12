@@ -85,4 +85,8 @@ public class GameData {
         this.gameName = null;
         this.observers = new ArrayList<>();
     }
+
+    public ChessGame getGame() {
+        return game;
+    }
 }

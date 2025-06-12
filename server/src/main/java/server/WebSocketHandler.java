@@ -1,6 +1,9 @@
 package server;
 
+import chess.ChessGame;
 import chess.ChessMove;
+import chess.ChessPiece;
+import chess.ChessPosition;
 import dataaccess.DataAccess;
 import dataaccess.MySqlDataAccess;
 import model.GameData;
@@ -27,6 +30,9 @@ public class WebSocketHandler {
     private static final Gson gson = new Gson();
     private final DataAccess db;
     private static DataAccess sharedDB;
+    private static final Map<Integer, ChessGame> activeGames = new ConcurrentHashMap<>();
+
+
 
     public static void setSharedDB(DataAccess db) { sharedDB = db;}
 
@@ -44,19 +50,30 @@ public class WebSocketHandler {
     public void onMessage(Session session, String message) throws IOException {
         System.out.println("📨 Message received: " + message);
 
+
+
         try {
+            System.out.println("Calling deserialize()");
             UserGameCommand command = websocket.MessageSerializer.deserialize(message);
 
+
+
             if (command == null || command.getCommandType() == null) {
+                System.out.println("❌ Command is null after deserialization.");
                 session.getRemote().sendString(gson.toJson(Map.of("serverMessageType", "ERROR", "errorMessage", "Error: Invalid command")));
                 return;
             }
+            System.out.println("✅ Command successfully deserialized.");
+
+            System.out.println("➡️ Command type received: " + command.getCommandType());
 
             switch (command.getCommandType()) {
                 case CONNECT:
+                    System.out.println("✅ Entered handleConnect");
                     handleConnect(session, command);
                     break;
                 case MAKE_MOVE:
+                    System.out.println("Entered makeMoveConnect");
                     handleMakeMove(session, command);
                     break;
                 case LEAVE:
@@ -95,7 +112,7 @@ public class WebSocketHandler {
         websocket.messages.NotificationMessage notification = new websocket.messages.NotificationMessage(message);
         manager.broadcast(gson.toJson(notification));
 
-        manager.getGame().setGameOver(true);
+        manager.getGame(command.getGameID()).setGameOver(true);
 
         String resignationMsg = String.format("%s resigned", username);
         manager.broadcast(gson.toJson(new NotificationMessage(resignationMsg)));
@@ -120,7 +137,7 @@ public class WebSocketHandler {
             return;
         }
 
-        GameData gameData = manager.getGameData();
+        GameData gameData = manager.getGameData(command.getGameID());
 
         if (gameData == null) {
             System.out.println("GameData is null after loading. Aborting.");
@@ -168,7 +185,7 @@ public class WebSocketHandler {
         }
 
         // Get the game from the manager
-        chess.ChessGame game = manager.getGame();
+        chess.ChessGame game = manager.getGame(command.getGameID());
         if (game == null) {
             System.out.println("Game not found for gameID " + command.getGameID());
             return;
@@ -243,6 +260,7 @@ public class WebSocketHandler {
     private void handleConnect(Session session, UserGameCommand command) {
         int gameID = command.getGameID();
         String authToken = command.getAuthToken();
+        System.out.println("🚨 ENTERED handleConnect()");
 
         System.out.println("Handling CONNECT for gameID " + gameID + ", authToken: " + authToken);
 
@@ -262,24 +280,31 @@ public class WebSocketHandler {
                 }
                 return;
             }
+
+            ChessGame game = gameData.getGame();
+            game.setBoard(gameData.getBoard());
+
+            System.out.println("DEBUG: Piece at e2 (6,4) = " + game.getBoard().getPiece(new ChessPosition(6, 4)));
+
+            activeGames.put(gameID, game);
+
+            System.out.println("DEBUG: GameData board = " + gameData.getBoard());
+            System.out.println("Board after setBoard: " + game.getBoard());
+            System.out.println("Piece at e2: " + game.getBoard().getPiece(new ChessPosition(6, 4)));
+
         } catch (dataaccess.DataAccessException e) {
             try {
-                try {
-                    session.getRemote().sendString(gson.toJson(
-                            Map.of("serverMessageType", "ERROR",
-                                    "errorMessage", "Error: Failed to access game data")));
-                } catch (IOException ioException) {
-                    ioException.printStackTrace();
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
+                session.getRemote().sendString(gson.toJson(
+                        Map.of("serverMessageType", "ERROR",
+                                "errorMessage", "Error: Failed to access game data")));
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
             }
             e.printStackTrace();
             return;
         }
-        manager.setGameData(gameData);            // store in session manager   // wrap it
+        manager.setGameData(gameID, gameData);            // store in session manager   // wrap it
         manager.add(session, authToken);      // store it so it won't be null next time
-
 
         String username = manager.getUsername(session);
         if (username == null) {

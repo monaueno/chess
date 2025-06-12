@@ -29,6 +29,8 @@ public class GameSessionManager {
         return sessionToUsername.keySet();
     }
 
+    private final Map<Integer, GameData> gameDataMap = new ConcurrentHashMap<>();
+
     public void broadcast(String message) {
         for (Session s : getAllSessions()) {
             try {
@@ -51,17 +53,16 @@ public class GameSessionManager {
         }
     }
 
-    private GameData gameData;
-
-    public GameData getGameData() {
-        return gameData;
+    public GameData getGameData(int gameID) {
+        return gameDataMap.get(gameID);
     }
 
-    public void setGameData(GameData gameData) {
-        this.gameData = gameData;
+    public void setGameData(int gameID, GameData gameData) {
+        gameDataMap.put(gameID, gameData);
     }
 
-    public ChessGame getGame() {
-        return gameData != null ? gameData.game() : null;
+    public ChessGame getGame(int gameID) {
+        GameData data = getGameData(gameID);
+        return data != null ? data.game() : null;
     }
 }

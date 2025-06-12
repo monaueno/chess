@@ -50,6 +50,7 @@ public class GameplayWebSocketHandler {
         this.session = session;
 
         UserGameCommand connectCommand = new UserGameCommand(CommandType.CONNECT, authToken, gameID);
+
         try {
             session.getRemote().sendString(gson.toJson(connectCommand));
         } catch (Exception e) {
@@ -105,16 +106,22 @@ public class GameplayWebSocketHandler {
     }
 
     private ChessPosition parsePosition(String pos) {
-        int row = 8 - Character.getNumericValue(pos.charAt(1)); // e.g., '2' → 6
-        int col = pos.charAt(0) - 'a' + 1; // e.g., 'e' → 5
+        char fileChar = pos.charAt(0);
+        char rankChar = pos.charAt(1);
+
+        int row = 9 - Character.getNumericValue(rankChar); // e.g., '2' → 6
+        int col = fileChar - 'a'; // e.g., 'e' → 5
         return new ChessPosition(row, col);
     }
 
     public void sendMove(String from, String to) {
         ChessPosition fromPos = parsePosition(from);
         ChessPosition toPos = parsePosition(to);
-        MakeMoveCommand moveCommand = new MakeMoveCommand(authToken, gameID, fromPos, toPos);
+        System.out.println("DEBUG (client) — Parsed move:");
+        System.out.println("  From: " + from + " -> " + fromPos);
+        System.out.println("  To  : " + to + " -> " + toPos);
 
+        MakeMoveCommand moveCommand = new MakeMoveCommand(authToken, gameID, fromPos, toPos);
         System.out.println("Sending move JSON: " + gson.toJson(moveCommand));
 
         try {
