@@ -157,7 +157,6 @@ public class ChessClient {
                 return;
             }
             case "observe game" -> handleObserveGame();
-            case String s when s.startsWith("h ") -> handleHighlight(s.substring(2).trim());
             default -> System.out.println("Invalid command. Type 'help' to see options.");
         }
     }
@@ -279,50 +278,6 @@ public class ChessClient {
             new ChessBoardUI().drawBoard(board, true, highlightedFrom, highlightedTo);
         } catch (Exception e) {
             System.out.println(e.getMessage());
-        }
-    }
-
-
-    private void handleHighlight(String input) {
-        try {
-            if (input.length() != 2 || input.charAt(0) < 'a' || input.charAt(0) > 'h' || !Character.isDigit(input.charAt(1))) {
-                System.out.println("Invalid input. Use format like 'h d2'.");
-                return;
-            }
-
-            int file = input.charAt(0) - 'a' + 1;
-            int rank = Character.getNumericValue(input.charAt(1));
-
-            if (rank < 1 || rank > 8) {
-                System.out.println("Invalid rank. Use numbers 1 through 8.");
-                return;
-            }
-
-            int row = rank;
-            int col = file;
-
-            ChessPosition start = new ChessPosition(row, col);
-
-            if (game == null) {
-                System.out.println("Game not loaded yet.");
-                return;
-            }
-
-            Collection<ChessMove> valid = game.validMoves(start);
-            if (valid == null) {
-                System.out.println("No piece at that position.");
-                return;
-            } else if (valid.isEmpty()) {
-                System.out.println("No legal moves.");
-                return;
-            }
-
-            highlightedFrom = start;
-            highlightedTo = valid.stream().map(ChessMove::getEndPosition).collect(Collectors.toSet());
-
-            new ChessBoardUI().drawBoard(game.getBoard(), whitePerspective, highlightedFrom, highlightedTo);
-        } catch (Exception e) {
-            System.out.println("Invalid input. Use format like 'h d2'.");
         }
     }
 }

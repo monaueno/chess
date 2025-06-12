@@ -119,6 +119,9 @@ public class GameplayWebSocketHandler {
                                 String[] parts = input.split("\\s+");
                                 sendMove(parts[0], parts[1]);
                                 break;
+                            } else if (input.matches("[a-h][1-8]")) {
+                                handleHighlight(input);
+                                return;
                             } else {
                                 System.out.println("Invalid input. Try again:");
                             }
@@ -156,6 +159,51 @@ public class GameplayWebSocketHandler {
                 System.err.println(errorMsg.getErrorMessage());
 
                 break;
+        }
+    }
+
+
+    private void handleHighlight(String input) {
+        try {
+            if (input.length() != 2 || input.charAt(0) < 'a' || input.charAt(0) > 'h' || !Character.isDigit(input.charAt(1))) {
+                System.out.println("Invalid input. Use format like 'd2'.");
+                return;
+            }
+
+            int file = input.charAt(0) - 'a' + 1;
+            int rank = Character.getNumericValue(input.charAt(1));
+
+            if (rank < 1 || rank > 8) {
+                System.out.println("Invalid rank. Use numbers 1 through 8.");
+                return;
+            }
+
+            int row = rank;
+            int col = file;
+
+            ChessPosition start = new ChessPosition(row, col);
+
+            if (game == null) {
+                System.out.println("Game not loaded yet.");
+                return;
+            }
+
+            Collection<ChessMove> valid = game.validMoves(start);
+            if (valid == null) {
+                System.out.println("No piece at that position.");
+                return;
+            } else if (valid.isEmpty()) {
+                System.out.println("No legal moves.");
+                return;
+            }
+
+            highlightedFrom = start;
+            highlightedTo = valid.stream().map(ChessMove::getEndPosition).collect(Collectors.toSet());
+
+            new ChessBoardUI().drawBoard(game.getBoard(), playerIsWhite, highlightedFrom, highlightedTo);
+            promptForMove();
+        } catch (Exception e) {
+            System.out.println("Invalid input. Use format like 'd2'.");
         }
     }
 
