@@ -107,13 +107,11 @@ public class GameplayWebSocketHandler {
 
                     game.setBoard(board);
 
-                    System.out.println("🧩 Re-drawing board after LOAD_GAME...");
                     new ChessBoardUI().drawBoard(board, playerColor == ChessGame.TeamColor.WHITE, highlightedFrom, highlightedTo);
 
-                    System.out.println("✅ Done drawing board.");
-
                     if (game.isGameOver()) {
-                        System.out.println("✅ Game is over.");
+                        System.out.println("Game is over.");
+                        System.out.println();
 
                         if (game.isInCheckmate(ChessGame.TeamColor.WHITE)) {
                             System.out.println("Checkmate! Black wins.");
@@ -143,13 +141,14 @@ public class GameplayWebSocketHandler {
                         return;
                     }
                     if (!game.isGameOver()) {
-                        System.out.println("Current turn: " + game.getTeamTurn());
                         if (game.getMoveHistory() != null && !game.getMoveHistory().isEmpty()) {
                             ChessMove lastMove = game.getMoveHistory().get(game.getMoveHistory().size() - 1);
                             String from = (char)('a' + lastMove.getStartPosition().getColumn() - 1) + String.valueOf(lastMove.getStartPosition().getRow());
                             String to = (char)('a' + lastMove.getEndPosition().getColumn() - 1) + String.valueOf(lastMove.getEndPosition().getRow());
                             String moveText = String.format("%s made the move %s to %s", username, from, to);
                             System.out.println(moveText);
+                            System.out.println("Current turn: " + game.getTeamTurn());
+                            System.out.println();
                         }
 
                         if (!isObserver && game.getTeamTurn().equals(playerColor)) {
@@ -157,7 +156,7 @@ public class GameplayWebSocketHandler {
                         }
 
                         if (playerColor == game.getTeamTurn()) {
-                            System.out.println("✅ It's your turn! Enter your move (e.g., e2 e4), or type 'resign' or 'exit':");
+                            System.out.println("It's your turn!");
                             new Thread(() -> {
                                 while (true) {
                                     System.out.print("Enter move: ");
@@ -189,7 +188,7 @@ public class GameplayWebSocketHandler {
                             }).start();
                         } else {
                             if (!isObserver) {
-                                System.out.println("⏳ Waiting for opponent to move. You may still type 'resign' or 'exit':");
+                                System.out.println("Waiting for opponent to move. You may still type 'resign' or 'exit':");
                                 new Thread(() -> {
                                     while (true) {
                                         System.out.print("Command: ");
@@ -311,12 +310,8 @@ public class GameplayWebSocketHandler {
     public void sendMove(String from, String to) {
         ChessPosition fromPos = parsePosition(from);
         ChessPosition toPos = parsePosition(to);
-        System.out.println("DEBUG (client) — Parsed move:");
-        System.out.println("  From: " + from + " -> " + fromPos);
-        System.out.println("  To  : " + to + " -> " + toPos);
 
         MakeMoveCommand moveCommand = new MakeMoveCommand(authToken, gameID, fromPos, toPos);
-        System.out.println("Sending move JSON: " + gson.toJson(moveCommand));
 
         try {
             session.getRemote().sendString(gson.toJson(moveCommand));
@@ -401,7 +396,6 @@ public class GameplayWebSocketHandler {
 
     @OnWebSocketClose
     public void onClose(int statusCode, String reason) {
-        System.out.println("WebSocket closed: " + reason);
     }
 
     @OnWebSocketError

@@ -225,7 +225,6 @@ public class MySqlDataAccess implements DataAccess {
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
                         String whiteUsername = rs.getString("whiteUsername");
-                        System.out.println("✔️ Reading from DB - whiteUsername: " + whiteUsername);
                         String blackUsername = rs.getString("blackUsername");
                         String gameName = rs.getString("gameName");
                         String gameJson = rs.getString("gameData");
