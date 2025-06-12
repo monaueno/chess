@@ -3,6 +3,7 @@ package server;
 import chess.ChessGame;
 import chess.ChessMove;
 import dataaccess.DataAccess;
+import dataaccess.DataAccessException;
 import model.GameData;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
@@ -119,6 +120,11 @@ public class WebSocketHandler {
             }
             return;
         }
+        if (gameData.whiteUsername() == null) {
+            gameData.setWhiteUsername(username);
+        } else if (gameData.blackUsername() == null) {
+            gameData.setBlackUsername(username);
+        }
 
         String role = username.equals(gameData.whiteUsername()) ? "white" :
                 username.equals(gameData.blackUsername()) ? "black" : "observer";
@@ -220,7 +226,8 @@ public class WebSocketHandler {
         String username = manager.getUsername(session);
         if (username == null) return;
 
-        manager.getGame(gameID).setGameOver(true);
+        ChessGame game = manager.getGame(gameID);
+        game.setGameOver(true);
 
         NotificationMessage resignationMsg = new NotificationMessage(username + " has resigned.");
         manager.broadcast(gson.toJson(resignationMsg));

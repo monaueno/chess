@@ -50,19 +50,22 @@ public class JoinGameService {
 
         // System.out.println("Comparing: game.whiteUsername=[" + game.whiteUsername() + "] to auth.username=[" + username + "]");
 
-        if (color == ChessGame.TeamColor.WHITE && game.whiteUsername() != null && !game.whiteUsername().equals(username)) {
-            throw new DataAccessException("White is already taken");
-        }
-        if (color == ChessGame.TeamColor.BLACK && game.blackUsername() != null && !game.blackUsername().equals(username)) {
-            throw new DataAccessException("Black color already taken");
-        }
-
         switch (color) {
             case WHITE -> {
+                String existingWhite = game.whiteUsername();
+                if (existingWhite != null && !existingWhite.equalsIgnoreCase(username)) {
+                    throw new DataAccessException("Error: white player already taken");
+                }
                 db.setWhiteUsername(game.gameID(), username);
+                game.setWhiteUsername(username);
             }
             case BLACK -> {
+                String existingBlack = game.blackUsername();
+                if (existingBlack != null && !existingBlack.equalsIgnoreCase(username)) {
+                    throw new DataAccessException("Error: black player already taken");
+                }
                 db.setBlackUsername(game.gameID(), username);
+                game.setBlackUsername(username);
             }
             default -> throw new DataAccessException("bad request");
         }

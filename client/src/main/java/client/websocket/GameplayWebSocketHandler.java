@@ -32,7 +32,7 @@ public class GameplayWebSocketHandler {
     private static final Gson gson = new Gson();
     private ChessBoard board;
     private ChessGame game = new ChessGame();
-    private final boolean playerIsWhite = true;
+    private boolean playerIsWhite;
     private ChessPosition highlightedFrom;
     private Set<ChessPosition> highlightedTo;
     private final java.util.Scanner scanner = new java.util.Scanner(System.in);
@@ -82,6 +82,8 @@ public class GameplayWebSocketHandler {
                     return;
                 }
 
+                this.playerIsWhite = (this.playerColor == ChessGame.TeamColor.WHITE);
+
                 if (board == null) {
                     System.err.println("Error: board is null in LOAD_GAME");
                     return;
@@ -90,12 +92,12 @@ public class GameplayWebSocketHandler {
                 game.setBoard(board);
 
                 System.out.println("🧩 Re-drawing board after LOAD_GAME...");
-                new ChessBoardUI().drawBoard(board, playerIsWhite, highlightedFrom, highlightedTo);
+                new ChessBoardUI().drawBoard(board, playerColor == ChessGame.TeamColor.WHITE, highlightedFrom, highlightedTo);
                 System.out.println("✅ Done drawing board.");
                 System.out.println("Current turn: " + game.getTeamTurn());
                 System.out.println("Move attempted by: " + username + " playing as " + playerColor);
 
-                if (lgMsg.isYourTurn()) {
+                if (playerColor == game.getTeamTurn()) {
                     System.out.println("✅ It's your turn! Enter your move (e.g., e2 e4), or type 'resign' or 'exit':");
                     new Thread(() -> {
                         while (true) {
@@ -152,12 +154,13 @@ public class GameplayWebSocketHandler {
         }
     }
 
+
     private ChessPosition parsePosition(String pos) {
         char fileChar = pos.charAt(0);
         char rankChar = pos.charAt(1);
 
-        int row = 9 - Character.getNumericValue(rankChar); // e.g., '2' → 6
-        int col = fileChar - 'a'; // e.g., 'e' → 5
+        int row = Character.getNumericValue(rankChar); // e.g., '2' → 6
+        int col = (fileChar - 'a') + 1; // e.g., 'e' → 5
         return new ChessPosition(row, col);
     }
 
@@ -220,6 +223,8 @@ public class GameplayWebSocketHandler {
         UserGameCommand resign = new UserGameCommand(CommandType.RESIGN, authToken, gameID);
         try {
             session.getRemote().sendString(gson.toJson(resign));
+            exited = true;
+            if (session != null && session.isOpen()) session.close();
         } catch (Exception e) {
             System.err.println("Failed to send RESIGN command: " + e.getMessage());
         }
@@ -229,6 +234,8 @@ public class GameplayWebSocketHandler {
         UserGameCommand leave = new UserGameCommand(CommandType.LEAVE, authToken, gameID);
         try {
             session.getRemote().sendString(gson.toJson(leave));
+            exited = true;
+            if (session != null && session.isOpen()) session.close();
         } catch (Exception e) {
             System.err.println("Failed to send LEAVE command: " + e.getMessage());
         }
