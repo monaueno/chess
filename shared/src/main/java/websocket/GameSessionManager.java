@@ -13,12 +13,16 @@ public class GameSessionManager {
 
     private final Map<Session, String> sessionToUsername = new ConcurrentHashMap<>();
 
-    public void add(Session session, String username) {
+    public void add(Session session, String username, int gameID) {
         sessionToUsername.put(session, username);
+        gameSessions.computeIfAbsent(gameID, k -> ConcurrentHashMap.newKeySet()).add(session);
     }
 
     public void remove(Session session) {
         sessionToUsername.remove(session);
+        for (Set<Session> sessions : gameSessions.values()) {
+            sessions.remove(session);
+        }
     }
 
     public String getUsername(Session session) {
@@ -30,6 +34,7 @@ public class GameSessionManager {
     }
 
     private final Map<Integer, GameData> gameDataMap = new ConcurrentHashMap<>();
+    private final Map<Integer, Set<Session>> gameSessions = new ConcurrentHashMap<>();
 
     public void broadcast(String message) {
         for (Session s : getAllSessions()) {
@@ -66,8 +71,14 @@ public class GameSessionManager {
         return data != null ? data.game() : null;
     }
 
+    public Set<Session> getSessionsForGame(int gameID) {
+        return gameSessions.getOrDefault(gameID, Set.of());
+    }
+
     public Session[] getSessions() {
         Set<Session> sessions = sessionToUsername.keySet();
         return sessions.toArray(new Session[0]);
     }
+
+
 }

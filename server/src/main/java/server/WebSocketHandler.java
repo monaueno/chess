@@ -106,12 +106,12 @@ public class WebSocketHandler {
         }
 
         manager.setGameData(gameID, gameData);
-        manager.add(session, authToken);
+        manager.add(session, authToken, gameID);
 
         String username;
         try {
             username = db.getUsernameFromAuth(authToken);
-            manager.add(session, username);
+            manager.add(session, username, gameID);
         } catch (Exception e) {
             try {
                 session.getRemote().sendString(gson.toJson(Map.of("serverMessageType", "ERROR", "errorMessage", "Error: Failed to retrieve username")));
@@ -263,11 +263,11 @@ public class WebSocketHandler {
             session
         );
 
-        for (Session s : manager.getSessions()) {
+        for (Session s : manager.getSessionsForGame(command.getGameID())) {
             String otherUser = manager.getUsername(s);
             boolean theirTurn = (otherUser != null &&
                     ((game.getTeamTurn() == ChessGame.TeamColor.WHITE && otherUser.equals(gameData.whiteUsername())) ||
-                            (game.getTeamTurn() == ChessGame.TeamColor.BLACK && otherUser.equals(gameData.blackUsername()))));
+                     (game.getTeamTurn() == ChessGame.TeamColor.BLACK && otherUser.equals(gameData.blackUsername()))));
             LoadGameMessage updatedGameMsg = new LoadGameMessage(gameData, theirTurn);
             try {
                 s.getRemote().sendString(gson.toJson(updatedGameMsg));

@@ -91,6 +91,13 @@ public class GameplayWebSocketHandler extends Endpoint {
                         return;
                     }
 
+                    // Debug print to confirm playerColor assignment
+                    System.out.println("Player username: " + username);
+                    System.out.println("White player: " + data.whiteUsername());
+                    System.out.println("Black player: " + data.blackUsername());
+                    System.out.println("Assigned playerColor: " + playerColor);
+                    System.out.println("Game turn: " + game.getTeamTurn());
+
                     this.playerIsWhite = (this.playerColor == ChessGame.TeamColor.WHITE);
 
                     if (board == null) {
@@ -146,39 +153,6 @@ public class GameplayWebSocketHandler extends Endpoint {
 
                         if (!isObserver && game.getTeamTurn().equals(playerColor)) {
                             onGameLoadedCallback.run();
-                        }
-
-                        if (playerColor == game.getTeamTurn()) {
-                            System.out.println("It's your turn!");
-                            new Thread(() -> {
-                                while (true) {
-                                    System.out.print("Enter move: ");
-                                    String input = scanner.nextLine().trim();
-
-                                    if (input.equalsIgnoreCase("resign")) {
-                                        System.out.print("Are you sure you want to resign? (y/n): ");
-                                        String confirm = scanner.nextLine().trim().toLowerCase();
-                                        if (confirm.equals("y")) {
-                                            sendResignCommand();
-                                            break;
-                                        } else {
-                                            continue;
-                                        }
-                                    } else if (input.equalsIgnoreCase("exit")) {
-                                        sendLeaveCommand();
-                                        break;
-                                    } else if (input.matches("^[a-h][1-8]\\s+[a-h][1-8]$")) {
-                                        String[] parts = input.split("\\s+");
-                                        sendMove(parts[0], parts[1]);
-                                        break;
-                                    } else if (input.matches("[a-h][1-8]")) {
-                                        handleHighlight(input);
-                                        return;
-                                    } else {
-                                        System.out.println("Invalid input. Try again:");
-                                    }
-                                }
-                            }).start();
                         } else {
                             if (!isObserver) {
                                 System.out.println("Waiting for opponent to move. You may still type 'resign' or 'exit':");
