@@ -16,7 +16,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import chess.ChessBoard;
-import org.eclipse.jetty.websocket.client.WebSocketClient;
+import javax.websocket.ContainerProvider;
+import javax.websocket.WebSocketContainer;
 import ui.ChessBoardUI;
 
 public class ChessClient {
@@ -221,10 +222,7 @@ public class ChessClient {
                 System.out.println();
                 System.out.printf("Joined game '%s' as %s.%n", selectedGame.gameName(), color);
 
-                WebSocketClient client = new WebSocketClient();
-                client.start();
                 URI uri = new URI("ws://localhost:8080/ws");
-
                 GameplayWebSocketHandler handler = new GameplayWebSocketHandler(
                         authToken,
                         selectedGame.gameID(),
@@ -233,7 +231,9 @@ public class ChessClient {
                         facade.getDataAccess(),
                         false
                 );
-                client.connect(handler, uri).get();
+
+                WebSocketContainer container = ContainerProvider.getWebSocketContainer();
+                container.connectToServer(handler, uri);
 
                 while(!handler.hasExited()) {
                     Thread.sleep(1000);
@@ -277,27 +277,27 @@ public class ChessClient {
     }
 
     private void observeGame(int index) {
+
         ListGamesResult.GameSummary selectedGame = cachedGames.get(index);
         try {
             facade.observeGame(selectedGame.gameID(), authToken);
             System.out.printf("Now observing game '%s'.%n", selectedGame.gameName());
 
-            WebSocketClient client = new WebSocketClient();
-            client.start();
+
             URI uri = new URI("ws://localhost:8080/ws");
 
             GameplayWebSocketHandler handler = new GameplayWebSocketHandler(
                     authToken,
                     selectedGame.gameID(),
                     currentUsername,
-                    () -> {}, // no prompt for observers
+                    () -> {},
                     facade.getDataAccess(),
-                    true // ✅ this tells it you're observing
+                    true
             );
 
-            client.connect(handler, uri).get();
+            WebSocketContainer container = ContainerProvider.getWebSocketContainer();
+            container.connectToServer(handler, uri);
 
-            // 🛑 Wait here until the observer exits manually (by typing 'exit')
             while (!handler.hasExited()) {
                 Thread.sleep(500);
             }
