@@ -19,10 +19,10 @@ public class Server {
         try {
             DatabaseManager.createDatabase();
             DatabaseManager.createTables();
-            db = new MySqlDataAccess();          // can throw DataAccessException
+            db = new MySqlDataAccess();
         } catch (DataAccessException e) {
             System.err.println("DB init failed: " + e.getMessage());
-            return -1;                           // fail fast
+            return -1;
         }
 
         /* ❷ Provide it to the WebSocket handler BEFORE registering */

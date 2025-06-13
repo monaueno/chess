@@ -32,7 +32,6 @@ public class GameData {
         this.observers = observers != null ? observers : new ArrayList<>();
     }
 
-    // Getters and setters
     public int gameID() {
         return gameID;
     }

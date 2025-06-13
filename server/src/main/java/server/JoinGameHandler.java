@@ -23,7 +23,6 @@ public class JoinGameHandler implements Route {
         Gson gson = new Gson();
         System.out.println("🔹 JoinGameHandler triggered");
         System.out.println("🔹 Request body: " + req.body());
-        // String authToken = req.headers("authorization"); // Removed redundant line
         String authToken = req.headers("authorization");
         System.out.println("🔹 Authorization header: " + authToken);
 

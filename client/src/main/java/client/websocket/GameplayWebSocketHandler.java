@@ -91,7 +91,7 @@ public class GameplayWebSocketHandler extends Endpoint {
                         return;
                     }
 
-                    // Debug print to confirm playerColor assignment
+
                     System.out.println("Player username: " + username);
                     System.out.println("White player: " + data.whiteUsername());
                     System.out.println("Black player: " + data.blackUsername());
@@ -193,7 +193,7 @@ public class GameplayWebSocketHandler extends Endpoint {
                             }
                         }
                     }
-                } // <-- FIX: closes if (!game.isGameOver()) block before break
+                }
                 catch (DataAccessException e) {
                     System.err.println("Failed to load game from data access: " + e.getMessage());
                     return;
@@ -256,7 +256,6 @@ public class GameplayWebSocketHandler extends Endpoint {
             highlightedFrom = start;
             highlightedTo = valid.stream().map(ChessMove::getEndPosition).collect(Collectors.toSet());
 
-            // Always draw observer board from white's perspective
             new ChessBoardUI().drawBoard(game.getBoard(), isObserver || playerIsWhite, highlightedFrom, highlightedTo);
             promptForMove();
         } catch (Exception e) {
@@ -269,8 +268,8 @@ public class GameplayWebSocketHandler extends Endpoint {
         char fileChar = pos.charAt(0);
         char rankChar = pos.charAt(1);
 
-        int row = Character.getNumericValue(rankChar); // e.g., '2' → 6
-        int col = (fileChar - 'a') + 1; // e.g., 'e' → 5
+        int row = Character.getNumericValue(rankChar);
+        int col = (fileChar - 'a') + 1;
         return new ChessPosition(row, col);
     }
 
@@ -282,7 +281,6 @@ public class GameplayWebSocketHandler extends Endpoint {
 
         try {
             session.getBasicRemote().sendText(gson.toJson(moveCommand));
-            // Do not draw board here; wait for LOAD_GAME message which will trigger UI update.
         } catch (Exception e) {
             System.err.println("Failed to send move: " + e.getMessage());
         }

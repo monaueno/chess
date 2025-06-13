@@ -40,7 +40,7 @@ public class ChessClient {
     private void run() {
         System.out.println("Welcome to CS 240 Chess!");
         try {
-            int port = 8080; // or read from args
+            int port = 8080;
             facade = new ServerFacade(port, new MySqlDataAccess());
 
             while (true) {

@@ -1,4 +1,4 @@
-package ui;      // adjust to your project’s package if needed
+package ui;
 
 import chess.ChessBoard;
 import chess.ChessPiece;

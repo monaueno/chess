@@ -115,7 +115,6 @@ public class ChessGame {
             return;
         }
         int row = startPosition.getRow();
-        // King-side castling
         ChessPiece kingSideRook = board.getPiece(new ChessPosition(row, 8));
         if (kingSideRook != null && kingSideRook.getPieceType() == ChessPiece.PieceType.ROOK &&
                 kingSideRook.getTeamColor() == piece.getTeamColor() && !kingSideRook.hasMoved()) {
