@@ -1,5 +1,10 @@
 package client.websocket;
 
+import javax.websocket.*;
+import javax.websocket.server.ServerEndpoint;
+import java.io.IOException;
+import java.net.URI;
+
 import chess.ChessBoard;
 import chess.ChessGame;
 import chess.ChessMove;
@@ -13,12 +18,6 @@ import websocket.messages.ErrorMessage;
 import websocket.messages.NotificationMessage;
 import websocket.messages.ServerMessage;
 import com.google.gson.Gson;
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketError;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
-import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 import websocket.messages.LoadGameMessage;
 import dataaccess.DataAccess;
 
@@ -30,7 +29,7 @@ import java.util.stream.Collectors;
 import chess.ChessPosition;
 
 
-@WebSocket
+@ServerEndpoint(value="/ws")
 public class GameplayWebSocketHandler {
 
     private final String authToken;
@@ -60,24 +59,21 @@ public class GameplayWebSocketHandler {
     }
 
 
-
-
-    @OnWebSocketConnect
-    public void onConnect(Session session) {
+    @OnOpen
+    public void onOpen(Session session) {
         this.session = session;
 
         UserGameCommand connectCommand = new UserGameCommand(CommandType.CONNECT, authToken, gameID);
 
         try {
-            session.getRemote().sendString(gson.toJson(connectCommand));
+            session.getBasicRemote().sendText(gson.toJson(connectCommand));
         } catch (Exception e) {
             System.err.println("Failed to send CONNECT command: " + e.getMessage());
         }
     }
 
-    @OnWebSocketMessage
-    public void onMessage(String message) {
-
+    @OnMessage
+    public void onMessage(String message, Session session) {
         ServerMessage serverMessage = MessageSerializer.deserializeServerMessage(message);
 
         switch (serverMessage.getServerMessageType()) {
@@ -234,7 +230,6 @@ public class GameplayWebSocketHandler {
 
                 break;
 
-
             case NOTIFICATION:
                 NotificationMessage noteMsg = (NotificationMessage) serverMessage;
                 System.out.println(noteMsg.getMessage());
@@ -314,7 +309,7 @@ public class GameplayWebSocketHandler {
         MakeMoveCommand moveCommand = new MakeMoveCommand(authToken, gameID, fromPos, toPos);
 
         try {
-            session.getRemote().sendString(gson.toJson(moveCommand));
+            session.getBasicRemote().sendText(gson.toJson(moveCommand));
             // Do not draw board here; wait for LOAD_GAME message which will trigger UI update.
         } catch (Exception e) {
             System.err.println("Failed to send move: " + e.getMessage());
@@ -374,7 +369,7 @@ public class GameplayWebSocketHandler {
     private void sendResignCommand() {
         UserGameCommand resign = new UserGameCommand(CommandType.RESIGN, authToken, gameID);
         try {
-            session.getRemote().sendString(gson.toJson(resign));
+            session.getBasicRemote().sendText(gson.toJson(resign));
             exited = true;
             if (session != null && session.isOpen()) session.close();
         } catch (Exception e) {
@@ -385,7 +380,7 @@ public class GameplayWebSocketHandler {
     private void sendLeaveCommand() {
         UserGameCommand leave = new UserGameCommand(CommandType.LEAVE, authToken, gameID);
         try {
-            session.getRemote().sendString(gson.toJson(leave));
+            session.getBasicRemote().sendText(gson.toJson(leave));
             exited = true;
             if (session != null && session.isOpen()) session.close();
         } catch (Exception e) {
@@ -394,12 +389,12 @@ public class GameplayWebSocketHandler {
     }
 
 
-    @OnWebSocketClose
-    public void onClose(int statusCode, String reason) {
+    @OnClose
+    public void onClose(Session session, CloseReason closeReason) {
     }
 
-    @OnWebSocketError
-    public void onError(Throwable t) {
-        System.err.println("WebSocket error: " + t.getMessage());
+    @OnError
+    public void onError(Session session, Throwable throwable) {
+        System.err.println("WebSocket error: " + throwable.getMessage());
     }
 }
