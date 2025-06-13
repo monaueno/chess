@@ -1,4 +1,4 @@
-package websocket;
+package server;
 
 import chess.ChessGame;
 import model.GameData;

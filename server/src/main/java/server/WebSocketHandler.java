@@ -12,10 +12,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import com.google.gson.Gson;
-import websocket.GameSessionManager;
 import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
-import websocket.commands.UserGameCommand.CommandType;
 import websocket.messages.LoadGameMessage;
 import websocket.messages.NotificationMessage;
 
