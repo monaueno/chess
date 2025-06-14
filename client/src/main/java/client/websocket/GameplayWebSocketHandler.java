@@ -290,9 +290,8 @@ public class GameplayWebSocketHandler extends Endpoint {
         }
     }
 
-    // Extracted game over handling logic
     private boolean handleGameOver(LoadGameMessage msg) {
-        if (!game.isGameOver()) return false;
+        if (!game.isGameOver()) {return false;}
 
         System.out.println("Game is over.\n");
         if (game.isInCheckmate(ChessGame.TeamColor.WHITE)) {

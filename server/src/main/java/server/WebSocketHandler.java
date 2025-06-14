@@ -70,7 +70,11 @@ public class WebSocketHandler {
                 case MAKE_MOVE -> handleMakeMove(session, command);
                 case LEAVE -> handleLeave(session, command);
                 case RESIGN -> handleResign(session, command);
-                default -> session.getRemote().sendString(GSON.toJson(Map.of("serverMessageType", "ERROR", "errorMessage", "Error: Unknown command")));
+                default -> session.getRemote().sendString(GSON.toJson(Map.of(
+                        "serverMessageType",
+                        "ERROR",
+                        "errorMessage",
+                        "Error: Unknown command")));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -165,7 +169,6 @@ public class WebSocketHandler {
             return;
         }
 
-        // Validate that the authToken belongs to this user
         String token = command.getAuthToken();
         String userFromToken;
         try {
@@ -353,7 +356,14 @@ public class WebSocketHandler {
         }
     }
 
-    private boolean validateMove(Session session, UserGameCommand command, GameSessionManager manager, ChessMove move, ChessGame game, GameData gameData, String username) {
+    private boolean validateMove(
+            Session session,
+            UserGameCommand command,
+            GameSessionManager manager,
+            ChessMove move,
+            ChessGame game,
+            GameData gameData,
+            String username) {
         Collection<ChessMove> validMoves = game.validMoves(move.getStartPosition());
         if (validMoves == null || !validMoves.contains(move)) {
             sendError(session, "Illegal move");
