@@ -2,8 +2,8 @@ package servicetests;
 
 import dataaccess.DataAccessException;
 import dataaccess.MySqlDataAccess;
-import model.AuthData;
-import model.UserData;
+import model.data.AuthData;
+import model.data.UserData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import model.RegisterRequest;

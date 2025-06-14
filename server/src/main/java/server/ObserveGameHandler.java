@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import model.*;
+import model.data.GameData;
 import spark.Request;
 import spark.Response;
 import spark.Route;

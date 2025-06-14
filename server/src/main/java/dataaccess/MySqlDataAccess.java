@@ -1,15 +1,15 @@
 package dataaccess;
 
-import java.lang.reflect.Type;
 import java.sql.*;
 import java.util.List;
 import com.google.gson.Gson;
 import chess.ChessGame;
 import java.util.ArrayList;
 
-import com.google.gson.reflect.TypeToken;
+import model.data.AuthData;
+import model.data.GameData;
+import model.data.UserData;
 import org.mindrot.jbcrypt.BCrypt;
-import model.*;
 
 public class MySqlDataAccess implements DataAccess {
 
@@ -242,22 +242,8 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public void updateGame(int gameID, ChessGame game) throws DataAccessException {
-        String sql = "UPDATE games SET gameData = ? WHERE gameID = ?";
         String gameJson = new Gson().toJson(game);
-
-        try (Connection conn = DatabaseManager.getConnection();
-        PreparedStatement stmt = conn.prepareStatement(sql)){
-
-            stmt.setString(1, gameJson);
-            stmt.setInt(2, gameID);
-
-            int rowsAffected = stmt.executeUpdate();
-            if(rowsAffected == 0){
-                throw new DataAccessException("No game found with ID: " + gameID);
-            }
-        }catch (SQLException ex){
-            throw new DataAccessException("Error updating game in database", ex);
-        }
+        updateGameDataField(gameID, gameJson);
     }
 
     @Override
@@ -355,13 +341,17 @@ public class MySqlDataAccess implements DataAccess {
     }
     @Override
     public void updateBoard(int gameID, chess.ChessBoard board) throws DataAccessException {
-        String sql = "UPDATE games SET gameData = ? WHERE gameID = ?";
         String gameJson = new Gson().toJson(board);
+        updateGameDataField(gameID, gameJson);
+    }
+
+    private void updateGameDataField(int gameID, String gameDataJson) throws DataAccessException {
+        String sql = "UPDATE games SET gameData = ? WHERE gameID = ?";
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, gameJson);
+            stmt.setString(1, gameDataJson);
             stmt.setInt(2, gameID);
 
             int rowsAffected = stmt.executeUpdate();
@@ -370,7 +360,7 @@ public class MySqlDataAccess implements DataAccess {
             }
 
         } catch (SQLException ex) {
-            throw new DataAccessException("Error updating board in database", ex);
+            throw new DataAccessException("Error updating gameData in database", ex);
         }
     }
 }

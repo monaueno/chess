@@ -4,6 +4,8 @@ import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import model.*;
 import chess.ChessGame;
+import model.data.AuthData;
+import model.data.GameData;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

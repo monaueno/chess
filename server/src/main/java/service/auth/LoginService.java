@@ -2,10 +2,10 @@ package service.auth;
 
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
-import model.AuthData;
+import model.data.AuthData;
 import model.LoginRequest;
 import model.LoginResult;
-import model.UserData;
+import model.data.UserData;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.UUID;

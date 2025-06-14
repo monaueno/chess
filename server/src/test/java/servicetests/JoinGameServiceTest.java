@@ -3,13 +3,13 @@ package servicetests;
 import chess.ChessGame;
 import dataaccess.DataAccessException;
 import dataaccess.MySqlDataAccess;
-import model.AuthData;
-import model.UserData;
+import model.data.AuthData;
+import model.data.UserData;
+import model.data.GameData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import model.JoinGameRequest;
 import service.game.JoinGameService;
-import model.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 

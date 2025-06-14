@@ -3,14 +3,15 @@ package servicetests;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import dataaccess.MySqlDataAccess;
-import model.AuthData;
+import model.data.AuthData;
+import model.data.GameData;
+import model.data.UserData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import model.ListGamesResult;
 import model.ListGamesResult.GameSummary;
 import chess.ChessGame;
 import service.game.ListGamesService;
-import model.*;
 
 import java.util.List;
 
@@ -27,7 +28,7 @@ class ListGamesServiceTest {
         db.clear();
         service = new ListGamesService(db);
 
-        db.createUser(new model.UserData("testuser", "password", "test@example.com"));
+        db.createUser(new UserData("testuser", "password", "test@example.com"));
         db.createAuth(new AuthData("valid-token", "testuser"));
 
         ChessGame game1 = new ChessGame();

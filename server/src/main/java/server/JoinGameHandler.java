@@ -4,12 +4,12 @@ import chess.ChessGame;
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
 import model.JoinGameRequest;
+import model.data.GameData;
 import service.game.JoinGameService;
 import spark.Request;
 import spark.Response;
 import spark.Route;
 import dataaccess.DataAccess;
-import model.*;
 
 public class JoinGameHandler implements Route {
     private final DataAccess dataAccess;

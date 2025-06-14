@@ -3,8 +3,8 @@ package service.game;
 import chess.ChessGame;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
-import model.AuthData;
-import model.GameData;
+import model.data.AuthData;
+import model.data.GameData;
 import model.JoinGameRequest;
 
 public class JoinGameService {

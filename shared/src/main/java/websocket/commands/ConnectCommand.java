@@ -11,10 +11,6 @@ public class ConnectCommand extends UserGameCommand {
         return move;
     }
 
-    public void seMove(ChessMove move) {
-        this.move = move;
-    }
-
     public ChessGame.TeamColor getPlayerColor(){
         return playerColor;
     }

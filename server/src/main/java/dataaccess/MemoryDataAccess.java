@@ -3,10 +3,13 @@ package dataaccess;
 import java.util.HashMap;
 import java.util.Map;
 import chess.ChessBoard;
-import model.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import chess.ChessGame;
+import model.data.AuthData;
+import model.data.GameData;
+import model.data.UserData;
 
 public class MemoryDataAccess implements DataAccess{
     private final Map<String, UserData> users = new HashMap<>();

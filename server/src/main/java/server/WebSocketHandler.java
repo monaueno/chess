@@ -4,7 +4,7 @@ import chess.ChessGame;
 import chess.ChessMove;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
-import model.GameData;
+import model.data.GameData;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
 import java.io.IOException;
@@ -20,11 +20,11 @@ import websocket.messages.NotificationMessage;
 @WebSocket
 public class WebSocketHandler {
 
-    private static final Map<Integer, GameSessionManager> gameSessions = new ConcurrentHashMap<>();
-    private static final Gson gson = new Gson();
+    private static final Map<Integer, GameSessionManager> GAME_SESSIONS = new ConcurrentHashMap<>();
+    private static final Gson GSON = new Gson();
     private static DataAccess sharedDB;
     private final DataAccess db;
-    private static final Map<Integer, ChessGame> activeGames = new ConcurrentHashMap<>();
+    private static final Map<Integer, ChessGame> ACTIVE_GAMES = new ConcurrentHashMap<>();
 
     public WebSocketHandler() {
         this.db = sharedDB;
@@ -43,7 +43,7 @@ public class WebSocketHandler {
     @OnWebSocketClose
     public void onClose(Session session, int statusCode, String reason) {
         System.out.println("Connection closed: " + session + " (" + reason + ")");
-        for (GameSessionManager manager : gameSessions.values()) {
+        for (GameSessionManager manager : GAME_SESSIONS.values()) {
             manager.remove(session);
         }
     }
@@ -60,7 +60,7 @@ public class WebSocketHandler {
             UserGameCommand command = websocket.MessageSerializer.deserialize(message);
 
             if (command == null || command.getCommandType() == null) {
-                session.getRemote().sendString(gson.toJson(Map.of("serverMessageType", "ERROR", "errorMessage", "Error: Invalid command")));
+                session.getRemote().sendString(GSON.toJson(Map.of("serverMessageType", "ERROR", "errorMessage", "Error: Invalid command")));
                 return;
             }
 
@@ -69,11 +69,11 @@ public class WebSocketHandler {
                 case MAKE_MOVE -> handleMakeMove(session, command);
                 case LEAVE -> handleLeave(session, command);
                 case RESIGN -> handleResign(session, command);
-                default -> session.getRemote().sendString(gson.toJson(Map.of("serverMessageType", "ERROR", "errorMessage", "Error: Unknown command")));
+                default -> session.getRemote().sendString(GSON.toJson(Map.of("serverMessageType", "ERROR", "errorMessage", "Error: Unknown command")));
             }
         } catch (Exception e) {
             e.printStackTrace();
-            session.getRemote().sendString(gson.toJson(Map.of("serverMessageType", "ERROR", "errorMessage", "Error: Failed to parse command")));
+            session.getRemote().sendString(GSON.toJson(Map.of("serverMessageType", "ERROR", "errorMessage", "Error: Failed to parse command")));
         }
     }
 
@@ -81,22 +81,22 @@ public class WebSocketHandler {
         int gameID = command.getGameID();
         String authToken = command.getAuthToken();
 
-        gameSessions.putIfAbsent(gameID, new GameSessionManager());
-        GameSessionManager manager = gameSessions.get(gameID);
+        GAME_SESSIONS.putIfAbsent(gameID, new GameSessionManager());
+        GameSessionManager manager = GAME_SESSIONS.get(gameID);
 
         GameData gameData;
         try {
             gameData = db.getGame(gameID);
             if (gameData == null) {
-                session.getRemote().sendString(gson.toJson(Map.of("serverMessageType", "ERROR", "errorMessage", "Error: Game not found")));
+                session.getRemote().sendString(GSON.toJson(Map.of("serverMessageType", "ERROR", "errorMessage", "Error: Game not found")));
                 return;
             }
             ChessGame game = gameData.getGame();
             game.setBoard(gameData.getBoard());
-            activeGames.put(gameID, game);
+            ACTIVE_GAMES.put(gameID, game);
         } catch (Exception e) {
             try {
-                session.getRemote().sendString(gson.toJson(Map.of("serverMessageType", "ERROR", "errorMessage", "Error: Failed to access game data")));
+                session.getRemote().sendString(GSON.toJson(Map.of("serverMessageType", "ERROR", "errorMessage", "Error: Failed to access game data")));
             } catch (IOException ioException) {
                 ioException.printStackTrace();
             }
@@ -112,7 +112,7 @@ public class WebSocketHandler {
             manager.add(session, username);
         } catch (Exception e) {
             try {
-                session.getRemote().sendString(gson.toJson(Map.of("serverMessageType", "ERROR", "errorMessage", "Error: Failed to retrieve username")));
+                session.getRemote().sendString(GSON.toJson(Map.of("serverMessageType", "ERROR", "errorMessage", "Error: Failed to retrieve username")));
             } catch (IOException ioException) {
                 ioException.printStackTrace();
             }
@@ -136,7 +136,7 @@ public class WebSocketHandler {
 
         LoadGameMessage loadGameMsg = new LoadGameMessage(gameData, yourTurn);
         try {
-            session.getRemote().sendString(gson.toJson(loadGameMsg));
+            session.getRemote().sendString(GSON.toJson(loadGameMsg));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -147,7 +147,7 @@ public class WebSocketHandler {
     }
 
     private void handleMakeMove(Session session, UserGameCommand command) {
-        GameSessionManager manager = gameSessions.get(command.getGameID());
+        GameSessionManager manager = GAME_SESSIONS.get(command.getGameID());
         if (manager == null) {
             System.out.println("manager is null");
             return;
@@ -194,36 +194,7 @@ public class WebSocketHandler {
             return;
         }
 
-        Collection<ChessMove> validMoves = game.validMoves(move.getStartPosition());
-        if (validMoves == null || !validMoves.contains(move)) {
-            sendError(session, "Illegal move");
-            System.out.println("no valid moves");
-            return;
-        }
-
-        boolean isWhite = username.equals(gameData.whiteUsername());
-        boolean isBlack = username.equals(gameData.blackUsername());
-        ChessGame.TeamColor playerColor = isWhite ? ChessGame.TeamColor.WHITE : isBlack ? ChessGame.TeamColor.BLACK : null;
-
-
-        System.out.println("DEBUG — TeamTurn is " + game.getTeamTurn());
-        System.out.println("DEBUG — playerColor is " + playerColor);
-        System.out.println("DEBUG — game.whiteUsername = " + gameData.whiteUsername());
-        System.out.println("DEBUG — username = " + username);
-        if (playerColor == null || playerColor != game.getTeamTurn()) {
-            sendError(session, "It's not your turn.");
-            System.out.println("not your turn");
-            return;
-        }
-
-        try {
-            game.makeMove(move, playerColor);
-            game.getMoveHistory().add(move);
-            db.updateGame(command.getGameID(), game);
-            db.updateBoard(command.getGameID(), game.getBoard());
-        } catch (Exception e) {
-            sendError(session, "Failed to apply move - " + e.getMessage());
-            System.out.println("couldn't apply move");
+        if (!validateMove(session, command, manager, move, game, gameData, username)) {
             return;
         }
 
@@ -237,57 +208,56 @@ public class WebSocketHandler {
 
         System.out.println("✅ Move applied: " + move.getStartPosition() + " -> " + move.getEndPosition());
 
-        ChessGame.TeamColor opponent = (playerColor == ChessGame.TeamColor.WHITE) ? ChessGame.TeamColor.BLACK : ChessGame.TeamColor.WHITE;
+        ChessGame.TeamColor opponent = (username.equals(gameData.whiteUsername())) ? ChessGame.TeamColor.BLACK : ChessGame.TeamColor.WHITE;
 
         if (game.isInCheckmate(opponent)) {
             game.setGameOver(true);
-            String winner = (playerColor == ChessGame.TeamColor.WHITE) ? "White" : "Black";
-            manager.broadcast(gson.toJson(new NotificationMessage("Checkmate! Game over. " + winner + " wins.")));
+            String winner = (username.equals(gameData.whiteUsername())) ? "White" : "Black";
+            manager.broadcast(GSON.toJson(new NotificationMessage("Checkmate! Game over. " + winner + " wins.")));
         } else if (game.isInStalemate(opponent)) {
             game.setGameOver(true);
-            manager.broadcast(gson.toJson(new NotificationMessage("Stalemate! Game over. It's a draw.")));
+            manager.broadcast(GSON.toJson(new NotificationMessage("Stalemate! Game over. It's a draw.")));
         }  else if (game.isInCheck(opponent)) {
             System.out.println("check");
             String checkedPlayer = (opponent == ChessGame.TeamColor.WHITE) ? "white" : "black";
             String checkingPlayer = (opponent == ChessGame.TeamColor.WHITE) ? "black" : "white";
-            manager.broadcast(gson.toJson(new NotificationMessage("Check by " + checkingPlayer + " against " + checkedPlayer + "!")));
+            manager.broadcast(GSON.toJson(new NotificationMessage("Check by " + checkingPlayer + " against " + checkedPlayer + "!")));
         }
 
         // Notify all other clients of the move
         String moveSummary = username + " moved from "
             + move.getStartPosition() + " to " + move.getEndPosition();
         manager.broadcastExcept(
-            gson.toJson(new NotificationMessage(moveSummary)),
+            GSON.toJson(new NotificationMessage(moveSummary)),
             session
         );
 
-        for (Session s : manager.getSessions()) {
-            String otherUser = manager.getUsername(s);
-            boolean theirTurn = (otherUser != null &&
-                    ((game.getTeamTurn() == ChessGame.TeamColor.WHITE && otherUser.equals(gameData.whiteUsername())) ||
-                            (game.getTeamTurn() == ChessGame.TeamColor.BLACK && otherUser.equals(gameData.blackUsername()))));
-            LoadGameMessage updatedGameMsg = new LoadGameMessage(gameData, theirTurn);
-            try {
-                s.getRemote().sendString(gson.toJson(updatedGameMsg));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+        sendLoadGameToPlayers(manager, gameData, game);
     }
 
     private void handleLeave(Session session, UserGameCommand command) {
         int gameID = command.getGameID();
-        GameSessionManager manager = gameSessions.get(gameID);
-        if (manager == null) return;
+        GameSessionManager manager = GAME_SESSIONS.get(gameID);
+        if (manager == null) {
+            return;
+        }
 
         String username = manager.getUsername(session);
-        if (username == null) return;
+        if (username == null) {
+            return;
+        }
 
         GameData gameData = manager.getGameData(gameID);
-        if (gameData == null) return;
+        if (gameData == null) {
+            return;
+        }
 
-        if (username.equals(gameData.whiteUsername())) gameData.setWhiteUsername(null);
-        if (username.equals(gameData.blackUsername())) gameData.setBlackUsername(null);
+        if (username.equals(gameData.whiteUsername())) {
+            gameData.setWhiteUsername(null);
+        }
+        if (username.equals(gameData.blackUsername())) {
+            gameData.setBlackUsername(null);
+        }
 
         // Persist the cleared slot to the database
         try {
@@ -303,7 +273,7 @@ public class WebSocketHandler {
 
     private void handleResign(Session session, UserGameCommand command) {
         int gameID = command.getGameID();
-        GameSessionManager manager = gameSessions.get(gameID);
+        GameSessionManager manager = GAME_SESSIONS.get(gameID);
         String username = manager.getUsername(session);
         GameData gameData = manager.getGameData(gameID);
 
@@ -312,9 +282,13 @@ public class WebSocketHandler {
             return;
         }
 
-        if (manager == null) return;
+        if (manager == null) {
+            return;
+        }
 
-        if (username == null) return;
+        if (username == null) {
+            return;
+        }
 
         ChessGame game = manager.getGame(gameID);
         if (game.isGameOver()) {
@@ -348,25 +322,76 @@ public class WebSocketHandler {
             }
         }
         NotificationMessage resignationMsg = new NotificationMessage(username + " has resigned. " + winner + " wins!");
-        manager.broadcast(gson.toJson(resignationMsg));
+        manager.broadcast(GSON.toJson(resignationMsg));
         manager.remove(session);
     }
 
     private void broadcastToOthers(int gameID, NotificationMessage notificationMessage, Session session) {
-        GameSessionManager manager = gameSessions.get(gameID);
+        GameSessionManager manager = GAME_SESSIONS.get(gameID);
         if (manager != null) {
-            manager.broadcastExcept(gson.toJson(notificationMessage), session);
+            manager.broadcastExcept(GSON.toJson(notificationMessage), session);
         }
     }
 
     private void sendError(Session session, String message) {
         try {
-            session.getRemote().sendString(gson.toJson(Map.of(
+            session.getRemote().sendString(GSON.toJson(Map.of(
                     "serverMessageType", "ERROR",
                     "errorMessage", "Error: " + message
             )));
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private boolean validateMove(Session session, UserGameCommand command, GameSessionManager manager, ChessMove move, ChessGame game, GameData gameData, String username) {
+        Collection<ChessMove> validMoves = game.validMoves(move.getStartPosition());
+        if (validMoves == null || !validMoves.contains(move)) {
+            sendError(session, "Illegal move");
+            System.out.println("no valid moves");
+            return false;
+        }
+
+        boolean isWhite = username.equals(gameData.whiteUsername());
+        boolean isBlack = username.equals(gameData.blackUsername());
+        ChessGame.TeamColor playerColor = isWhite ? ChessGame.TeamColor.WHITE : isBlack ? ChessGame.TeamColor.BLACK : null;
+
+        System.out.println("DEBUG — TeamTurn is " + game.getTeamTurn());
+        System.out.println("DEBUG — playerColor is " + playerColor);
+        System.out.println("DEBUG — game.whiteUsername = " + gameData.whiteUsername());
+        System.out.println("DEBUG — username = " + username);
+        if (playerColor == null || playerColor != game.getTeamTurn()) {
+            sendError(session, "It's not your turn.");
+            System.out.println("not your turn");
+            return false;
+        }
+
+        try {
+            game.makeMove(move, playerColor);
+            game.getMoveHistory().add(move);
+            db.updateGame(command.getGameID(), game);
+            db.updateBoard(command.getGameID(), game.getBoard());
+        } catch (Exception e) {
+            sendError(session, "Failed to apply move - " + e.getMessage());
+            System.out.println("couldn't apply move");
+            return false;
+        }
+
+        return true;
+    }
+
+    private void sendLoadGameToPlayers(GameSessionManager manager, GameData gameData, ChessGame game) {
+        for (Session s : manager.getSessions()) {
+            String otherUser = manager.getUsername(s);
+            boolean theirTurn = (otherUser != null &&
+                    ((game.getTeamTurn() == ChessGame.TeamColor.WHITE && otherUser.equals(gameData.whiteUsername())) ||
+                     (game.getTeamTurn() == ChessGame.TeamColor.BLACK && otherUser.equals(gameData.blackUsername()))));
+            LoadGameMessage updatedGameMsg = new LoadGameMessage(gameData, theirTurn);
+            try {
+                s.getRemote().sendString(GSON.toJson(updatedGameMsg));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

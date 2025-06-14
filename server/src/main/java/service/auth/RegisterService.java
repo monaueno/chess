@@ -2,10 +2,10 @@ package service.auth;
 
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
-import model.AuthData;
+import model.data.AuthData;
 import model.RegisterRequest;
 import model.RegisterResult;
-import model.UserData;
+import model.data.UserData;
 
 import java.util.UUID;
 

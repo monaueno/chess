@@ -1,7 +1,6 @@
 package dataaccess;
 
-import dataaccess.MySqlDataAccess;
-import model.UserData;
+import model.data.UserData;
 import org.junit.jupiter.api.*;
 
 import static org.junit.jupiter.api.Assertions.*;

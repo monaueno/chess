@@ -1,7 +1,7 @@
 package server;
 
 import chess.ChessGame;
-import model.GameData;
+import model.data.GameData;
 import org.eclipse.jetty.websocket.api.Session;
 
 import java.io.IOException;

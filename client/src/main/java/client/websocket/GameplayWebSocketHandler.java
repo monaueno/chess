@@ -1,14 +1,11 @@
 package client.websocket;
 
 import javax.websocket.*;
-import javax.websocket.server.ServerEndpoint;
-import java.io.IOException;
-import java.net.URI;
 
 import chess.ChessBoard;
 import chess.ChessGame;
 import chess.ChessMove;
-import model.GameData;
+import model.data.GameData;
 import ui.ChessBoardUI;
 import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
@@ -33,7 +30,7 @@ public class GameplayWebSocketHandler extends Endpoint {
     private final int gameID;
     private final Runnable onGameLoadedCallback;
     private Session session;
-    private static final Gson gson = new Gson();
+    private static final Gson GSON = new Gson();
     private ChessBoard board;
     private ChessGame game = new ChessGame();
     private boolean playerIsWhite;
@@ -65,7 +62,7 @@ public class GameplayWebSocketHandler extends Endpoint {
         UserGameCommand connectCommand = new UserGameCommand(CommandType.CONNECT, authToken, gameID);
 
         try {
-            session.getBasicRemote().sendText(gson.toJson(connectCommand));
+            session.getBasicRemote().sendText(GSON.toJson(connectCommand));
         } catch (Exception e) {
             System.err.println("Failed to send CONNECT command: " + e.getMessage());
         }
@@ -78,155 +75,7 @@ public class GameplayWebSocketHandler extends Endpoint {
 
         switch (serverMessage.getServerMessageType()) {
             case LOAD_GAME:
-                // Move all logic currently inside onMessage() LOAD_GAME case to here
-                // including board setup, printing, input handling, etc.
-                try {
-                    LoadGameMessage loadGameMessage = (LoadGameMessage) serverMessage;
-                    GameData data = loadGameMessage.getGame();
-                    this.game = data.game();
-                    this.board = game.getBoard();
-
-                    if (username.equals(loadGameMessage.getWhiteUsername())) {
-                        this.playerColor = ChessGame.TeamColor.WHITE;
-                    } else if (username.equals(loadGameMessage.getBlackUsername())) {
-                        this.playerColor = ChessGame.TeamColor.BLACK;
-                    } else if (!isObserver) {
-                        System.err.println("⚠️ Username does not match either white or black player.");
-                        return;
-                    }
-
-                    this.playerIsWhite = (this.playerColor == ChessGame.TeamColor.WHITE);
-
-                    if (board == null) {
-                        System.err.println("Error: board is null in LOAD_GAME");
-                        return;
-                    }
-
-                    game.setBoard(board);
-
-                    new ChessBoardUI().drawBoard(board, playerColor == ChessGame.TeamColor.WHITE, highlightedFrom, highlightedTo);
-
-                    if (game.isGameOver()) {
-                        System.out.println("Game is over.");
-                        System.out.println();
-
-                        if (game.isInCheckmate(ChessGame.TeamColor.WHITE)) {
-                            System.out.println("Checkmate! Black wins.");
-                        } else if (game.isInCheckmate(ChessGame.TeamColor.BLACK)) {
-                            System.out.println("Checkmate! White wins.");
-                        } else if (game.getResignedPlayer() != null) {
-                            String resigned = game.getResignedPlayer();
-                            String winner = resigned.equals(loadGameMessage.getWhiteUsername()) ? loadGameMessage.getBlackUsername() : loadGameMessage.getWhiteUsername();
-                            System.out.println(resigned + " has resigned. " + winner + " wins.");
-                        } else {
-                            System.out.println("It's a draw.");
-                        }
-
-                        System.out.println("Only 'exit' is allowed.");
-                        new Thread(() -> {
-                            while (true) {
-                                System.out.print("Command: ");
-                                String input = scanner.nextLine().trim().toLowerCase();
-                                if (input.equals("exit")) {
-                                    sendLeaveCommand();
-                                    break;
-                                } else {
-                                    System.out.println("Game is over. Only 'exit' is allowed.");
-                                }
-                            }
-                        }).start();
-                        return;
-                    }
-                    if (!game.isGameOver()) {
-                        if (game.getMoveHistory() != null && !game.getMoveHistory().isEmpty()) {
-                            ChessMove lastMove = game.getMoveHistory().get(game.getMoveHistory().size() - 1);
-                            String from = (char)('a' + lastMove.getStartPosition().getColumn() - 1) + String.valueOf(lastMove.getStartPosition().getRow());
-                            String to = (char)('a' + lastMove.getEndPosition().getColumn() - 1) + String.valueOf(lastMove.getEndPosition().getRow());
-                            String moveText = String.format("%s made the move %s to %s", game.getTeamTurn() == ChessGame.TeamColor.WHITE ? loadGameMessage.getBlackUsername() : loadGameMessage.getWhiteUsername(), from, to);
-                            System.out.println(moveText);
-                            System.out.println("Current turn: " + game.getTeamTurn());
-                            System.out.println();
-                        }
-
-                        if (!isObserver && game.getTeamTurn().equals(playerColor)) {
-                            onGameLoadedCallback.run();
-                        }
-
-                        if (playerColor == game.getTeamTurn()) {
-                            System.out.println("It's your turn!");
-                            new Thread(() -> {
-                                while (true) {
-                                    System.out.print("Enter move: ");
-                                    String input = scanner.nextLine().trim();
-
-                                    if (input.equalsIgnoreCase("resign")) {
-                                        System.out.print("Are you sure you want to resign? (y/n): ");
-                                        String confirm = scanner.nextLine().trim().toLowerCase();
-                                        if (confirm.equals("y")) {
-                                            sendResignCommand();
-                                            break;
-                                        } else {
-                                            continue;
-                                        }
-                                    } else if (input.equalsIgnoreCase("exit")) {
-                                        sendLeaveCommand();
-                                        break;
-                                    } else if (input.matches("^[a-h][1-8]\\s+[a-h][1-8]$")) {
-                                        String[] parts = input.split("\\s+");
-                                        sendMove(parts[0], parts[1]);
-                                        break;
-                                    } else if (input.matches("[a-h][1-8]")) {
-                                        handleHighlight(input);
-                                        return;
-                                    } else {
-                                        System.out.println("Invalid input. Try again:");
-                                    }
-                                }
-                            }).start();
-                        } else {
-                            if (!isObserver) {
-                                System.out.println("Waiting for opponent to move. You may still type 'resign' or 'exit':");
-                                new Thread(() -> {
-                                    while (true) {
-                                        System.out.print("Command: ");
-                                        String input = scanner.nextLine().trim();
-
-                                        if (input.equalsIgnoreCase("resign")) {
-                                            sendResignCommand();
-                                            break;
-                                        } else if (input.equalsIgnoreCase("exit")) {
-                                            sendLeaveCommand();
-                                            break;
-                                        } else {
-                                            System.out.println("Not your turn. Only 'resign' or 'exit' allowed.");
-                                        }
-                                    }
-                                }).start();
-                            } else {
-                                System.out.println("⏳ You are observing the game. Type a square like 'e2' to highlight moves, or 'exit' to leave:");
-                                new Thread(() -> {
-                                    boolean running = true;
-                                    while (running) {
-                                        System.out.print("Command: ");
-                                        String input = scanner.nextLine().trim();
-                                        if (input.equalsIgnoreCase("exit")) {
-                                            sendLeaveCommand();
-                                            running = false;
-                                            break;
-                                        } else if (input.matches("^[a-h][1-8]$")) {
-                                            handleHighlight(input);
-                                        } else {
-                                            System.out.println("Invalid command. Type a square like 'e2' to highlight moves, or 'exit' to leave.");
-                                        }
-                                    }
-                                }).start();
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    System.err.println("Failed to load game: " + e.getMessage());
-                    return;
-                }
+                handleLoadGameMessage((LoadGameMessage) serverMessage);
                 break;
 
             case NOTIFICATION:
@@ -308,7 +157,7 @@ public class GameplayWebSocketHandler extends Endpoint {
         MakeMoveCommand moveCommand = new MakeMoveCommand(authToken, gameID, fromPos, toPos);
 
         try {
-            session.getBasicRemote().sendText(gson.toJson(moveCommand));
+            session.getBasicRemote().sendText(GSON.toJson(moveCommand));
             // Do not draw board here; wait for LOAD_GAME message which will trigger UI update.
         } catch (Exception e) {
             System.err.println("Failed to send move: " + e.getMessage());
@@ -361,14 +210,10 @@ public class GameplayWebSocketHandler extends Endpoint {
         return exited;
     }
 
-    private void handleResignOrLeave(){
-        exited = true;
-    }
-
     private void sendResignCommand() {
         UserGameCommand resign = new UserGameCommand(CommandType.RESIGN, authToken, gameID);
         try {
-            session.getBasicRemote().sendText(gson.toJson(resign));
+            session.getBasicRemote().sendText(GSON.toJson(resign));
             exited = true;
             if (session != null && session.isOpen()) session.close();
         } catch (Exception e) {
@@ -379,7 +224,7 @@ public class GameplayWebSocketHandler extends Endpoint {
     private void sendLeaveCommand() {
         UserGameCommand leave = new UserGameCommand(CommandType.LEAVE, authToken, gameID);
         try {
-            session.getBasicRemote().sendText(gson.toJson(leave));
+            session.getBasicRemote().sendText(GSON.toJson(leave));
             exited = true;
             if (session != null && session.isOpen()) session.close();
         } catch (Exception e) {
@@ -387,11 +232,196 @@ public class GameplayWebSocketHandler extends Endpoint {
         }
     }
 
-
-    public void onClose(Session session, CloseReason closeReason) {
+    private void handleLoadGameMessage(LoadGameMessage loadGameMessage) {
+        try {
+            processLoadGameMessage(loadGameMessage);
+        } catch (Exception e) {
+            System.err.println("Failed to load game: " + e.getMessage());
+        }
     }
 
-    public void onError(Session session, Throwable throwable) {
-        System.err.println("WebSocket error: " + throwable.getMessage());
+    private void processLoadGameMessage(LoadGameMessage loadGameMessage) throws Exception {
+        GameData data = loadGameMessage.getGame();
+        this.game = data.game();
+        this.board = game.getBoard();
+
+        if (!assignPlayerColor(loadGameMessage)) return;
+        if (!validateBoardPresence()) return;
+
+        game.setBoard(board);
+        new ChessBoardUI().drawBoard(board, playerColor == ChessGame.TeamColor.WHITE, highlightedFrom, highlightedTo);
+
+        if (handleGameOver(loadGameMessage)) return;
+
+        printLastMoveMessage(loadGameMessage);
+
+        if (!isObserver && game.getTeamTurn().equals(playerColor)) {
+            onGameLoadedCallback.run();
+        }
+
+        if (playerColor == game.getTeamTurn()) {
+            System.out.println("It's your turn!");
+            new Thread(this::handlePlayerTurn).start();
+        } else {
+            handleOpponentOrObserverTurn(loadGameMessage);
+        }
+    }
+
+    private boolean assignPlayerColor(LoadGameMessage msg) {
+        if (username.equals(msg.getWhiteUsername())) {
+            this.playerColor = ChessGame.TeamColor.WHITE;
+        } else if (username.equals(msg.getBlackUsername())) {
+            this.playerColor = ChessGame.TeamColor.BLACK;
+        } else if (!isObserver) {
+            System.err.println("⚠️ Username does not match either white or black player.");
+            return false;
+        }
+        this.playerIsWhite = (this.playerColor == ChessGame.TeamColor.WHITE);
+        return true;
+    }
+
+    private boolean validateBoardPresence() {
+        if (board == null) {
+            System.err.println("Error: board is null in LOAD_GAME");
+            return false;
+        }
+        return true;
+    }
+
+    // Extracted game over handling logic
+    private boolean handleGameOver(LoadGameMessage msg) {
+        if (!game.isGameOver()) return false;
+
+        System.out.println("Game is over.\n");
+        if (game.isInCheckmate(ChessGame.TeamColor.WHITE)) {
+            System.out.println("Checkmate! Black wins.");
+        } else if (game.isInCheckmate(ChessGame.TeamColor.BLACK)) {
+            System.out.println("Checkmate! White wins.");
+        } else if (game.getResignedPlayer() != null) {
+            String resigned = game.getResignedPlayer();
+            String winner = resigned.equals(msg.getWhiteUsername()) ? msg.getBlackUsername() : msg.getWhiteUsername();
+            System.out.println(resigned + " has resigned. " + winner + " wins.");
+        } else {
+            System.out.println("It's a draw.");
+        }
+
+        System.out.println("Only 'exit' is allowed.");
+        startExitOnlyPrompt();
+        return true;
+    }
+
+    // Extracted move history output
+    private void printLastMoveMessage(LoadGameMessage msg) {
+        if (game.getMoveHistory() != null && !game.getMoveHistory().isEmpty()) {
+            ChessMove lastMove = game.getMoveHistory().get(game.getMoveHistory().size() - 1);
+            String from = (char) ('a' + lastMove.getStartPosition().getColumn() - 1) + String.valueOf(lastMove.getStartPosition().getRow());
+            String to = (char) ('a' + lastMove.getEndPosition().getColumn() - 1) + String.valueOf(lastMove.getEndPosition().getRow());
+            String moveText = String.format("%s made the move %s to %s",
+                game.getTeamTurn() == ChessGame.TeamColor.WHITE ? msg.getBlackUsername() : msg.getWhiteUsername(), from, to);
+            System.out.println(moveText);
+            System.out.println("Current turn: " + game.getTeamTurn() + "\n");
+        }
+    }
+
+    /**
+     * Handles player input when it is their turn.
+     */
+    private void handlePlayerTurn() {
+        while (true) {
+            System.out.print("Enter move: ");
+            String input = scanner.nextLine().trim();
+
+            if (input.equalsIgnoreCase("resign")) {
+                System.out.print("Are you sure you want to resign? (y/n): ");
+                String confirm = scanner.nextLine().trim().toLowerCase();
+                if (confirm.equals("y")) {
+                    sendResignCommand();
+                    break;
+                } else {
+                    continue;
+                }
+            } else if (input.equalsIgnoreCase("exit")) {
+                sendLeaveCommand();
+                break;
+            } else if (input.matches("^[a-h][1-8]\\s+[a-h][1-8]$")) {
+                String[] parts = input.split("\\s+");
+                sendMove(parts[0], parts[1]);
+                break;
+            } else if (input.matches("[a-h][1-8]")) {
+                handleHighlight(input);
+                return;
+            } else {
+                System.out.println("Invalid input. Try again:");
+            }
+        }
+    }
+
+    private void handleOpponentOrObserverTurn(LoadGameMessage loadGameMessage) {
+        if (!isObserver) {
+            System.out.println("Waiting for opponent to move. You may still type 'resign' or 'exit':");
+            startOpponentWaitPrompt();
+        } else {
+            System.out.println("⏳ You are observing the game. Type a square like 'e2' to highlight moves, or 'exit' to leave:");
+            startObserverPrompt();
+        }
+    }
+
+    private void startOpponentWaitPrompt() {
+        new Thread(() -> {
+            while (true) {
+                System.out.print("Command: ");
+                String input = scanner.nextLine().trim();
+
+                if (input.equalsIgnoreCase("resign")) {
+                    sendResignCommand();
+                    break;
+                } else if (input.equalsIgnoreCase("exit")) {
+                    sendLeaveCommand();
+                    break;
+                } else {
+                    System.out.println("Not your turn. Only 'resign' or 'exit' allowed.");
+                }
+            }
+        }).start();
+    }
+
+    /**
+     * Starts a thread that allows the observer to type squares or 'exit'.
+     */
+    private void startObserverPrompt() {
+        new Thread(() -> {
+            boolean running = true;
+            while (running) {
+                System.out.print("Command: ");
+                String input = scanner.nextLine().trim();
+                if (input.equalsIgnoreCase("exit")) {
+                    sendLeaveCommand();
+                    running = false;
+                    break;
+                } else if (input.matches("^[a-h][1-8]$")) {
+                    handleHighlight(input);
+                } else {
+                    System.out.println("Invalid command. Type a square like 'e2' to highlight moves, or 'exit' to leave.");
+                }
+            }
+        }).start();
+    }
+
+    /**
+     * Starts a thread that only allows the user to type 'exit' to leave after game over.
+     */
+    private void startExitOnlyPrompt() {
+        new Thread(() -> {
+            while (true) {
+                System.out.print("Command: ");
+                String input = scanner.nextLine().trim().toLowerCase();
+                if (input.equals("exit")) {
+                    sendLeaveCommand();
+                    break;
+                } else {
+                    System.out.println("Game is over. Only 'exit' is allowed.");
+                }
+            }
+        }).start();
     }
 }

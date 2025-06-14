@@ -1,9 +1,9 @@
 package dataaccess;
 
+import model.data.GameData;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 import chess.ChessGame;
-import model.*;
 
 public class GameDAOTest{
     private DataAccess db;

@@ -5,7 +5,7 @@ import com.google.gson.*;
 
 public class MessageSerializer {
 
-    private static final Gson gson = new Gson();
+    private static final Gson GSON = new Gson();
 
     public static UserGameCommand deserialize(String json) {
         System.out.println("Deserializing JSON: " + json);
@@ -15,10 +15,10 @@ public class MessageSerializer {
             UserGameCommand.CommandType type = UserGameCommand.CommandType.valueOf(typeStr);
 
             return switch (type) {
-                case CONNECT -> gson.fromJson(json, ConnectCommand.class);
-                case MAKE_MOVE -> gson.fromJson(json, MakeMoveCommand.class);
-                case LEAVE -> gson.fromJson(json, LeaveCommand.class);
-                case RESIGN -> gson.fromJson(json, ResignCommand.class);
+                case CONNECT -> GSON.fromJson(json, ConnectCommand.class);
+                case MAKE_MOVE -> GSON.fromJson(json, MakeMoveCommand.class);
+                case LEAVE -> GSON.fromJson(json, LeaveCommand.class);
+                case RESIGN -> GSON.fromJson(json, ResignCommand.class);
             };
         } catch (Exception e) {
             System.out.println("Deserialization failed: " + e.getMessage());
