@@ -165,10 +165,6 @@ public class GameplayWebSocketHandler extends Endpoint {
     }
 
     private void promptForMove() {
-        if (isObserver) {
-            System.out.println("You are an observer. Only 'exit' is allowed.");
-            return;
-        }
         while (true) {
             System.out.print("\nEnter move (e.g., e2 e4), or a square (e.g., e2) to preview, or 'resign'/'exit': ");
             String input = scanner.nextLine().trim().toLowerCase();

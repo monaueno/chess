@@ -37,6 +37,7 @@ public class Server {
         Spark.post("/game", new CreateGameHandler(db));
         Spark.put("/game", new JoinGameHandler(db));
         Spark.get("/game", new ListGamesHandler(db));
+        Spark.get("/observe", new ObserveGameHandler(db));
 
 
         System.out.println("✅ All routes registered, starting Spark server...");

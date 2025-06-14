@@ -102,7 +102,6 @@ public ListGamesResult listGames(String authToken) throws IOException {
         if (status >= 400) {
             try (InputStream errorStream = connection.getErrorStream()) {
                 String raw = new String(errorStream.readAllBytes());
-                System.out.println("Raw error response: " + raw); // debug print
                 ErrorResult error = gson.fromJson(raw, ErrorResult.class); // this may still fail
                 throw new IOException(error.message());
             }
