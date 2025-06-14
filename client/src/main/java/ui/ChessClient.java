@@ -5,7 +5,6 @@ import chess.ChessMove;
 import chess.ChessPosition;
 import client.ServerFacade;
 import client.websocket.GameplayWebSocketHandler;
-import dataaccess.MySqlDataAccess;
 import model.*;
 import model.ListGamesResult;
 
