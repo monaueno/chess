@@ -99,7 +99,6 @@ public ListGamesResult listGames(String authToken) throws IOException {
 
     private void checkResponse(HttpURLConnection connection) throws IOException {
         int status = connection.getResponseCode();
-        System.out.println("Response status code: " + status); // debug print
 
         if (status >= 400) {
             try (InputStream errorStream = connection.getErrorStream()) {

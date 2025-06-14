@@ -27,8 +27,7 @@ import java.util.stream.Collectors;
 import chess.ChessPosition;
 
 
-@ServerEndpoint(value="/ws")
-public class GameplayWebSocketHandler {
+public class GameplayWebSocketHandler extends Endpoint {
 
     private final String authToken;
     private final int gameID;
@@ -55,9 +54,13 @@ public class GameplayWebSocketHandler {
     }
 
 
-    @OnOpen
-    public void onOpen(Session session) {
+    @Override
+    public void onOpen(Session session, EndpointConfig config) {
         this.session = session;
+
+        session.addMessageHandler(String.class, msg -> {
+            handleIncomingMessage(msg);
+        });
 
         UserGameCommand connectCommand = new UserGameCommand(CommandType.CONNECT, authToken, gameID);
 
@@ -68,12 +71,15 @@ public class GameplayWebSocketHandler {
         }
     }
 
-    @OnMessage
-    public void onMessage(String message, Session session) {
+
+    // Handles incoming messages from the server
+    private void handleIncomingMessage(String message) {
         ServerMessage serverMessage = MessageSerializer.deserializeServerMessage(message);
 
         switch (serverMessage.getServerMessageType()) {
             case LOAD_GAME:
+                // Move all logic currently inside onMessage() LOAD_GAME case to here
+                // including board setup, printing, input handling, etc.
                 try {
                     LoadGameMessage loadGameMessage = (LoadGameMessage) serverMessage;
                     GameData data = loadGameMessage.getGame();
@@ -221,7 +227,6 @@ public class GameplayWebSocketHandler {
                     System.err.println("Failed to load game: " + e.getMessage());
                     return;
                 }
-
                 break;
 
             case NOTIFICATION:
@@ -383,11 +388,9 @@ public class GameplayWebSocketHandler {
     }
 
 
-    @OnClose
     public void onClose(Session session, CloseReason closeReason) {
     }
 
-    @OnError
     public void onError(Session session, Throwable throwable) {
         System.err.println("WebSocket error: " + throwable.getMessage());
     }
