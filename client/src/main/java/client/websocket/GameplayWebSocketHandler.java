@@ -211,7 +211,9 @@ public class GameplayWebSocketHandler extends Endpoint {
         try {
             session.getBasicRemote().sendText(GSON.toJson(resign));
             exited = true;
-            if (session != null && session.isOpen()) session.close();
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
         } catch (Exception e) {
             System.err.println("Failed to send RESIGN command: " + e.getMessage());
         }
@@ -222,7 +224,9 @@ public class GameplayWebSocketHandler extends Endpoint {
         try {
             session.getBasicRemote().sendText(GSON.toJson(leave));
             exited = true;
-            if (session != null && session.isOpen()) session.close();
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
         } catch (Exception e) {
             System.err.println("Failed to send LEAVE command: " + e.getMessage());
         }
@@ -241,13 +245,13 @@ public class GameplayWebSocketHandler extends Endpoint {
         this.game = data.game();
         this.board = game.getBoard();
 
-        if (!assignPlayerColor(loadGameMessage)) return;
-        if (!validateBoardPresence()) return;
+        if (!assignPlayerColor(loadGameMessage)) {return;}
+        if (!validateBoardPresence()) {return;}
 
         game.setBoard(board);
         new ChessBoardUI().drawBoard(board, playerColor == ChessGame.TeamColor.WHITE, highlightedFrom, highlightedTo);
 
-        if (handleGameOver(loadGameMessage)) return;
+        if (handleGameOver(loadGameMessage)) {return;}
 
         printLastMoveMessage(loadGameMessage);
 
@@ -281,7 +285,9 @@ public class GameplayWebSocketHandler extends Endpoint {
             System.err.println("Error: board is null in LOAD_GAME");
             return false;
         }
-        return true;
+        {
+            return true;
+        }
     }
 
     // Extracted game over handling logic

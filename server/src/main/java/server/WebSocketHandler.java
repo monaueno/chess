@@ -60,7 +60,8 @@ public class WebSocketHandler {
             UserGameCommand command = websocket.MessageSerializer.deserialize(message);
 
             if (command == null || command.getCommandType() == null) {
-                session.getRemote().sendString(GSON.toJson(Map.of("serverMessageType", "ERROR", "errorMessage", "Error: Invalid command")));
+                session.getRemote().sendString(GSON.toJson(
+                    Map.of("serverMessageType", "ERROR", "errorMessage", "Error: Invalid command")));
                 return;
             }
 
@@ -96,7 +97,8 @@ public class WebSocketHandler {
             ACTIVE_GAMES.put(gameID, game);
         } catch (Exception e) {
             try {
-                session.getRemote().sendString(GSON.toJson(Map.of("serverMessageType", "ERROR", "errorMessage", "Error: Failed to access game data")));
+                session.getRemote().sendString(GSON.toJson(
+                    Map.of("serverMessageType", "ERROR", "errorMessage", "Error: Failed to access game data")));
             } catch (IOException ioException) {
                 ioException.printStackTrace();
             }
@@ -112,7 +114,8 @@ public class WebSocketHandler {
             manager.add(session, username);
         } catch (Exception e) {
             try {
-                session.getRemote().sendString(GSON.toJson(Map.of("serverMessageType", "ERROR", "errorMessage", "Error: Failed to retrieve username")));
+                session.getRemote().sendString(GSON.toJson(
+                    Map.of("serverMessageType", "ERROR", "errorMessage", "Error: Failed to retrieve username")));
             } catch (IOException ioException) {
                 ioException.printStackTrace();
             }
@@ -263,7 +266,13 @@ public class WebSocketHandler {
         try {
             db.updateGameData(gameID, gameData);
         } catch (DataAccessException e) {
-            sendError(session, "Failed to persist gameData after leave: " + e.getMessage());
+            try {
+                session.getRemote().sendString(GSON.toJson(
+                    Map.of("serverMessageType", "ERROR",
+                           "errorMessage", "Error: Failed to persist gameData after leave: " + e.getMessage())));
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
             return;
         }
 
