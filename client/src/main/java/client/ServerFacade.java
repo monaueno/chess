@@ -15,36 +15,34 @@ public class ServerFacade {
 
     private final String serverUrl;
     private final Gson gson = new Gson();
-    private final DataAccess dataAccess;
 
-    public ServerFacade(int port, DataAccess dataAccess) {
+    public ServerFacade(int port) {
         this.serverUrl = "http://localhost:" + port;
-        this.dataAccess = dataAccess;
     }
 
     public AuthResult register(String username, String password, String email) throws IOException {
         RegisterRequest request = new RegisterRequest(username, password, email);
-        return this.<RegisterRequest, AuthResult>makeRequest("/register", request, AuthResult.class);
+        return this.<RegisterRequest, AuthResult>makeRequest("/user", request, AuthResult.class);
     }
 
     public AuthResult login(String username, String password) throws IOException {
         LoginRequest request = new LoginRequest(username, password);
-        return this.<LoginRequest, AuthResult>makeRequest("/login", request, AuthResult.class);
+        return this.<LoginRequest, AuthResult>makeRequest("/session", request, AuthResult.class);
     }
 
     public void logout(String authToken) throws IOException {
-        HttpURLConnection connection = makeConnection("POST", "/logout", authToken);
+        HttpURLConnection connection = makeConnection("DELETE", "/session", authToken);
         connection.connect();
         checkResponse(connection);
     }
 
     public CreateGameResult createGame(String gameName, String authToken) throws Exception {
         CreateGameRequest request = new CreateGameRequest(gameName);
-        return this.<CreateGameRequest, CreateGameResult>makeRequest("/create", request, CreateGameResult.class, authToken);
+        return this.<CreateGameRequest, CreateGameResult>makeRequest("/game", request, CreateGameResult.class, authToken);
     }
 
 public ListGamesResult listGames(String authToken) throws IOException {
-    HttpURLConnection connection = makeConnection("GET", "/list", authToken);
+    HttpURLConnection connection = makeConnection("GET", "/game", authToken);
     connection.connect();
     checkResponse(connection);
 
@@ -55,8 +53,17 @@ public ListGamesResult listGames(String authToken) throws IOException {
 }
 
     public SuccessResponse joinGame(int gameID, String playerColor, String authToken) throws IOException {
+        HttpURLConnection connection = makeConnection("PUT", "/game", authToken);
         JoinGameRequest request = new JoinGameRequest(playerColor, gameID);
-        return this.<JoinGameRequest, SuccessResponse>makeRequest("/join", request, SuccessResponse.class, authToken);
+        try (OutputStream os = connection.getOutputStream()) {
+            os.write(gson.toJson(request).getBytes());
+        }
+        checkResponse(connection);
+
+        try (InputStream is = connection.getInputStream()) {
+            String raw = new String(is.readAllBytes());
+            return gson.fromJson(raw, SuccessResponse.class);
+        }
     }
 
     private HttpURLConnection makeConnection(String method, String endpoint, String authToken) throws IOException {
@@ -92,9 +99,12 @@ public ListGamesResult listGames(String authToken) throws IOException {
 
     private void checkResponse(HttpURLConnection connection) throws IOException {
         int status = connection.getResponseCode();
+        System.out.println("Response status code: " + status); // debug print
+
         if (status >= 400) {
             try (InputStream errorStream = connection.getErrorStream()) {
                 String raw = new String(errorStream.readAllBytes());
+                System.out.println("Raw error response: " + raw); // debug print
                 ErrorResult error = gson.fromJson(raw, ErrorResult.class); // this may still fail
                 throw new IOException(error.message());
             }
@@ -122,7 +132,4 @@ public ListGamesResult listGames(String authToken) throws IOException {
         }
     }
 
-    public DataAccess getDataAccess() {
-        return this.dataAccess;
-    }
 }

@@ -8,7 +8,6 @@ import java.net.URI;
 import chess.ChessBoard;
 import chess.ChessGame;
 import chess.ChessMove;
-import dataaccess.DataAccessException;
 import model.GameData;
 import ui.ChessBoardUI;
 import websocket.commands.MakeMoveCommand;
@@ -19,7 +18,6 @@ import websocket.messages.NotificationMessage;
 import websocket.messages.ServerMessage;
 import com.google.gson.Gson;
 import websocket.messages.LoadGameMessage;
-import dataaccess.DataAccess;
 
 import java.util.Collection;
 import java.util.Scanner;
@@ -46,15 +44,13 @@ public class GameplayWebSocketHandler {
     private volatile boolean exited = false;
     private ChessGame.TeamColor playerColor;
     private String username;
-    private final DataAccess dataAccess;
     private final boolean isObserver;
 
-    public GameplayWebSocketHandler(String authToken, int gameID, String username, Runnable promptForMove, DataAccess dataAccess, boolean isObserver) {
+    public GameplayWebSocketHandler(String authToken, int gameID, String username, Runnable promptForMove, boolean isObserver) {
         this.authToken = authToken;
         this.gameID = gameID;
         this.username = username;
         this.onGameLoadedCallback = promptForMove;
-        this.dataAccess = dataAccess;
         this.isObserver = isObserver;
     }
 
@@ -79,15 +75,14 @@ public class GameplayWebSocketHandler {
         switch (serverMessage.getServerMessageType()) {
             case LOAD_GAME:
                 try {
-                    GameData data = dataAccess.getGame(gameID);
+                    LoadGameMessage loadGameMessage = (LoadGameMessage) serverMessage;
+                    GameData data = loadGameMessage.getGame();
                     this.game = data.game();
-                    this.board = data.getBoard();
-                    this.game = data.game();
-                    this.board = data.getBoard();
+                    this.board = game.getBoard();
 
-                    if (username.equals(data.whiteUsername())) {
+                    if (username.equals(loadGameMessage.getWhiteUsername())) {
                         this.playerColor = ChessGame.TeamColor.WHITE;
-                    } else if (username.equals(data.blackUsername())) {
+                    } else if (username.equals(loadGameMessage.getBlackUsername())) {
                         this.playerColor = ChessGame.TeamColor.BLACK;
                     } else if (!isObserver) {
                         System.err.println("⚠️ Username does not match either white or black player.");
@@ -115,7 +110,7 @@ public class GameplayWebSocketHandler {
                             System.out.println("Checkmate! White wins.");
                         } else if (game.getResignedPlayer() != null) {
                             String resigned = game.getResignedPlayer();
-                            String winner = resigned.equals(data.whiteUsername()) ? data.blackUsername() : data.whiteUsername();
+                            String winner = resigned.equals(loadGameMessage.getWhiteUsername()) ? loadGameMessage.getBlackUsername() : loadGameMessage.getWhiteUsername();
                             System.out.println(resigned + " has resigned. " + winner + " wins.");
                         } else {
                             System.out.println("It's a draw.");
@@ -141,7 +136,7 @@ public class GameplayWebSocketHandler {
                             ChessMove lastMove = game.getMoveHistory().get(game.getMoveHistory().size() - 1);
                             String from = (char)('a' + lastMove.getStartPosition().getColumn() - 1) + String.valueOf(lastMove.getStartPosition().getRow());
                             String to = (char)('a' + lastMove.getEndPosition().getColumn() - 1) + String.valueOf(lastMove.getEndPosition().getRow());
-                            String moveText = String.format("%s made the move %s to %s", game.getTeamTurn() == ChessGame.TeamColor.WHITE ? data.blackUsername() : data.whiteUsername(), from, to);
+                            String moveText = String.format("%s made the move %s to %s", game.getTeamTurn() == ChessGame.TeamColor.WHITE ? loadGameMessage.getBlackUsername() : loadGameMessage.getWhiteUsername(), from, to);
                             System.out.println(moveText);
                             System.out.println("Current turn: " + game.getTeamTurn());
                             System.out.println();
@@ -222,9 +217,8 @@ public class GameplayWebSocketHandler {
                             }
                         }
                     }
-                } // <-- FIX: closes if (!game.isGameOver()) block before break
-                catch (DataAccessException e) {
-                    System.err.println("Failed to load game from data access: " + e.getMessage());
+                } catch (Exception e) {
+                    System.err.println("Failed to load game: " + e.getMessage());
                     return;
                 }
 

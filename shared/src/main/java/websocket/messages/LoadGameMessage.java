@@ -16,4 +16,11 @@ public class LoadGameMessage extends ServerMessage {
         return game;
     }
     public boolean isYourTurn() { return yourTurn; }
+    public String getWhiteUsername() {
+        return game.whiteUsername();
+    }
+
+    public String getBlackUsername() {
+        return game.blackUsername();
+    }
 }

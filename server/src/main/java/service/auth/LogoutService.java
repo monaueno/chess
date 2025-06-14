@@ -13,12 +13,14 @@ public class LogoutService {
     }
 
     public void logout(LogoutRequest request) throws DataAccessException {
-        AuthData auth = db.getAuth(request.authToken());
+
+        String token = request.authToken();
+        AuthData auth = db.getAuth(token);
 
         if (auth == null) {
             throw new DataAccessException("unauthorized");
         }
 
-        db.deleteAuth(request.authToken());
+        db.deleteAuth(token);
     }
 }

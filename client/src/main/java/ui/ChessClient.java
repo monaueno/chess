@@ -42,7 +42,7 @@ public class ChessClient {
         System.out.println("Welcome to CS 240 Chess!");
         try {
             int port = 8080; // or read from args
-            facade = new ServerFacade(port, new MySqlDataAccess());
+            facade = new ServerFacade(port);
 
             while (true) {
                 if (authToken == null) {
@@ -229,7 +229,6 @@ public class ChessClient {
                         selectedGame.gameID(),
                         currentUsername,
                         this::promptForMove,
-                        facade.getDataAccess(),
                         false
                 );
                 WebSocketContainer container = ContainerProvider.getWebSocketContainer();
@@ -289,7 +288,6 @@ public class ChessClient {
                     selectedGame.gameID(),
                     currentUsername,
                     () -> {}, // no prompt for observers
-                    facade.getDataAccess(),
                     true // ✅ this tells it you're observing
             );
 

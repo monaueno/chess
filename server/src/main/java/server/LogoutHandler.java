@@ -24,6 +24,11 @@ public class LogoutHandler implements Route {
             // Get the authToken from the header
             String authToken = req.headers("authorization");
 
+            if (authToken == null) {
+                res.status(401);
+                return gson.toJson(new ErrorMessage("Missing auth token"));
+            }
+
             LogoutRequest request = new LogoutRequest(authToken);
             LogoutService service = new LogoutService(dataAccess);
             service.logout(request);
